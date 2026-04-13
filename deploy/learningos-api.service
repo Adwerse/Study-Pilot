@@ -1,0 +1,15 @@
+[Unit]
+Description=Learning OS FastAPI Service
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/opt/learning-os/backend
+EnvironmentFile=/opt/learning-os/backend/.env
+ExecStart=uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=always
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
