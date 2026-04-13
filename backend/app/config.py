@@ -5,7 +5,7 @@ class Settings(BaseSettings):
 	DATABASE_URL: str
 	SECRET_KEY: str
 	OPENAI_API_KEY: str
-	TELEGRAM_BOT_TOKEN: str
+	BOT_TOKEN: str
 	MINI_APP_URL: str
 	ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
 	DEBUG: bool = False

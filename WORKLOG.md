@@ -4,54 +4,64 @@ Last updated: 2026-04-13
 
 ## Repository Context
 
-- Project root contains backend, frontend, bot, nginx, and deploy folders.
-- Environment file is tracked locally and ignored by git via `.gitignore` entry `.env`.
+- Project root contains `backend`, `frontend`, `bot`, `nginx`, `deploy`.
+- `.env` is ignored by git at repo root.
 
 ## Completed Work
 
-### 1) Backend API scaffold (FastAPI)
+### 1) Backend FastAPI Scaffold
 
-- Added settings scaffold with pydantic-settings in `backend/app/config.py`.
-- Added async SQLAlchemy setup and DB dependency in `backend/app/database.py`.
-- Added FastAPI app setup, CORS, lifespan logs, health endpoint, and router wiring in `backend/app/main.py`.
-- Added shared auth dependency placeholder in `backend/app/api/dependencies.py`.
-- Added 501 placeholder routers:
-  - `backend/app/api/users.py`
-  - `backend/app/api/plans.py`
-  - `backend/app/api/focus.py`
-  - `backend/app/api/ask.py`
-  - `backend/app/api/analytics.py`
-- Updated backend dependencies in `backend/requirements.txt`.
+- Implemented settings, async DB session factory, app bootstrap, CORS, lifespan logs, and `/health`.
+- Added API routers for users/plans/focus/ask/analytics with placeholders.
+- Added `backend/tests` scaffold (`conftest.py`, `test_health.py`, `test_auth.py`).
+- Added test/lint dependencies in `backend/requirements.txt`.
 
-### 2) Nginx and deployment scaffold
+### 2) Telegram WebApp Auth (Backend)
 
-- Added reverse-proxy and TLS-ready nginx config in `nginx/nginx.conf`.
-- Added nginx container image file in `nginx/Dockerfile`.
-- Added initial server setup script in `deploy/setup.sh`.
-- Added release deployment script in `deploy/deploy.sh`.
-- Added systemd service unit for backend API in `deploy/learningos-api.service`.
+- Implemented Telegram `initData` signature validation in `backend/app/middlewares/auth.py` using stdlib `hmac` + `hashlib`.
+- Replaced `get_current_user` dependency with real `Authorization: tma <initData>` validation.
+- Implemented `/api/v1/users/me` to return Telegram user data from validated `initData`.
 
-### 3) Telegram bot scaffold (aiogram 3.x)
+### 3) Frontend Telegram Integration
 
-- Added bot settings via pydantic-settings in `bot/config.py`.
-- Added Mini App keyboard builder in `bot/keyboards/main.py`.
-- Added /start command handler with logging and WebApp button in `bot/handlers/start.py`.
-- Added notification helper stubs in `bot/handlers/notifications.py`.
-- Added update logging middleware in `bot/middlewares/logging.py`.
-- Added main entrypoint with webhook/polling switch in `bot/main.py`.
-- Updated bot dependencies in `bot/requirements.txt`.
+- Added Telegram SDK helpers (`frontend/src/lib/telegram.ts`).
+- Added axios API client with `Authorization: tma ...` interceptor (`frontend/src/lib/api.ts`).
+- Added `useCurrentUser` hook and main app rendering state in `frontend/src/main.tsx`.
+- Added minimal Vite app bootstrap files (`frontend/package.json`, `frontend/index.html`, `frontend/tsconfig.json`, `frontend/vite.config.ts`).
+- Added `frontend/.env` with `VITE_API_BASE_URL=http://localhost:8000`.
 
-## Pending Implementation Items
+### 4) Bot Scaffold and Runtime
 
-- Replace all API 501 placeholders with real business logic.
-- Implement Telegram initData validation in backend auth dependency.
-- Set real domain names, server IP, and email in deploy/nginx configs.
-- Configure production systemd service installation and enablement on server.
-- Add CI/CD and runtime monitoring.
+- Implemented aiogram 3 bot scaffold (config, start handler, notifications stubs, middleware, polling/webhook entrypoint).
+- Added `/start` WebApp button (`Open Learning OS`) and logging.
+- Confirmed bot polling starts successfully and token is valid (`getMe` check passed).
 
-## Quick Resume Checklist
+### 5) DevOps and Deployment Scaffold
 
-1. Fill `.env` values for backend and bot tokens/URLs.
-2. Install dependencies in `backend` and `bot`.
-3. Build frontend before first deployment.
-4. Run server setup script once, then use deployment script for releases.
+- Added nginx reverse proxy config + nginx Dockerfile.
+- Added deploy scripts (`deploy/setup.sh`, `deploy/deploy.sh`) and systemd unit (`deploy/learningos-api.service`).
+- Added `docker-compose.yml` with local `postgres` and `redis` services.
+
+### 6) Local Sprint 1 Validation
+
+- `docker compose up -d` passed (`postgres`, `redis` running).
+- Backend run passed: `/docs` reachable and `/health` returns `{ "status": "ok", "version": "0.1.0" }`.
+- Backend tests passed: `4 passed`.
+- Bot polling run passed; `/start` processed and WebApp button shown.
+- Confirmed Telegram contact and Mini App open flow from bot message.
+- For HTTPS Mini App testing, installed tunnel tooling:
+  - `ngrok` install succeeded but requires account authtoken.
+  - `cloudflared` quick tunnel used as fallback.
+- Added tunnel host allowlist in `frontend/vite.config.ts` and corresponding CORS origin in `backend/.env`.
+
+## Current Follow-ups
+
+- Replace placeholder API endpoints (plans/focus/ask/analytics/users update/delete) with real logic.
+- For stable Mini App testing, replace temporary tunnel URL with permanent HTTPS domain.
+- Keep backend/bot/frontend `.env` values aligned for production.
+- Add CI pipeline for tests + lint and formal release workflow.
+
+## Notes
+
+- On Windows, `bot` pinned dependencies install reliably with Python 3.12.
+- Root and service-level Makefiles currently use Unix-style `.venv/bin/...` commands and need Windows-specific alternatives for direct `make` usage on PowerShell.
