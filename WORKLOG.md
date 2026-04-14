@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-13
+Last updated: 2026-04-14
 
 ## Repository Context
 
@@ -53,6 +53,18 @@ Last updated: 2026-04-13
   - `ngrok` install succeeded but requires account authtoken.
   - `cloudflared` quick tunnel used as fallback.
 - Added tunnel host allowlist in `frontend/vite.config.ts` and corresponding CORS origin in `backend/.env`.
+
+### 7) Frontend WebApp Bootstrap Verification (2026-04-14)
+
+Что сделано:
+- Vite + React + TypeScript инициализирован.
+- `@twa-dev/sdk` установлен и настроен.
+- `src/lib/telegram.ts` — утилиты WebApp SDK.
+- `src/lib/api.ts` — axios клиент с `tma` авторизацией.
+- Telegram script подключён в `index.html`.
+- `npm run build` — OK.
+- `npx tsc --noEmit` — OK.
+- dev-сервер отвечает на `:5173` — OK.
 
 ## Current Follow-ups
 
