@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-14
+Last updated: 2026-04-15
 
 ## Repository Context
 
@@ -65,6 +65,31 @@ Last updated: 2026-04-14
 - `npm run build` — OK.
 - `npx tsc --noEmit` — OK.
 - dev-сервер отвечает на `:5173` — OK.
+
+## [Спринт 2] Дизайн-система
+Дата: 2026-04-15
+Статус: ✅ завершено
+
+Что сделано:
+- src/styles/theme.css — CSS-переменные из Telegram theme params
+- src/styles/global.css — базовый reset
+- src/hooks/useTelegramTheme.ts — live-обновление темы
+- src/components/ui/ — Button, Card, Badge, Typography, Divider
+- src/pages/DevKit.tsx — витрина компонентов
+- npx tsc --noEmit — OK
+- npm run build — OK
+- dev-сервер :5173 — OK
+
+Порядок теста (Telegram):
+1. Проверка сборки фронта: `npx tsc --noEmit` и `npm run build`.
+2. Запуск backend: `python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
+3. Проверка backend: `GET /health` => `{"status":"ok","version":"0.1.0"}`.
+4. Запуск frontend: `npm run dev` (порт `5173`).
+5. Проверка frontend: `curl http://localhost:5173` => HTTP `200`.
+6. Поднятие HTTPS-туннелей `cloudflared` для `:8000` и `:5173`.
+7. Привязка WebApp URL в боте к frontend tunnel и проверка открытия Mini App из `/start`.
+8. Проверка в Telegram: загрузка DevKit-экрана и применение theme params (light/dark).
+9. Завершение теста: остановка `uvicorn`, `vite`, `cloudflared`, `bot`.
 
 ## Current Follow-ups
 

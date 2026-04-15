@@ -7,6 +7,7 @@ export default defineConfig({
 		port: 5173,
 		host: true,
 		strictPort: true,
+		allowedHosts: true,
 	},
 	define: {
 		global: 'globalThis',
