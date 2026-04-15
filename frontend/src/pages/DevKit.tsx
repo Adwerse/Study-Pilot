@@ -27,14 +27,14 @@ export function DevKit() {
 		>
 			<header style={{ display: 'grid', gap: 'var(--space-2)' }}>
 				<Title>Learning OS UI DevKit</Title>
-				<Caption>Витрина компонентов для Telegram Mini App</Caption>
+				<Caption>Component showcase for Telegram Mini App</Caption>
 			</header>
 
 			<section style={sectionStyle}>
 				<Subtitle>Buttons</Subtitle>
 				<Card>
 					<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-						<Body style={{ fontWeight: 600 }}>Варианты</Body>
+						<Body style={{ fontWeight: 600 }}>Variants</Body>
 						<div style={rowStyle}>
 							<Button variant="primary" size="md">Primary</Button>
 							<Button variant="secondary" size="md">Secondary</Button>
@@ -42,14 +42,14 @@ export function DevKit() {
 							<Button variant="ghost" size="md">Ghost</Button>
 						</div>
 
-						<Body style={{ fontWeight: 600 }}>Размеры</Body>
+						<Body style={{ fontWeight: 600 }}>Sizes</Body>
 						<div style={rowStyle}>
 							<Button variant="primary" size="sm">Small</Button>
 							<Button variant="primary" size="md">Medium</Button>
 							<Button variant="primary" size="lg">Large</Button>
 						</div>
 
-						<Body style={{ fontWeight: 600 }}>Состояния</Body>
+						<Body style={{ fontWeight: 600 }}>States</Body>
 						<div style={rowStyle}>
 							<Button variant="secondary" size="md" loading>
 								Loading
@@ -70,11 +70,11 @@ export function DevKit() {
 				<Subtitle>Cards</Subtitle>
 				<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 					<Card>
-						<Body>Обычная карточка без интерактивности.</Body>
+						<Body>A regular card without interactivity.</Body>
 					</Card>
 					<Card onClick={() => setCardClicks((prev) => prev + 1)}>
-						<Body>Кликабельная карточка. Нажатий: {cardClicks}</Body>
-						<Hint>Hover и pointer включены при наличии onClick.</Hint>
+						<Body>Clickable card. Clicks: {cardClicks}</Body>
+						<Hint>Hover and pointer are enabled when onClick is provided.</Hint>
 					</Card>
 				</div>
 			</section>
@@ -107,9 +107,9 @@ export function DevKit() {
 				<Subtitle>Divider</Subtitle>
 				<Card>
 					<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-						<Body>Контент до разделителя</Body>
+						<Body>Content before divider</Body>
 						<Divider />
-						<Body>Контент после разделителя</Body>
+						<Body>Content after divider</Body>
 					</div>
 				</Card>
 			</section>

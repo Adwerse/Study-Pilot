@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTelegramTheme } from './hooks/useTelegramTheme'
 import { expand, ready } from './lib/telegram'
-import { DevKit } from './pages/DevKit'
+import { AppRouter } from './router'
 
 export default function App() {
 	useTelegramTheme()
@@ -11,5 +11,5 @@ export default function App() {
 		expand()
 	}, [])
 
-	return <DevKit />
+	return <AppRouter />
 }

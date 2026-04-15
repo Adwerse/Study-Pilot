@@ -91,6 +91,20 @@ Last updated: 2026-04-15
 8. Проверка в Telegram: загрузка DevKit-экрана и применение theme params (light/dark).
 9. Завершение теста: остановка `uvicorn`, `vite`, `cloudflared`, `bot`.
 
+## [Спринт 2] Навигация и экраны
+Дата: 2026-04-15
+Статус: ✅ завершено
+
+Что сделано:
+- src/router.tsx — react-router-dom, 4 маршрута
+- src/components/layout/ — Layout, BottomNav, BottomTab
+- src/components/ui/Skeleton.tsx — shimmer-анимация
+- src/pages/ — TodayPage, RoadmapPage, KnowledgePage, AnalyticsPage
+- Bottom tabs с SVG-иконками и active-состоянием
+- safe-area-inset-bottom для iPhone
+- npx tsc --noEmit — OK
+- npm run build — OK
+
 ## Current Follow-ups
 
 - Replace placeholder API endpoints (plans/focus/ask/analytics/users update/delete) with real logic.
