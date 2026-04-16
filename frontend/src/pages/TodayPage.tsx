@@ -1,4 +1,5 @@
 import { Button, Caption, Card, Skeleton, Subtitle, Title } from '../components/ui'
+import { useTodayTasks } from '../hooks'
 
 const weekdayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
 const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'full' })
@@ -8,6 +9,7 @@ function toCapitalized(text: string): string {
 }
 
 export function TodayPage() {
+	const { tasks, loading } = useTodayTasks()
 	const now = new Date()
 	const weekday = toCapitalized(weekdayFormatter.format(now))
 	const fullDate = toCapitalized(dateFormatter.format(now))
@@ -25,14 +27,32 @@ export function TodayPage() {
 
 			<section style={{ display: 'grid', gap: 'var(--space-3)' }}>
 				<Subtitle>Focus blocks</Subtitle>
-				{Array.from({ length: 3 }).map((_, index) => (
-					<Card key={index}>
-						<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-							<Skeleton height={18} width="55%" />
-							<Skeleton lines={2} height={12} />
-						</div>
-					</Card>
-				))}
+				{loading
+					? Array.from({ length: 3 }).map((_, index) => (
+							<Card key={`skeleton-${index}`}>
+								<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
+									<Skeleton height={18} width="55%" />
+									<Skeleton lines={2} height={12} />
+								</div>
+							</Card>
+						))
+					: tasks.length > 0
+						? tasks.map((task) => (
+								<Card key={task.id}>
+									<div style={{ display: 'grid', gap: 'var(--space-1)' }}>
+										<Subtitle>{task.title}</Subtitle>
+										<Caption>{task.deliverable}</Caption>
+									</div>
+								</Card>
+							))
+						: Array.from({ length: 3 }).map((_, index) => (
+								<Card key={`fallback-${index}`}>
+									<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
+										<Skeleton height={18} width="55%" />
+										<Skeleton lines={2} height={12} />
+									</div>
+								</Card>
+							))}
 			</section>
 
 			<Button variant="primary" size="lg" fullWidth disabled onClick={handleStartSession}>

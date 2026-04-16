@@ -1,6 +1,11 @@
 import { Button, Divider, Skeleton, Title } from '../components/ui'
+import { useApi } from '../hooks'
+import { apiClient } from '../lib/api'
+import type { Document as ApiDocument } from '../types/api'
 
 export function KnowledgePage() {
+	const { data: docs, loading } = useApi<ApiDocument[]>((signal) => apiClient.getDocuments(signal))
+
 	const handleUpload = () => {
 		// TODO: integrate RAG Agent (Sprint 5)
 	}
@@ -16,9 +21,13 @@ export function KnowledgePage() {
 			<Divider />
 
 			<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-				<Skeleton height={14} width="90%" />
-				<Skeleton height={14} width="85%" />
-				<Skeleton height={14} width="72%" />
+				{loading
+					? [90, 85, 72].map((width) => <Skeleton key={width} height={14} width={`${width}%`} />)
+					: docs?.map((doc) => (
+							<div key={doc.id} style={{ padding: '6px 0' }}>
+								{doc.title}
+							</div>
+						))}
 			</div>
 
 			<input

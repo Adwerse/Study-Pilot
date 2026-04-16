@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-15
+Last updated: 2026-04-16
 
 ## Repository Context
 
@@ -102,6 +102,19 @@ Last updated: 2026-04-15
 - src/pages/ — TodayPage, RoadmapPage, KnowledgePage, AnalyticsPage
 - Bottom tabs с SVG-иконками и active-состоянием
 - safe-area-inset-bottom для iPhone
+- npx tsc --noEmit — OK
+- npm run build — OK
+
+## [Спринт 2] API клиент + хуки
+Дата: 2026-04-16
+Статус: ✅ завершено
+
+Что сделано:
+- src/types/api.ts — все типы сущностей
+- src/lib/api.ts — axios instance + interceptors + apiClient методы
+- src/hooks/useApi.ts — универсальный хук с AbortController
+- src/hooks/useCurrentUser.ts, usePlan.ts, useFocus.ts, useAnalytics.ts
+- Хуки подключены к четырём экранам (данные или скелетоны)
 - npx tsc --noEmit — OK
 - npm run build — OK
 
