@@ -1,0 +1,18 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy frontend to Railway
+        uses: bervProject/railway-deploy@0.2.0-beta
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        with:
+          service: ${{ secrets.RAILWAY_FRONTEND_SERVICE_ID }}
