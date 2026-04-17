@@ -118,6 +118,18 @@ Last updated: 2026-04-16
 - npx tsc --noEmit — OK
 - npm run build — OK
 
+## [Спринт 3] Roadmap Agent
+Дата: 2026-04-17
+Статус: ✅ завершено
+
+Что сделано:
+- app/agents/llm_client.py — Tensorix AsyncOpenAI клиент (deepseek/deepseek-chat-v3.1)
+- app/agents/prompts/roadmap.py — system + user промпты
+- app/agents/roadmap.py — RoadmapAgent с валидацией JSON
+- POST /api/v1/plans — подключён к агенту
+- tests/test_roadmap_agent.py — интеграционный тест с реальным LLM
+- Тест пройден: LLM возвращает валидный план ✅
+
 ## Current Follow-ups
 
 - Replace placeholder API endpoints (plans/focus/ask/analytics/users update/delete) with real logic.
