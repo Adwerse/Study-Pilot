@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare frontend deploy context
+        run: cp -a frontend/. .
       - name: Deploy frontend to Railway
         uses: bervProject/railway-deploy@0.2.0-beta
         env:

@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare backend deploy context
+        run: cp -a backend/. .
       - name: Deploy backend to Railway
         uses: bervProject/railway-deploy@0.2.0-beta
         env:
@@ -22,6 +24,8 @@ jobs:
     needs: deploy-backend
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare bot deploy context
+        run: cp -a bot/. .
       - name: Deploy bot to Railway
         uses: bervProject/railway-deploy@0.2.0-beta
         env:
