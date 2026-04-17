@@ -1,20 +1,20 @@
 name: Deploy Frontend
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths: ['frontend/**']
+    paths: ['frontend/**', '.github/workflows/deploy-frontend.yml']
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare frontend deploy context
-        run: cp -a frontend/. .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Deploy frontend to Railway
-        uses: bervProject/railway-deploy@0.2.0-beta
+        run: npx -y @railway/cli up frontend --service frontend --ci --path-as-root
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          service: frontend

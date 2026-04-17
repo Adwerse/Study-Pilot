@@ -1,34 +1,33 @@
 name: Deploy Backend and Bot
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths: ['backend/**', 'bot/**']
+    paths: ['backend/**', 'bot/**', '.github/workflows/deploy-backend.yml']
 
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare backend deploy context
-        run: cp -a backend/. .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Deploy backend to Railway
-        uses: bervProject/railway-deploy@0.2.0-beta
+        run: npx -y @railway/cli up backend --service backend --ci --path-as-root
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          service: backend
 
   deploy-bot:
     runs-on: ubuntu-latest
     needs: deploy-backend
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare bot deploy context
-        run: cp -a bot/. .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Deploy bot to Railway
-        uses: bervProject/railway-deploy@0.2.0-beta
+        run: npx -y @railway/cli up bot --service bot --ci --path-as-root
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          service: bot
