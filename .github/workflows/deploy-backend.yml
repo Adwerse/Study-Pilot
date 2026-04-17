@@ -15,7 +15,7 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
-          service: ${{ secrets.RAILWAY_BACKEND_SERVICE_ID }}
+          service: backend
 
   deploy-bot:
     runs-on: ubuntu-latest
@@ -27,4 +27,4 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
-          service: ${{ secrets.RAILWAY_BOT_SERVICE_ID }}
+          service: bot

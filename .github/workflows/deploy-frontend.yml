@@ -15,4 +15,4 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
-          service: ${{ secrets.RAILWAY_FRONTEND_SERVICE_ID }}
+          service: frontend

@@ -4,9 +4,15 @@
 
 ## Railway
 - RAILWAY_TOKEN — railway.app -> Account Settings -> Tokens
-- RAILWAY_FRONTEND_SERVICE_ID — ID сервиса frontend в Railway проекте
-- RAILWAY_BACKEND_SERVICE_ID — ID сервиса backend в Railway проекте
-- RAILWAY_BOT_SERVICE_ID — ID сервиса bot в Railway проекте
+
+В workflows используются имена сервисов Railway:
+- frontend
+- backend
+- bot
+
+Если сервисы у тебя названы иначе, поменяй поле service в:
+- .github/workflows/deploy-frontend.yml
+- .github/workflows/deploy-backend.yml
 
 ## Нужен ли .env файл для GitHub Actions?
 Нет. Для CI/CD используй GitHub Secrets.
