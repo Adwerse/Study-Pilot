@@ -15,9 +15,18 @@
 - .github/workflows/deploy-backend.yml
 
 ## Важно для monorepo и ошибки `Script start.sh not found`
-Если Railway анализирует корень репозитория (где лежат `backend/`, `frontend/`, `bot/`), Railpack не может корректно определить старт и падает.
+Если Railway анализирует корень репозитория (где лежат `backend/`, `frontend/`, `bot/`), Railpack может не определить корректный старт и падать.
 
-В этом репозитории workflows деплоят подпапки напрямую через Railway CLI с `--path-as-root`, поэтому дополнительный `cp` не нужен.
+В этом репозитории сервисы переведены на Dockerfile-based deploy:
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `bot/Dockerfile`
+
+Соответствующие `railway.toml` уже настроены на:
+- `builder = "DOCKERFILE"`
+- `dockerfilePath = "Dockerfile"`
+
+В workflows деплой идёт подпапками через Railway CLI с `--path-as-root`, поэтому у каждого сервиса собственный build context.
 
 Проверь в Railway для каждого сервиса:
 - `backend` -> Root Directory: `backend`
