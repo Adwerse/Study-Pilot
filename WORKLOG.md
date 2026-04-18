@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-16
+Last updated: 2026-04-18
 
 ## Repository Context
 
@@ -129,6 +129,14 @@ Last updated: 2026-04-16
 - POST /api/v1/plans — подключён к агенту
 - tests/test_roadmap_agent.py — интеграционный тест с реальным LLM
 - Тест пройден: LLM возвращает валидный план ✅
+
+## Backlog (Alpha)
+Дата: 2026-04-18
+Статус: 🟡 в работе
+
+- Альфа-версия Roadmap miniapp зафиксирована как текущий этап.
+- Проблема: тупняк/нестабильная генерация roadmap при слишком близких датах дедлайна.
+- Проблема: roadmap не сохраняется и теряется при переключении на другие вкладки.
 
 ## Current Follow-ups
 

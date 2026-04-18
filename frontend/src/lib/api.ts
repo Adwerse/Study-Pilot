@@ -2,6 +2,13 @@ import axios, { AxiosError } from 'axios'
 import type { AskResponse, ApiError, DailyMetrics, Document as ApiDocument, FocusSession, Plan, PlanStage, User } from '../types/api'
 import { getInitData, tg } from './telegram'
 
+type CreatePlanPayload = {
+  goal: string
+  level?: 'beginner' | 'intermediate' | 'advanced'
+  weekly_hours?: number
+  deadline?: string
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 })
@@ -71,7 +78,8 @@ export const apiClient = {
   updateMe: (data: Partial<User>, signal?: AbortSignal) => api.put<User>('/api/v1/users/me', data, { signal }),
 
   // Plans
-  createPlan: (goal: string, signal?: AbortSignal) => api.post<Plan>('/api/v1/plans', { goal }, { signal }),
+  createPlan: (goal: string, payload?: Partial<CreatePlanPayload>, signal?: AbortSignal) =>
+    api.post<Plan>('/api/v1/plans', { ...payload, goal }, { signal }),
   getCurrentPlan: (signal?: AbortSignal) => api.get<Plan | null>('/api/v1/plans/current', { signal }),
   getToday: (signal?: AbortSignal) => api.get<PlanStage[] | { tasks: PlanStage[] }>('/api/v1/plans/current/today', { signal }),
   recalculatePlan: (planId: string, signal?: AbortSignal) =>

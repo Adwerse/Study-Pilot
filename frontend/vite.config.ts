@@ -9,6 +9,11 @@ export default defineConfig({
 		strictPort: true,
 		allowedHosts: true,
 	},
+	test: {
+		globals: true,
+		environment: 'jsdom',
+		setupFiles: ['./src/test/setup.ts'],
+	},
 	define: {
 		global: 'globalThis',
 	},

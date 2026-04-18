@@ -1,63 +1,91 @@
-import { Body, Button, Card, Skeleton, Title } from '../components/ui'
-import { usePlan } from '../hooks'
+import type { PlanStage } from '../types/api'
+import { GeneratingState } from '../components/roadmap/GeneratingState'
+import { GoalForm } from '../components/roadmap/GoalForm'
+import { StageCard } from '../components/roadmap/StageCard'
+import { Body, Button, Caption, Card, Divider, Title } from '../components/ui'
+import { useRoadmap } from '../hooks/useRoadmap'
 
 export function RoadmapPage() {
-	const { plan, loading } = usePlan()
-	const hasPlan = Boolean(plan)
+	const { state, plan, error, generate, reset } = useRoadmap()
 
-	const handleSetGoal = () => {
-		// TODO: integrate Roadmap Agent (Sprint 3)
+	const stages = (plan?.stages ?? []) as Array<PlanStage & { topics?: string[]; hours_required?: number }>
+	const currentWeekIndex = stages.findIndex((stage) => stage.status === 'in_progress')
+	const totalHours = stages.reduce((sum, stage) => sum + (typeof stage.hours_required === 'number' ? stage.hours_required : 0), 0)
+
+	if (state === 'generating') {
+		return (
+			<div style={{ padding: 'var(--space-4)' }}>
+				<GeneratingState />
+			</div>
+		)
+	}
+
+	if (state === 'error') {
+		return (
+			<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
+				<Card>
+					<div
+						style={{
+							border: '1px solid var(--tg-destructive)',
+							borderRadius: 'var(--radius-sm)',
+							padding: '12px',
+							display: 'grid',
+							gap: '12px',
+						}}
+					>
+						<Body style={{ color: 'var(--tg-destructive)' }}>{error ?? 'Не удалось загрузить roadmap'}</Body>
+						<Button variant="destructive" size="md" onClick={reset}>
+							Попробовать снова
+						</Button>
+					</div>
+				</Card>
+			</div>
+		)
+	}
+
+	if (state === 'empty') {
+		return (
+			<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
+				<div>
+					<Title>Поставь цель</Title>
+					<Caption style={{ display: 'block', marginTop: '4px' }}>
+						Расскажи что хочешь изучить - составлю план по неделям
+					</Caption>
+				</div>
+
+				<div style={{ marginTop: '24px' }}>
+					<GoalForm onSubmit={generate} loading={false} />
+				</div>
+			</div>
+		)
 	}
 
 	return (
 		<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
-			<Title>My roadmap</Title>
+			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+				<div>
+					<Title style={{ marginBottom: '4px' }}>{plan?.title ?? 'Roadmap'}</Title>
+					<Caption>
+						{stages.length} недель · {totalHours} ч
+					</Caption>
+				</div>
 
-			{loading ? (
-				<Card>
-					<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-						<Skeleton height={16} width="55%" />
-						<Skeleton height={14} width="40%" />
-					</div>
-				</Card>
-			) : !hasPlan ? (
-				<Card>
-					<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-						<Body>Goal is not set</Body>
-						<Button variant="primary" size="md" onClick={handleSetGoal}>
-							Set goal
-						</Button>
-					</div>
-				</Card>
-			) : (
-				<Card>
-					<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-						<Body>{plan?.title}</Body>
-						<Body>{`${plan?.stages?.length ?? 0} stages`}</Body>
-					</div>
-				</Card>
-			)}
+				<Button variant="ghost" size="sm" onClick={reset}>
+					Пересоздать
+				</Button>
+			</div>
 
-			<Skeleton height={8} width="100%" borderRadius="var(--radius-full)" />
+			<Divider />
 
-			<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-				{loading || !plan?.stages?.length
-					? Array.from({ length: 4 }).map((_, index) => (
-							<Card key={`stage-skeleton-${index}`}>
-								<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-									<Skeleton height={16} width="50%" />
-									<Skeleton height={12} width="72%" />
-								</div>
-							</Card>
-						))
-					: plan.stages.map((stage) => (
-							<Card key={stage.id}>
-								<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-									<Body>{stage.title}</Body>
-									<Body>{stage.deliverable}</Body>
-								</div>
-							</Card>
-						))}
+			<div style={{ display: 'grid', gap: '12px' }}>
+				{stages.map((stage, index) => (
+					<StageCard
+						key={stage.id}
+						stage={stage}
+						index={index}
+						isCurrentWeek={index === currentWeekIndex || (currentWeekIndex === -1 && index === 0)}
+					/>
+				))}
 			</div>
 		</div>
 	)
