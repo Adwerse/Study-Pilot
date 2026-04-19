@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PlanBase(BaseModel):
@@ -25,5 +25,18 @@ class PlanRead(PlanBase):
     id: UUID
     generated_at: datetime
     adapted_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlanStage(BaseModel):
+    id: str
+    plan_id: str
+    week_number: int
+    title: str
+    deliverable: str
+    status: str = "pending"
+    order_index: int
+    topics: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

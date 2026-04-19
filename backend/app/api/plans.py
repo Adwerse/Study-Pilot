@@ -3,8 +3,11 @@ from datetime import date
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 
+from app.agents.daily_coach import daily_coach_agent
 from app.agents.roadmap import roadmap_agent
 from app.api.dependencies import get_current_user
+from app.schemas.focus_block import DailyPlan
+from app.schemas.plan import PlanStage
 
 
 router = APIRouter(prefix="/plans", tags=["plans"], dependencies=[Depends(get_current_user)])
@@ -33,9 +36,32 @@ async def create_plan(
 	return result
 
 
-@router.get("/current", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def get_current_plan() -> dict[str, str]:
-	return {"detail": "not implemented"}
+@router.get("/current")
+async def get_current_plan() -> dict | None:
+	# Placeholder until DB persistence is connected.
+	return None
+
+
+@router.get("/current/today", response_model=DailyPlan)
+async def get_today_plan(
+	current_user: dict = Depends(get_current_user),
+) -> DailyPlan:
+	_ = current_user
+	# Stub stage; replace with real stage lookup from DB in the next step.
+	mock_stage = PlanStage(
+		id="mock",
+		plan_id="mock",
+		week_number=1,
+		title="Основы Python",
+		deliverable="Написать первый скрипт",
+		status="in_progress",
+		order_index=0,
+	)
+	plan = await daily_coach_agent.generate_plan(
+		stage=mock_stage,
+		available_hours=2.0,
+	)
+	return plan
 
 
 @router.get("/{plan_id}", status_code=status.HTTP_501_NOT_IMPLEMENTED)
