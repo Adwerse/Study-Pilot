@@ -9,30 +9,30 @@ describe('StageCard', () => {
     id: '1',
     plan_id: 'p1',
     week_number: 1,
-    title: 'Основы Python',
-    deliverable: 'Написать первый скрипт',
+    title: 'Python fundamentals',
+    deliverable: 'Write the first script',
     status: 'in_progress',
     order_index: 0,
   }
 
-  it('отображает номер недели', () => {
+  it('renders the week number', () => {
     render(<StageCard stage={mockStage} index={0} />)
-    expect(screen.getByText(/Неделя 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Week 1/)).toBeInTheDocument()
   })
 
-  it('отображает заголовок и deliverable', () => {
+  it('renders the title and deliverable', () => {
     render(<StageCard stage={mockStage} index={0} />)
-    expect(screen.getByText('Основы Python')).toBeInTheDocument()
-    expect(screen.getByText('Написать первый скрипт')).toBeInTheDocument()
+    expect(screen.getByText('Python fundamentals')).toBeInTheDocument()
+    expect(screen.getByText('Write the first script')).toBeInTheDocument()
   })
 
-  it('показывает не более 3 тегов + счётчик остатка', () => {
+  it('shows no more than 3 tags and a remainder counter', () => {
     const stage = { ...mockStage, topics: ['a', 'b', 'c', 'd', 'e'] }
     render(<StageCard stage={stage} index={0} />)
-    expect(screen.getByText('+2 ещё')).toBeInTheDocument()
+    expect(screen.getByText('+2 more')).toBeInTheDocument()
   })
 
-  it('применяет стиль текущей недели', () => {
+  it('applies the current week style', () => {
     const { container } = render(<StageCard stage={mockStage} index={0} isCurrentWeek />)
     const wrapper = container.firstElementChild as HTMLElement
     expect(wrapper.style.borderLeftWidth).toBe('3px')

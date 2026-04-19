@@ -52,8 +52,8 @@ async def get_today_plan(
 		id="mock",
 		plan_id="mock",
 		week_number=1,
-		title="Основы Python",
-		deliverable="Написать первый скрипт",
+		title="Python fundamentals",
+		deliverable="Write the first script",
 		status="in_progress",
 		order_index=0,
 	)

@@ -71,7 +71,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
       <div>
         <label htmlFor="goal" style={labelStyle}>
-          Какую цель хочешь достичь?
+          What goal do you want to reach?
         </label>
 
         <div style={{ position: 'relative' }}>
@@ -80,7 +80,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
             ref={textareaRef}
             value={goal}
             onChange={(event) => setGoal(event.target.value)}
-            placeholder="Например: выучить Python для анализа данных"
+            placeholder="For example: learn Python for data analysis"
             minLength={10}
             maxLength={300}
             rows={3}
@@ -111,7 +111,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
 
       <div>
         <label htmlFor="level" style={labelStyle}>
-          Уровень подготовки
+          Skill level
         </label>
         <select
           id="level"
@@ -119,15 +119,15 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
           onChange={(event) => setLevel(event.target.value as GenerateParams['level'])}
           style={fieldStyle}
         >
-          <option value="beginner">С нуля</option>
-          <option value="intermediate">Базовые знания есть</option>
-          <option value="advanced">Продвинутый</option>
+          <option value="beginner">Starting from scratch</option>
+          <option value="intermediate">Some basics already</option>
+          <option value="advanced">Advanced</option>
         </select>
       </div>
 
       <div>
         <label htmlFor="weekly-hours" style={labelStyle}>
-          Часов в неделю
+          Hours per week
         </label>
         <div
           style={{
@@ -137,7 +137,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
             marginBottom: '8px',
           }}
         >
-          {weeklyHours} ч/нед
+          {weeklyHours} h/week
         </div>
         <input
           id="weekly-hours"
@@ -153,7 +153,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
 
       <div>
         <label htmlFor="deadline" style={labelStyle}>
-          Дедлайн (необязательно)
+          Deadline, optional
         </label>
         <input
           id="deadline"
@@ -173,7 +173,7 @@ export function GoalForm({ onSubmit, loading }: GoalFormProps) {
         disabled={isDisabled}
         onClick={submit}
       >
-        Сгенерировать roadmap
+        Generate roadmap
       </Button>
     </form>
   )

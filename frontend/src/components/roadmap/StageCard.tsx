@@ -10,11 +10,11 @@ type StageCardProps = {
 
 function getStatusBadge(status: PlanStage['status']) {
   if (status === 'done') {
-    return <Badge variant="success">Выполнено</Badge>
+    return <Badge variant="success">Completed</Badge>
   }
 
   if (status === 'in_progress') {
-    return <Badge variant="default">В процессе</Badge>
+    return <Badge variant="default">In progress</Badge>
   }
 
   return null
@@ -63,7 +63,7 @@ export function StageCard({ stage, index, isCurrentWeek = false }: StageCardProp
       <Card>
         <div style={{ display: 'grid', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <Badge variant="info">Неделя {stage.week_number}</Badge>
+            <Badge variant="info">Week {stage.week_number}</Badge>
             {getStatusBadge(stage.status)}
           </div>
 
@@ -102,7 +102,7 @@ export function StageCard({ stage, index, isCurrentWeek = false }: StageCardProp
                   </Badge>
                 ))}
 
-                {hiddenTopicsCount > 0 ? <Badge variant="default">+{hiddenTopicsCount} ещё</Badge> : null}
+                {hiddenTopicsCount > 0 ? <Badge variant="default">+{hiddenTopicsCount} more</Badge> : null}
               </div>
             </>
           ) : null}

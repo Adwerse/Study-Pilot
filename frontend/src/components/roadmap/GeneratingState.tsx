@@ -67,9 +67,9 @@ export function GeneratingState() {
           <Skeleton height={14} borderRadius="var(--radius-full)" />
         </div>
 
-        <Body style={{ color: 'var(--tg-hint)', marginTop: '20px' }}>Составляю твой план...</Body>
+        <Body style={{ color: 'var(--tg-hint)', marginTop: '20px' }}>Building your plan...</Body>
         <Caption style={{ opacity: 0.6, marginTop: '8px', display: 'inline-block' }}>
-          Это займёт несколько секунд
+          This will take a few seconds
         </Caption>
       </div>
     </div>

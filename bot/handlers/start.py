@@ -20,11 +20,11 @@ async def start_handler(message: Message) -> None:
 
     logger.info("/start from telegram_id=%s username=%s", telegram_id, username)
 
-    first_name = user.first_name if user else "друг"
+    first_name = user.first_name if user else "friend"
     text = (
-        f"Привет, {first_name}! 👋\n\n"
-        "Learning OS — твой персональный менеджер обучения.\n"
-        "Нажми кнопку чтобы открыть приложение."
+        f"Hi, {first_name}! 👋\n\n"
+        "Learning OS is your personal learning manager.\n"
+        "Tap the button to open the app."
     )
 
     await message.answer(text, reply_markup=get_webapp_keyboard(settings.MINI_APP_URL))

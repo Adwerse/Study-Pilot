@@ -18,7 +18,7 @@ install-all:
 test-all:
 	cd backend && make test
 
-# Проверка что всё поднялось
+# Verify that everything is up
 check:
 	@echo "--- Health check ---"
 	@curl -s http://localhost:8000/health | python3 -m json.tool

@@ -13,30 +13,30 @@ function renderGoalForm(options?: { loading?: boolean; onSubmit?: (params: unkno
 }
 
 describe('GoalForm', () => {
-  it('кнопка задизейблена при пустой цели', () => {
+  it('disables the button when the goal is empty', () => {
     renderGoalForm()
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
-  it('кнопка активна когда цель >= 10 символов', async () => {
+  it('enables the button when the goal has at least 10 characters', async () => {
     renderGoalForm()
-    await userEvent.type(screen.getByPlaceholderText(/Например/), 'Выучить основы Python')
+    await userEvent.type(screen.getByPlaceholderText(/For example/), 'Learn Python fundamentals')
     expect(screen.getByRole('button')).not.toBeDisabled()
   })
 
-  it('вызывает onSubmit с правильными параметрами', async () => {
+  it('calls onSubmit with the correct parameters', async () => {
     const onSubmit = vi.fn()
     renderGoalForm({ onSubmit })
 
-    await userEvent.type(screen.getByPlaceholderText(/Например/), 'Выучить основы Python')
+    await userEvent.type(screen.getByPlaceholderText(/For example/), 'Learn Python fundamentals')
     await userEvent.click(screen.getByRole('button'))
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ goal: 'Выучить основы Python' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ goal: 'Learn Python fundamentals' }))
   })
 
-  it('кнопка задизейблена при loading=true', () => {
+  it('disables the button when loading=true', () => {
     renderGoalForm({ loading: true })
-    const textarea = screen.getByPlaceholderText(/Например/)
+    const textarea = screen.getByPlaceholderText(/For example/)
     expect(textarea).toBeInTheDocument()
     expect(screen.getByRole('button')).toBeDisabled()
   })

@@ -12,150 +12,150 @@ Last updated: 2026-04-19
 ### 1) Backend FastAPI Scaffold
 
 - Implemented settings, async DB session factory, app bootstrap, CORS, lifespan logs, and `/health`.
-- Added API routers for users/plans/focus/ask/analytics with placeholders.
-- Added `backend/tests` scaffold (`conftest.py`, `test_health.py`, `test_auth.py`).
-- Added test/lint dependencies in `backend/requirements.txt`.
+- Added API routers for users, plans, focus, ask, and analytics with placeholders.
+- Added `backend/tests` scaffold with `conftest.py`, `test_health.py`, and `test_auth.py`.
+- Added test and lint dependencies in `backend/requirements.txt`.
 
 ### 2) Telegram WebApp Auth (Backend)
 
-- Implemented Telegram `initData` signature validation in `backend/app/middlewares/auth.py` using stdlib `hmac` + `hashlib`.
-- Replaced `get_current_user` dependency with real `Authorization: tma <initData>` validation.
+- Implemented Telegram `initData` signature validation in `backend/app/middlewares/auth.py` using stdlib `hmac` and `hashlib`.
+- Replaced the `get_current_user` dependency with real `Authorization: tma <initData>` validation.
 - Implemented `/api/v1/users/me` to return Telegram user data from validated `initData`.
 
 ### 3) Frontend Telegram Integration
 
-- Added Telegram SDK helpers (`frontend/src/lib/telegram.ts`).
-- Added axios API client with `Authorization: tma ...` interceptor (`frontend/src/lib/api.ts`).
-- Added `useCurrentUser` hook and main app rendering state in `frontend/src/main.tsx`.
-- Added minimal Vite app bootstrap files (`frontend/package.json`, `frontend/index.html`, `frontend/tsconfig.json`, `frontend/vite.config.ts`).
+- Added Telegram SDK helpers in `frontend/src/lib/telegram.ts`.
+- Added an axios API client with an `Authorization: tma ...` interceptor in `frontend/src/lib/api.ts`.
+- Added the `useCurrentUser` hook and main app rendering state in `frontend/src/main.tsx`.
+- Added minimal Vite app bootstrap files in `frontend/package.json`, `frontend/index.html`, `frontend/tsconfig.json`, and `frontend/vite.config.ts`.
 - Added `frontend/.env` with `VITE_API_BASE_URL=http://localhost:8000`.
 
-### 4) Bot Scaffold and Runtime
+### 4) Bot Scaffold And Runtime
 
-- Implemented aiogram 3 bot scaffold (config, start handler, notifications stubs, middleware, polling/webhook entrypoint).
-- Added `/start` WebApp button (`Open Learning OS`) and logging.
-- Confirmed bot polling starts successfully and token is valid (`getMe` check passed).
+- Implemented the aiogram 3 bot scaffold with config, start handler, notification stubs, middleware, and polling/webhook entrypoint.
+- Added the `/start` WebApp button, `Open Learning OS`, and logging.
+- Confirmed that bot polling starts successfully and the token is valid with a passing `getMe` check.
 
-### 5) DevOps and Deployment Scaffold
+### 5) DevOps And Deployment Scaffold
 
-- Added nginx reverse proxy config + nginx Dockerfile.
-- Added deploy scripts (`deploy/setup.sh`, `deploy/deploy.sh`) and systemd unit (`deploy/learningos-api.service`).
+- Added nginx reverse proxy config and nginx Dockerfile.
+- Added deploy scripts in `deploy/setup.sh` and `deploy/deploy.sh`, plus the systemd unit `deploy/learningos-api.service`.
 - Added `docker-compose.yml` with local `postgres` and `redis` services.
 
 ### 6) Local Sprint 1 Validation
 
-- `docker compose up -d` passed (`postgres`, `redis` running).
-- Backend run passed: `/docs` reachable and `/health` returns `{ "status": "ok", "version": "0.1.0" }`.
+- `docker compose up -d` passed with `postgres` and `redis` running.
+- Backend run passed: `/docs` is reachable and `/health` returns `{ "status": "ok", "version": "0.1.0" }`.
 - Backend tests passed: `4 passed`.
-- Bot polling run passed; `/start` processed and WebApp button shown.
-- Confirmed Telegram contact and Mini App open flow from bot message.
+- Bot polling run passed, `/start` was processed, and the WebApp button was shown.
+- Confirmed Telegram contact and Mini App open flow from the bot message.
 - For HTTPS Mini App testing, installed tunnel tooling:
-  - `ngrok` install succeeded but requires account authtoken.
-  - `cloudflared` quick tunnel used as fallback.
-- Added tunnel host allowlist in `frontend/vite.config.ts` and corresponding CORS origin in `backend/.env`.
+- `ngrok` installation succeeded but requires an account authtoken.
+- `cloudflared` quick tunnel was used as a fallback.
+- Added a tunnel host allowlist in `frontend/vite.config.ts` and the matching CORS origin in `backend/.env`.
 
 ### 7) Frontend WebApp Bootstrap Verification (2026-04-14)
 
-Что сделано:
-- Vite + React + TypeScript инициализирован.
-- `@twa-dev/sdk` установлен и настроен.
-- `src/lib/telegram.ts` — утилиты WebApp SDK.
-- `src/lib/api.ts` — axios клиент с `tma` авторизацией.
-- Telegram script подключён в `index.html`.
-- `npm run build` — OK.
-- `npx tsc --noEmit` — OK.
-- dev-сервер отвечает на `:5173` — OK.
+What was done:
+- Initialized Vite, React, and TypeScript.
+- Installed and configured `@twa-dev/sdk`.
+- Added `src/lib/telegram.ts` with WebApp SDK utilities.
+- Added `src/lib/api.ts` with an axios client using `tma` authorization.
+- Connected the Telegram script in `index.html`.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed.
+- The dev server responds on `:5173`.
 
-## [Спринт 2] Дизайн-система
-Дата: 2026-04-15
-Статус: ✅ завершено
+## [Sprint 2] Design System
+Date: 2026-04-15
+Status: completed
 
-Что сделано:
-- src/styles/theme.css — CSS-переменные из Telegram theme params
-- src/styles/global.css — базовый reset
-- src/hooks/useTelegramTheme.ts — live-обновление темы
-- src/components/ui/ — Button, Card, Badge, Typography, Divider
-- src/pages/DevKit.tsx — витрина компонентов
-- npx tsc --noEmit — OK
-- npm run build — OK
-- dev-сервер :5173 — OK
+What was done:
+- `src/styles/theme.css` with CSS variables from Telegram theme params
+- `src/styles/global.css` with a base reset
+- `src/hooks/useTelegramTheme.ts` for live theme updates
+- `src/components/ui/` with Button, Card, Badge, Typography, and Divider
+- `src/pages/DevKit.tsx` as a component showcase
+- `npx tsc --noEmit` passed
+- `npm run build` passed
+- Dev server on `:5173` passed
 
-Порядок теста (Telegram):
-1. Проверка сборки фронта: `npx tsc --noEmit` и `npm run build`.
-2. Запуск backend: `python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
-3. Проверка backend: `GET /health` => `{"status":"ok","version":"0.1.0"}`.
-4. Запуск frontend: `npm run dev` (порт `5173`).
-5. Проверка frontend: `curl http://localhost:5173` => HTTP `200`.
-6. Поднятие HTTPS-туннелей `cloudflared` для `:8000` и `:5173`.
-7. Привязка WebApp URL в боте к frontend tunnel и проверка открытия Mini App из `/start`.
-8. Проверка в Telegram: загрузка DevKit-экрана и применение theme params (light/dark).
-9. Завершение теста: остановка `uvicorn`, `vite`, `cloudflared`, `bot`.
+Telegram test order:
+1. Verify the frontend build with `npx tsc --noEmit` and `npm run build`.
+2. Start the backend with `python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
+3. Verify the backend with `GET /health` returning `{"status":"ok","version":"0.1.0"}`.
+4. Start the frontend with `npm run dev` on port `5173`.
+5. Verify the frontend with `curl http://localhost:5173` returning HTTP `200`.
+6. Start `cloudflared` HTTPS tunnels for `:8000` and `:5173`.
+7. Point the bot WebApp URL to the frontend tunnel and verify that the Mini App opens from `/start`.
+8. Verify in Telegram that the DevKit screen loads and theme params apply in both light and dark mode.
+9. Finish the test by stopping `uvicorn`, `vite`, `cloudflared`, and `bot`.
 
-## [Спринт 2] Навигация и экраны
-Дата: 2026-04-15
-Статус: ✅ завершено
+## [Sprint 2] Navigation And Screens
+Date: 2026-04-15
+Status: completed
 
-Что сделано:
-- src/router.tsx — react-router-dom, 4 маршрута
-- src/components/layout/ — Layout, BottomNav, BottomTab
-- src/components/ui/Skeleton.tsx — shimmer-анимация
-- src/pages/ — TodayPage, RoadmapPage, KnowledgePage, AnalyticsPage
-- Bottom tabs с SVG-иконками и active-состоянием
-- safe-area-inset-bottom для iPhone
-- npx tsc --noEmit — OK
-- npm run build — OK
+What was done:
+- `src/router.tsx` with `react-router-dom` and 4 routes
+- `src/components/layout/` with Layout, BottomNav, and BottomTab
+- `src/components/ui/Skeleton.tsx` with shimmer animation
+- `src/pages/` with TodayPage, RoadmapPage, KnowledgePage, and AnalyticsPage
+- Bottom tabs with SVG icons and active state
+- `safe-area-inset-bottom` support for iPhone
+- `npx tsc --noEmit` passed
+- `npm run build` passed
 
-## [Спринт 2] API клиент + хуки
-Дата: 2026-04-16
-Статус: ✅ завершено
+## [Sprint 2] API Client And Hooks
+Date: 2026-04-16
+Status: completed
 
-Что сделано:
-- src/types/api.ts — все типы сущностей
-- src/lib/api.ts — axios instance + interceptors + apiClient методы
-- src/hooks/useApi.ts — универсальный хук с AbortController
-- src/hooks/useCurrentUser.ts, usePlan.ts, useFocus.ts, useAnalytics.ts
-- Хуки подключены к четырём экранам (данные или скелетоны)
-- npx tsc --noEmit — OK
-- npm run build — OK
+What was done:
+- `src/types/api.ts` with all entity types
+- `src/lib/api.ts` with the axios instance, interceptors, and `apiClient` methods
+- `src/hooks/useApi.ts` as a reusable hook with `AbortController`
+- `src/hooks/useCurrentUser.ts`, `usePlan.ts`, `useFocus.ts`, and `useAnalytics.ts`
+- Hooks connected to four screens for either data or skeleton states
+- `npx tsc --noEmit` passed
+- `npm run build` passed
 
-## [Спринт 3] Roadmap Agent
-Дата: 2026-04-17
-Статус: ✅ завершено
+## [Sprint 3] Roadmap Agent
+Date: 2026-04-17
+Status: completed
 
-Что сделано:
-- app/agents/llm_client.py — Tensorix AsyncOpenAI клиент (deepseek/deepseek-chat-v3.1)
-- app/agents/prompts/roadmap.py — system + user промпты
-- app/agents/roadmap.py — RoadmapAgent с валидацией JSON
-- POST /api/v1/plans — подключён к агенту
-- tests/test_roadmap_agent.py — интеграционный тест с реальным LLM
-- Тест пройден: LLM возвращает валидный план ✅
+What was done:
+- `app/agents/llm_client.py` with a Tensorix AsyncOpenAI client using `deepseek/deepseek-chat-v3.1`
+- `app/agents/prompts/roadmap.py` with system and user prompts
+- `app/agents/roadmap.py` with `RoadmapAgent` and JSON validation
+- `POST /api/v1/plans` connected to the agent
+- `tests/test_roadmap_agent.py` as an integration test with a real LLM
+- Test passed and the LLM returns a valid plan
 
-## [Спринт 3] Daily Coach Agent
-Дата: 2026-04-19
-Статус: ✅ завершено
+## [Sprint 3] Daily Coach Agent
+Date: 2026-04-19
+Status: completed
 
-Что сделано:
-- app/agents/prompts/daily_coach.py — system + user промпты
-- app/schemas/focus_block.py — FocusBlock, DailyPlan (Pydantic v2)
-- app/agents/daily_coach.py — DailyCoachAgent с валидацией через Pydantic
-- GET /api/v1/plans/current/today — подключён к агенту
-- tests/test_daily_coach.py — 4 unit-теста с мок LLM ✅
-- tests/test_daily_coach_integration.py — интеграционный тест ✅
+What was done:
+- `app/agents/prompts/daily_coach.py` with system and user prompts
+- `app/schemas/focus_block.py` with `FocusBlock` and `DailyPlan` on Pydantic v2
+- `app/agents/daily_coach.py` with `DailyCoachAgent` validated through Pydantic
+- `GET /api/v1/plans/current/today` connected to the agent
+- `tests/test_daily_coach.py` with 4 unit tests using a mocked LLM
+- `tests/test_daily_coach_integration.py` as an integration test
 
 ## Backlog (Alpha)
-Дата: 2026-04-18
-Статус: 🟡 в работе
+Date: 2026-04-18
+Status: in progress
 
-- Альфа-версия Roadmap miniapp зафиксирована как текущий этап.
-- Проблема: тупняк/нестабильная генерация roadmap при слишком близких датах дедлайна.
-- Проблема: roadmap не сохраняется и теряется при переключении на другие вкладки.
+- The alpha version of the Roadmap mini app is locked in as the current stage.
+- Issue: roadmap generation becomes unstable when the deadline is too close.
+- Issue: roadmap is not persisted and gets lost when switching to other tabs.
 
 ## Current Follow-ups
 
-- Replace placeholder API endpoints (plans/focus/ask/analytics/users update/delete) with real logic.
-- For stable Mini App testing, replace temporary tunnel URL with permanent HTTPS domain.
-- Keep backend/bot/frontend `.env` values aligned for production.
-- Add CI pipeline for tests + lint and formal release workflow.
+- Replace placeholder API endpoints in plans, focus, ask, analytics, and user update/delete with real logic.
+- Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
+- Keep backend, bot, and frontend `.env` values aligned for production.
+- Add a CI pipeline for tests and lint, plus a formal release workflow.
 
 ## Notes
 

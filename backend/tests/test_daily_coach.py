@@ -10,21 +10,21 @@ MOCK_LLM_RESPONSE = '''
 {
   "blocks": [
     {
-      "title": "Разобрать переменные и типы",
-      "topic": "Основы Python",
+      "title": "Review variables and types",
+      "topic": "Python fundamentals",
       "duration_minutes": 25,
-      "description": "Изучить int, str, list, dict",
+      "description": "Study int, str, list, and dict",
       "priority": 1
     },
     {
-      "title": "Написать первый скрипт",
-      "topic": "Практика",
+      "title": "Write the first script",
+      "topic": "Practice",
       "duration_minutes": 40,
-      "description": "Hello world и базовые операции",
+      "description": "Hello world and basic operations",
       "priority": 2
     }
   ],
-  "daily_note": "Отличное начало — два блока хватит для первого дня."
+  "daily_note": "Great start. Two blocks are enough for the first day."
 }
 '''
 
@@ -35,8 +35,8 @@ def mock_stage() -> PlanStage:
         id="test-1",
         plan_id="plan-1",
         week_number=1,
-        title="Основы Python",
-        deliverable="Написать первый скрипт",
+        title="Python fundamentals",
+        deliverable="Write the first script",
         status="in_progress",
         order_index=0,
     )
@@ -74,10 +74,10 @@ async def test_blocks_count_within_bounds(mock_stage: PlanStage) -> None:
 async def test_invalid_json_raises_value_error(mock_stage: PlanStage) -> None:
     with patch(
         "app.agents.daily_coach.complete",
-        new=AsyncMock(return_value="это не json"),
+        new=AsyncMock(return_value="this is not json"),
     ):
         agent = DailyCoachAgent()
-        with pytest.raises(ValueError, match="невалидный JSON"):
+        with pytest.raises(ValueError, match="invalid JSON"):
             await agent.generate_plan(stage=mock_stage)
 
 
@@ -94,8 +94,8 @@ async def test_topics_today_passed_to_prompt(mock_stage: PlanStage) -> None:
         agent = DailyCoachAgent()
         await agent.generate_plan(
             stage=mock_stage,
-            topics_today=["Переменные", "Типы данных"],
+            topics_today=["Variables", "Data types"],
         )
 
-    assert "Переменные" in captured["user_msg"]
-    assert "Типы данных" in captured["user_msg"]
+    assert "Variables" in captured["user_msg"]
+    assert "Data types" in captured["user_msg"]

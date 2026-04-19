@@ -33,9 +33,9 @@ export function RoadmapPage() {
 							gap: '12px',
 						}}
 					>
-						<Body style={{ color: 'var(--tg-destructive)' }}>{error ?? 'Не удалось загрузить roadmap'}</Body>
+						<Body style={{ color: 'var(--tg-destructive)' }}>{error ?? 'Failed to load roadmap'}</Body>
 						<Button variant="destructive" size="md" onClick={reset}>
-							Попробовать снова
+							Try again
 						</Button>
 					</div>
 				</Card>
@@ -47,9 +47,9 @@ export function RoadmapPage() {
 		return (
 			<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
 				<div>
-					<Title>Поставь цель</Title>
+					<Title>Set a goal</Title>
 					<Caption style={{ display: 'block', marginTop: '4px' }}>
-						Расскажи что хочешь изучить - составлю план по неделям
+						Tell me what you want to learn and I will break it down into a weekly plan
 					</Caption>
 				</div>
 
@@ -66,12 +66,12 @@ export function RoadmapPage() {
 				<div>
 					<Title style={{ marginBottom: '4px' }}>{plan?.title ?? 'Roadmap'}</Title>
 					<Caption>
-						{stages.length} недель · {totalHours} ч
+						{stages.length} weeks · {totalHours} h
 					</Caption>
 				</div>
 
 				<Button variant="ghost" size="sm" onClick={reset}>
-					Пересоздать
+					Regenerate
 				</Button>
 			</div>
 

@@ -15,8 +15,8 @@ class DailyCoachAgent:
         topics_today: list[str] | None = None,
         available_hours: float = 2.0,
     ) -> DailyPlan:
-        topics_str = ", ".join(stage.topics) if hasattr(stage, "topics") and stage.topics else "не указаны"
-        done_topics_str = ", ".join(topics_today or []) or "ничего"
+        topics_str = ", ".join(stage.topics) if hasattr(stage, "topics") and stage.topics else "not specified"
+        done_topics_str = ", ".join(topics_today or []) or "none"
 
         user_msg = DAILY_COACH_USER.format(
             stage_title=stage.title,
@@ -41,7 +41,7 @@ class DailyCoachAgent:
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            raise ValueError(f"LLM вернул невалидный JSON: {e}\\nRaw: {raw[:300]}") from e
+            raise ValueError(f"LLM returned invalid JSON: {e}\\nRaw: {raw[:300]}") from e
 
         return DailyPlan.model_validate(data)
 
