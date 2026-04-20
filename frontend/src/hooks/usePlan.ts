@@ -1,23 +1,10 @@
 import { apiClient } from '../lib/api'
-import type { Plan, PlanStage } from '../types/api'
+import type { DailyPlan, FocusBlock, Plan } from '../types/api'
 import { useApi } from './useApi'
 
-type TodayTasksResponse = PlanStage[] | { tasks: PlanStage[] }
-
-function extractTasks(response: TodayTasksResponse | null): PlanStage[] {
-	if (!response) {
-		return []
-	}
-
-	if (Array.isArray(response)) {
-		return response
-	}
-
-	if (Array.isArray(response.tasks)) {
-		return response.tasks
-	}
-
-	return []
+interface LegacyTodayTask extends FocusBlock {
+	id: string
+	deliverable: string
 }
 
 export function usePlan() {
@@ -27,8 +14,13 @@ export function usePlan() {
 }
 
 export function useTodayTasks() {
-	const { data, loading, error, refetch } = useApi<TodayTasksResponse>((signal) => apiClient.getToday(signal))
-	const tasks = extractTasks(data)
+	const { data, loading, error, refetch } = useApi<DailyPlan>((signal) => apiClient.getToday(signal))
+	const tasks: LegacyTodayTask[] =
+		data?.blocks.map((block, index) => ({
+			...block,
+			id: `${index}`,
+			deliverable: block.description,
+		})) ?? []
 
 	return { tasks, loading, error, refetch }
 }

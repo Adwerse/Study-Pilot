@@ -54,7 +54,9 @@ export function useFocus(): FocusState & {
 			setStartedAt(sessionStart)
 			setElapsed(0)
 		} catch (focusError) {
-			setError(normalizeApiError(focusError))
+			const normalizedError = normalizeApiError(focusError)
+			setError(normalizedError)
+			throw normalizedError
 		} finally {
 			setLoading(false)
 		}
@@ -75,7 +77,9 @@ export function useFocus(): FocusState & {
 				setStartedAt(null)
 				setElapsed(0)
 			} catch (focusError) {
-				setError(normalizeApiError(focusError))
+				const normalizedError = normalizeApiError(focusError)
+				setError(normalizedError)
+				throw normalizedError
 			} finally {
 				setLoading(false)
 			}

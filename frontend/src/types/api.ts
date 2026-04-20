@@ -27,6 +27,20 @@ export interface PlanStage {
 	order_index: number
 }
 
+// Daily plan
+export interface FocusBlock {
+	title: string
+	topic: string
+	duration_minutes: number
+	description: string
+	priority: 1 | 2 | 3 | 4
+}
+
+export interface DailyPlan {
+	blocks: FocusBlock[]
+	daily_note: string
+}
+
 // Plan
 export interface Plan {
 	id: string

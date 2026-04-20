@@ -142,6 +142,20 @@ What was done:
 - `tests/test_daily_coach.py` with 4 unit tests using a mocked LLM
 - `tests/test_daily_coach_integration.py` as an integration test
 
+## [Спринт 3] Экран "Сегодня"
+Дата: 2026-04-20
+Статус: ✅ завершено
+
+Что сделано:
+- `src/hooks/useTodayPlan.ts` — параллельные запросы + sessionStorage прогресс
+- `src/components/today/StageProgress.tsx` — прогресс-бар этапа (4 теста ✅)
+- `src/components/today/FocusBlockCard.tsx` — карточка блока, 4 состояния (5 тестов ✅)
+- `src/components/today/DailyNote.tsx` — заметка дня
+- `src/pages/TodayPage.tsx` — полный экран, 4 состояния
+- `npx tsc --noEmit` — OK
+- `npm run build` — OK
+- `npm run test` — все тесты зелёные ✅
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
