@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-19
+Last updated: 2026-04-20
 
 ## Repository Context
 
@@ -156,17 +156,35 @@ What was done:
 - `npm run build` — OK
 - `npm run test` — все тесты зелёные ✅
 
+## [Спринт 3] Связка Roadmap ↔ Daily Coach
+Дата: 2026-04-20
+Статус: ✅ завершено
+
+Что сделано:
+- `backend/app/api/plans.py` — `POST /plans` сохраняет roadmap в runtime-хранилище
+- `backend/app/api/plans.py` — `GET /plans/current` возвращает текущий сохранённый план
+- `backend/app/api/plans.py` — `GET /plans/current/today` генерирует Daily Coach из реального текущего этапа
+- `backend/app/api/focus.py` — реализованы `POST /focus/start`, `POST /focus/end`, `GET /focus/history`
+- `backend/app/repositories/runtime_store.py` — добавлено user-scoped in-memory состояние: plan/stages/focus history
+- `backend/app/schemas/focus_session.py` — добавлена схема `FocusSession`
+- `backend/tests/test_plan_persistence.py` — добавлены тесты на сохранение roadmap и использование истории focus в today-plan
+- `pytest tests/test_plan_persistence.py tests/test_daily_coach.py -v` — 6 passed ✅
+
+Текущий лимит реализации:
+- Сохранение roadmap/focus реализовано в памяти процесса (runtime store).
+- После рестарта backend состояние сбрасывается; постоянное хранение в PostgreSQL остаётся следующим шагом.
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
 
 - The alpha version of the Roadmap mini app is locked in as the current stage.
 - Issue: roadmap generation becomes unstable when the deadline is too close.
-- Issue: roadmap is not persisted and gets lost when switching to other tabs.
 
 ## Current Follow-ups
 
-- Replace placeholder API endpoints in plans, focus, ask, analytics, and user update/delete with real logic.
+- Move runtime roadmap/focus persistence from in-memory store to PostgreSQL.
+- Replace placeholder API endpoints in ask, analytics, and user update/delete with real logic.
 - Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
 - Keep backend, bot, and frontend `.env` values aligned for production.
 - Add a CI pipeline for tests and lint, plus a formal release workflow.
