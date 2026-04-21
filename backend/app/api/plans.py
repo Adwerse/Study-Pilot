@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.daily_coach import daily_coach_agent
@@ -12,7 +13,13 @@ from app.api.dependencies import get_current_user
 from app.database import get_db
 from app.models.plan import PlanStage as PlanStageModel
 from app.repositories.plan_repository import PlanRepository
-from app.repositories.runtime_store import get_today_focus_summary, get_user_key
+from app.repositories.runtime_store import (
+    get_current_stage as get_runtime_current_stage,
+    get_plan as get_saved_plan,
+    get_today_focus_summary,
+    get_user_key,
+    save_plan,
+)
 from app.schemas.focus_block import DailyPlan
 from app.schemas.plan import PlanRead, PlanStage, PlanStageStatusUpdate
 
@@ -54,8 +61,33 @@ async def resolve_user_id(db: AsyncSession, current_user: dict) -> UUID:
 async def get_owned_plan_or_404(repo: PlanRepository, plan_id: UUID, user_id: UUID):
     plan = await repo.get_by_id(plan_id)
     if not plan or plan.user_id != user_id:
-        raise HTTPException(status_code=404, detail="План не найден")
+        raise HTTPException(status_code=404, detail="Plan not found")
     return plan
+
+
+def build_stage_payload(stage: PlanStageModel) -> PlanStage:
+    return PlanStage(
+        id=str(stage.id),
+        plan_id=str(stage.plan_id),
+        week_number=stage.week_number,
+        title=stage.title,
+        deliverable=stage.deliverable,
+        status=stage.status,
+        order_index=stage.order_index,
+    )
+
+
+async def generate_daily_plan_for_stage(stage: PlanStage, current_user: dict) -> DailyPlan:
+    completed_today, minutes_today, topics_today = get_today_focus_summary(get_user_key(current_user), date.today())
+    available_hours = max(0.5, 2.0 - (minutes_today / 60))
+
+    return await daily_coach_agent.generate_plan(
+        stage=stage,
+        completed_today=completed_today,
+        minutes_today=minutes_today,
+        topics_today=topics_today,
+        available_hours=available_hours,
+    )
 
 
 @router.post("/", response_model=PlanRead)
@@ -64,6 +96,7 @@ async def create_plan(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    user_key = get_user_key(current_user)
     repo = PlanRepository(db)
     llm_result = await roadmap_agent.generate(
         goal=body.goal,
@@ -71,13 +104,16 @@ async def create_plan(
         weekly_hours=body.weekly_hours,
         deadline=body.deadline,
     )
-    user_id = await resolve_user_id(db, current_user)
-    plan = await repo.create(
-        user_id=user_id,
-        title=llm_result["title"],
-        stages_data=llm_result["stages"],
-    )
-    return plan
+
+    try:
+        user_id = await resolve_user_id(db, current_user)
+        return await repo.create(
+            user_id=user_id,
+            title=llm_result["title"],
+            stages_data=llm_result["stages"],
+        )
+    except (SQLAlchemyError, OSError):
+        return save_plan(user_key, llm_result)
 
 
 @router.get("/current", response_model=PlanRead)
@@ -85,12 +121,22 @@ async def get_current_plan(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    user_key = get_user_key(current_user)
     repo = PlanRepository(db)
-    user_id = await resolve_user_id(db, current_user)
-    plan = await repo.get_active_by_user(user_id)
-    if not plan:
-        raise HTTPException(status_code=404, detail="Активный план не найден")
-    return plan
+
+    try:
+        user_id = await resolve_user_id(db, current_user)
+        plan = await repo.get_active_by_user(user_id)
+        if plan:
+            return plan
+    except (SQLAlchemyError, OSError):
+        pass
+
+    saved_plan = get_saved_plan(user_key)
+    if saved_plan:
+        return saved_plan
+
+    raise HTTPException(status_code=404, detail="Active plan not found")
 
 
 @router.get("/current/today", response_model=DailyPlan)
@@ -98,34 +144,24 @@ async def get_today(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    user_key = get_user_key(current_user)
     repo = PlanRepository(db)
-    user_id = await resolve_user_id(db, current_user)
-    plan = await repo.get_active_by_user(user_id)
-    if not plan:
-        raise HTTPException(status_code=404, detail="Активный план не найден")
 
-    stage = await repo.get_current_stage(plan.id)
-    if not stage:
-        raise HTTPException(status_code=404, detail="Текущий этап не найден")
+    try:
+        user_id = await resolve_user_id(db, current_user)
+        plan = await repo.get_active_by_user(user_id)
+        if plan:
+            stage = await repo.get_current_stage(plan.id)
+            if stage:
+                return await generate_daily_plan_for_stage(build_stage_payload(stage), current_user)
+    except (SQLAlchemyError, OSError):
+        pass
 
-    completed_today, minutes_today, topics_today = get_today_focus_summary(get_user_key(current_user), date.today())
-    available_hours = max(0.5, 2.0 - (minutes_today / 60))
+    runtime_stage = get_runtime_current_stage(user_key)
+    if runtime_stage:
+        return await generate_daily_plan_for_stage(PlanStage.model_validate(runtime_stage), current_user)
 
-    return await daily_coach_agent.generate_plan(
-        stage=PlanStage(
-            id=str(stage.id),
-            plan_id=str(stage.plan_id),
-            week_number=stage.week_number,
-            title=stage.title,
-            deliverable=stage.deliverable,
-            status=stage.status,
-            order_index=stage.order_index,
-        ),
-        completed_today=completed_today,
-        minutes_today=minutes_today,
-        topics_today=topics_today,
-        available_hours=available_hours,
-    )
+    raise HTTPException(status_code=404, detail="Current stage not found")
 
 
 @router.get("/{plan_id}", response_model=PlanRead)
@@ -175,7 +211,7 @@ async def recalculate_plan(
     await db.commit()
     updated_plan = await repo.get_by_id(plan_id)
     if not updated_plan:
-        raise HTTPException(status_code=404, detail="План не найден")
+        raise HTTPException(status_code=404, detail="Plan not found")
     return updated_plan
 
 

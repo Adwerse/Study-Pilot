@@ -1,7 +1,7 @@
 from copy import deepcopy
 from datetime import date, datetime, timezone
 from typing import Any
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from app.schemas.focus_session import FocusSession
 
@@ -83,7 +83,7 @@ def save_plan(user_key: str, roadmap_result: dict[str, Any]) -> dict[str, Any]:
 
     plan = {
         "id": plan_id,
-        "user_id": user_key,
+        "user_id": str(uuid5(NAMESPACE_URL, f"user:{user_key}")),
         "title": str(roadmap_result.get("title") or "Learning Plan"),
         "status": "active",
         "generated_at": now_iso,

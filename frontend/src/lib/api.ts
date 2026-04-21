@@ -22,7 +22,20 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 })
 
+function isApiError(error: unknown): error is ApiError {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  const maybeApiError = error as Partial<ApiError>
+  return typeof maybeApiError.detail === 'string' && typeof maybeApiError.status === 'number'
+}
+
 export function normalizeApiError(error: unknown): ApiError {
+  if (isApiError(error)) {
+    return error
+  }
+
   const axiosError = error as AxiosError<{ detail?: string | string[] }>
   const status = axiosError?.response?.status ?? 500
   const rawDetail = axiosError?.response?.data?.detail
