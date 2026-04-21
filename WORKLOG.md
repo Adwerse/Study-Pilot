@@ -174,6 +174,26 @@ What was done:
 - Сохранение roadmap/focus реализовано в памяти процесса (runtime store).
 - После рестарта backend состояние сбрасывается; постоянное хранение в PostgreSQL остаётся следующим шагом.
 
+## [Sprint 3] Plan API
+Date: 2026-04-21
+Status: completed
+
+What was done:
+- `app/models/plan.py` with ORM `Plan` and `PlanStage` plus relationship mapping
+- `app/repositories/plan_repository.py` with create/get/update helpers and current-stage lookup
+- `app/schemas/plan.py` with `PlanRead`, `PlanStageRead`, and `PlanStageStatusUpdate`
+- `app/api/plans.py` with 6 DB-backed endpoints wired to the roadmap and daily coach agents
+- `tests/test_plan_repository.py` with 4 unit tests using a mocked DB
+- Verified app startup and OpenAPI exposure for `plans`
+
+Checks:
+- ORM import check passed
+- Repository import check passed
+- Plan schema import check passed
+- `GET /health` returned `{"status":"ok","version":"0.1.0"}`
+- `pytest tests/test_plan_repository.py -v` passed with `4 passed`
+- OpenAPI contains `/api/v1/plans`
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
@@ -183,7 +203,7 @@ Status: in progress
 
 ## Current Follow-ups
 
-- Move runtime roadmap/focus persistence from in-memory store to PostgreSQL.
+- Move remaining focus persistence from in-memory store to PostgreSQL.
 - Replace placeholder API endpoints in ask, analytics, and user update/delete with real logic.
 - Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
 - Keep backend, bot, and frontend `.env` values aligned for production.
