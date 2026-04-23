@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-20
+Last updated: 2026-04-23
 
 ## Repository Context
 
@@ -194,6 +194,26 @@ Checks:
 - `pytest tests/test_plan_repository.py -v` passed with `4 passed`
 - OpenAPI contains `/api/v1/plans`
 
+## [Спринт 4] Focus Agent
+Дата: 2026-04-23
+Статус: ✅ завершено
+
+Что сделано:
+- `app/models/focus_log.py` — ORM FocusLog
+- `app/schemas/focus_log.py` — FocusSessionStart, FocusSessionEnd, FocusSessionRead
+- `app/repositories/user_repository.py` — get_or_create_by_telegram_id
+- `app/repositories/focus_repository.py` — start, end, active, history, today
+- `app/agents/focus.py` — FocusAgent: сообщения, логика перерывов, reminder
+- `app/api/focus.py` — 4 эндпоинта: start, end, active, history
+- `app/api/focus.py` — `user_id` резолвится через UserRepository, не через `UUID(int=telegram_id)`
+- `tests/test_focus_agent.py` — 5 unit-тестов ✅
+- `tests/test_focus_repository.py` — 3 unit-теста ✅
+- `8` тестов — все зелёные ✅
+
+Известные ограничения:
+- Пауза не реализована (out of scope спринта 4)
+- Уведомления бота — TODO, подключить после интеграции бота с бэком
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
@@ -203,7 +223,6 @@ Status: in progress
 
 ## Current Follow-ups
 
-- Move remaining focus persistence from in-memory store to PostgreSQL.
 - Replace placeholder API endpoints in ask, analytics, and user update/delete with real logic.
 - Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
 - Keep backend, bot, and frontend `.env` values aligned for production.

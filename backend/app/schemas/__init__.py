@@ -1,4 +1,4 @@
-from .focus_log import FocusLogCreate, FocusLogRead
+from .focus_log import FocusSessionEnd, FocusSessionRead, FocusSessionStart
 from .focus_session import FocusSession
 from .focus_block import DailyPlan, FocusBlock
 from .metrics import MetricsCreate, MetricsRead
@@ -13,8 +13,9 @@ __all__ = [
     "PlanRead",
     "PlanStageCreate",
     "PlanStageRead",
-    "FocusLogCreate",
-    "FocusLogRead",
+    "FocusSessionStart",
+    "FocusSessionEnd",
+    "FocusSessionRead",
     "FocusSession",
     "FocusBlock",
     "DailyPlan",
