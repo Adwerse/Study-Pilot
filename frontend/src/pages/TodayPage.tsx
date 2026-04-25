@@ -17,6 +17,7 @@ export function TodayPage() {
 	const navigate = useNavigate()
 	const { plan, stage, loading, error, refetch, completedBlocks, markBlockDone } = useTodayPlan()
 	const [activeBlockIndex, setActiveBlockIndex] = useState<number | null>(null)
+	const [pomodoroCounts, setPomodoroCounts] = useState<Record<number, number>>({})
 	const formattedDate = useMemo(() => dateFormatter.format(new Date()).replace(/\.$/, ''), [])
 
 	if (loading) {
@@ -82,6 +83,7 @@ export function TodayPage() {
 
 	const allBlocksCompleted = plan.blocks.length > 0 && completedBlocks.length === plan.blocks.length
 	const activeBlock = activeBlockIndex !== null ? plan.blocks[activeBlockIndex] : null
+	const getPomodoroCount = (blockIndex: number) => pomodoroCounts[blockIndex] ?? 1
 
 	const handleSessionComplete = () => {
 		if (activeBlockIndex !== null) {
@@ -132,6 +134,10 @@ export function TodayPage() {
 								index={index}
 								isDone={blockIsDone}
 								isActive={blockIsActive}
+								pomodoroCount={getPomodoroCount(index)}
+								onPomodoroCountChange={(count) => {
+									setPomodoroCounts((previous) => ({ ...previous, [index]: count }))
+								}}
 								onStart={() => {
 									setActiveBlockIndex(index)
 								}}
@@ -186,6 +192,7 @@ export function TodayPage() {
 						<PomodoroScreen
 							suggestedTopic={activeBlock.topic}
 							stageId={stage?.id}
+							pomodoroCount={getPomodoroCount(activeBlockIndex)}
 							onSessionComplete={handleSessionComplete}
 						/>
 					</div>

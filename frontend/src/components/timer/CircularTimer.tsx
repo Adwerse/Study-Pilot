@@ -1,4 +1,4 @@
-type CircularTimerStatus = 'idle' | 'running' | 'finished'
+type CircularTimerStatus = 'idle' | 'running' | 'paused' | 'finished'
 
 export type CircularTimerProps = {
 	remaining: number
@@ -20,11 +20,15 @@ function getCaption(status: CircularTimerStatus): string {
 		return 'remaining'
 	}
 
+	if (status === 'paused') {
+		return 'paused'
+	}
+
 	if (status === 'finished') {
 		return 'done!'
 	}
 
-	return '25:00'
+	return 'ready'
 }
 
 export function CircularTimer({ remaining, progress, status, size = 220 }: CircularTimerProps) {
@@ -64,7 +68,7 @@ export function CircularTimer({ remaining, progress, status, size = 220 }: Circu
 				cy={center}
 				r={radius}
 				fill="none"
-				stroke={status === 'finished' ? 'var(--tg-success)' : 'var(--tg-button)'}
+				stroke={status === 'finished' ? 'var(--tg-success)' : status === 'paused' ? 'var(--tg-hint)' : 'var(--tg-button)'}
 				strokeWidth={8}
 				strokeLinecap="round"
 				strokeDasharray={circumference}
@@ -91,14 +95,7 @@ export function CircularTimer({ remaining, progress, status, size = 220 }: Circu
 				textAnchor="middle"
 				dominantBaseline="central"
 			>
-				{status === 'idle' ? (
-					<>
-						<tspan>25</tspan>
-						<tspan>:00</tspan>
-					</>
-				) : (
-					caption
-				)}
+				{caption}
 			</text>
 		</svg>
 	)

@@ -8,6 +8,8 @@ type FocusBlockCardProps = {
 	index: number
 	isDone: boolean
 	isActive: boolean
+	pomodoroCount?: number
+	onPomodoroCountChange?: (count: number) => void
 	onStart: () => void
 	onMarkDone: () => void
 }
@@ -25,8 +27,18 @@ function getPriorityMeta(priority: FocusBlock['priority']): { label: string; var
 	}
 }
 
-export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMarkDone }: FocusBlockCardProps) {
+export function FocusBlockCard({
+	block,
+	index,
+	isDone,
+	isActive,
+	pomodoroCount = 1,
+	onPomodoroCountChange,
+	onStart,
+	onMarkDone,
+}: FocusBlockCardProps) {
 	const priority = getPriorityMeta(block.priority)
+	const safePomodoroCount = Math.min(5, Math.max(1, pomodoroCount))
 	const wrapperStyle: CSSProperties = {
 		opacity: isDone ? 0.55 : 1,
 		pointerEvents: isDone ? 'none' : 'auto',
@@ -82,7 +94,33 @@ export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMark
 				<div>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
 						<Badge variant={priority.variant}>{priority.label}</Badge>
-						<Caption style={{ color: 'var(--tg-hint)' }}>{block.duration_minutes} min</Caption>
+						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+							<Caption style={{ color: 'var(--tg-hint)' }}>{block.duration_minutes} min</Caption>
+							<select
+								aria-label="Pomodoro count"
+								value={safePomodoroCount}
+								disabled={isDone || isActive}
+								onChange={(event) => onPomodoroCountChange?.(Number(event.target.value))}
+								style={{
+									height: '30px',
+									border: 'none',
+									borderRadius: 'var(--radius-full)',
+									background: 'var(--tg-bg)',
+									color: 'var(--tg-text)',
+									fontSize: 'var(--text-xs)',
+									fontWeight: 600,
+									padding: '0 8px',
+									opacity: isDone || isActive ? 0.55 : 1,
+									cursor: isDone || isActive ? 'default' : 'pointer',
+								}}
+							>
+								{[1, 2, 3, 4, 5].map((count) => (
+									<option key={count} value={count}>
+										{count}x
+									</option>
+								))}
+							</select>
+						</div>
 					</div>
 
 					<Subtitle

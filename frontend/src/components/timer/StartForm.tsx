@@ -5,12 +5,14 @@ type StartFormProps = {
 	onStart: (topic: string) => void
 	loading: boolean
 	suggestedTopic?: string
+	pomodoroCount?: number
 }
 
-export function StartForm({ onStart, loading, suggestedTopic }: StartFormProps) {
+export function StartForm({ onStart, loading, suggestedTopic, pomodoroCount = 1 }: StartFormProps) {
 	const [topic, setTopic] = useState(suggestedTopic ?? '')
 	const inputRef = useRef<HTMLInputElement>(null)
 	const isDisabled = topic.trim().length < 3 || loading
+	const totalMinutes = pomodoroCount * 25
 
 	useEffect(() => {
 		inputRef.current?.focus()
@@ -40,7 +42,9 @@ export function StartForm({ onStart, loading, suggestedTopic }: StartFormProps) 
 				/>
 			</label>
 
-			<Caption style={{ display: 'block' }}>25 minutes of deep work</Caption>
+			<Caption style={{ display: 'block' }}>
+				{pomodoroCount} pomodoro{pomodoroCount === 1 ? '' : 's'} - {totalMinutes} minutes of deep work
+			</Caption>
 
 			<Button
 				variant="primary"

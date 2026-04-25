@@ -8,6 +8,7 @@ import { StartForm } from './StartForm'
 type PomodoroScreenProps = {
 	suggestedTopic?: string
 	stageId?: string
+	pomodoroCount?: number
 	onSessionComplete?: () => void
 }
 
@@ -18,12 +19,24 @@ const centeredStackStyle = {
 	width: '100%',
 } as const
 
-export function PomodoroScreen({ suggestedTopic, stageId, onSessionComplete }: PomodoroScreenProps) {
-	const { status, topic, remaining, progress, loading, error, start, stop } = usePomodoro()
+export function PomodoroScreen({ suggestedTopic, stageId, pomodoroCount = 1, onSessionComplete }: PomodoroScreenProps) {
+	const {
+		status,
+		topic,
+		pomodoroCount: activePomodoroCount,
+		remaining,
+		progress,
+		loading,
+		error,
+		start,
+		pause,
+		resume,
+		stop,
+	} = usePomodoro(pomodoroCount)
 	const [showPicker, setShowPicker] = useState(false)
 
 	useEffect(() => {
-		if (status !== 'running') {
+		if (status !== 'running' && status !== 'paused') {
 			setShowPicker(false)
 		}
 	}, [status])
@@ -46,9 +59,10 @@ export function PomodoroScreen({ suggestedTopic, stageId, onSessionComplete }: P
 		return (
 			<div style={{ width: '100%', display: 'grid', gap: '16px' }}>
 				<StartForm
-					onStart={(nextTopic) => start(nextTopic, stageId)}
+					onStart={(nextTopic) => start(nextTopic, stageId, pomodoroCount)}
 					loading={loading}
 					suggestedTopic={suggestedTopic}
+					pomodoroCount={activePomodoroCount}
 				/>
 				{error ? <Body style={{ color: 'var(--tg-destructive)' }}>{error}</Body> : null}
 			</div>
@@ -72,8 +86,16 @@ export function PomodoroScreen({ suggestedTopic, stageId, onSessionComplete }: P
 	return (
 		<div style={{ ...centeredStackStyle, gap: '32px', textAlign: 'center' }}>
 			<CircularTimer remaining={remaining} progress={progress} status={status} />
-			<Caption style={{ color: 'var(--tg-text)', fontWeight: 500 }}>{topic}</Caption>
-			<div style={{ display: 'grid', gap: '10px', justifyItems: 'center' }}>
+			<div style={{ display: 'grid', gap: '6px' }}>
+				<Caption style={{ color: 'var(--tg-text)', fontWeight: 500 }}>{topic}</Caption>
+				<Caption>
+					{activePomodoroCount} pomodoro{activePomodoroCount === 1 ? '' : 's'}
+				</Caption>
+			</div>
+			<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+				<Button variant="secondary" size="sm" onClick={status === 'paused' ? resume : pause}>
+					{status === 'paused' ? 'Resume' : 'Pause'}
+				</Button>
 				<Button variant="ghost" size="sm" onClick={() => setShowPicker(true)}>
 					Stop
 				</Button>
