@@ -214,6 +214,26 @@ Checks:
 - Пауза не реализована (out of scope спринта 4)
 - Уведомления бота — TODO, подключить после интеграции бота с бэком
 
+## [Спринт 4] Pomodoro-таймер
+Дата: 2026-04-25
+Статус: ✅ завершено
+
+Что сделано:
+- `src/hooks/usePomodoro.ts` — polling 5s + локальный тик каждую секунду
+- `src/lib/api.ts` — добавлен `apiClient.getActiveSession`
+- `src/components/timer/CircularTimer.tsx` — SVG таймер (4 теста ✅)
+- `src/components/timer/DifficultyPicker.tsx` — bottom sheet оценки (3 теста ✅)
+- `src/components/timer/StartForm.tsx` — форма темы (3 теста ✅)
+- `src/components/timer/PomodoroScreen.tsx` — оркестратор состояний
+- `src/pages/TodayPage.tsx` — интеграция, fullscreen оверлей при активной сессии
+- `npx tsc --noEmit` — OK
+- `npm run build` — OK
+- `npm run test` — 10 новых тестов, общий прогон 27 тестов, все зелёные ✅
+
+Архитектурное решение:
+  Polling вместо WebSocket — проще деплой, достаточно для Pomodoro UX.
+  Таймер считается на фронте по `started_at` из БД.
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress

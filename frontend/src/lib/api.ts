@@ -112,6 +112,7 @@ export const apiClient = {
     api.post<FocusSession>('/api/v1/focus/start', { topic, stage_id: stageId }, { signal }),
   endFocus: (sessionId: string, difficulty: number, signal?: AbortSignal) =>
     api.post<FocusSession>('/api/v1/focus/end', { session_id: sessionId, difficulty }, { signal }),
+  getActiveSession: (signal?: AbortSignal) => api.get<FocusSession | null>('/api/v1/focus/active', { signal }),
   getFocusHistory: (signal?: AbortSignal) => api.get<FocusSession[]>('/api/v1/focus/history', { signal }),
 
   // Ask / RAG

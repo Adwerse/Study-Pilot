@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PomodoroScreen } from '../components/timer'
 import { DailyNote } from '../components/today/DailyNote'
 import { FocusBlockCard } from '../components/today/FocusBlockCard'
 import { StageProgress } from '../components/today/StageProgress'
 import { Body, Button, Caption, Card, Skeleton, Title } from '../components/ui'
-import { useFocus } from '../hooks/useFocus'
 import { useTodayPlan } from '../hooks/useTodayPlan'
-import { normalizeApiError } from '../lib/api'
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
 	weekday: 'short',
@@ -17,16 +16,8 @@ const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
 export function TodayPage() {
 	const navigate = useNavigate()
 	const { plan, stage, loading, error, refetch, completedBlocks, markBlockDone } = useTodayPlan()
-	const { session, isActive, start, end } = useFocus()
 	const [activeBlockIndex, setActiveBlockIndex] = useState<number | null>(null)
-	const [actionError, setActionError] = useState<string | null>(null)
 	const formattedDate = useMemo(() => dateFormatter.format(new Date()).replace(/\.$/, ''), [])
-
-	useEffect(() => {
-		if (!session || !isActive) {
-			setActiveBlockIndex(null)
-		}
-	}, [isActive, session])
 
 	if (loading) {
 		return (
@@ -57,7 +48,6 @@ export function TodayPage() {
 							variant="secondary"
 							size="md"
 							onClick={() => {
-								setActionError(null)
 								refetch()
 							}}
 						>
@@ -91,32 +81,14 @@ export function TodayPage() {
 	}
 
 	const allBlocksCompleted = plan.blocks.length > 0 && completedBlocks.length === plan.blocks.length
+	const activeBlock = activeBlockIndex !== null ? plan.blocks[activeBlockIndex] : null
 
-	const handleStart = async (blockIndex: number, topic: string) => {
-		if (isActive && activeBlockIndex !== null && activeBlockIndex !== blockIndex) {
-			return
+	const handleSessionComplete = () => {
+		if (activeBlockIndex !== null) {
+			markBlockDone(activeBlockIndex)
 		}
 
-		setActionError(null)
-
-		try {
-			await start(topic, stage?.id)
-			setActiveBlockIndex(blockIndex)
-		} catch (startError) {
-			setActionError(normalizeApiError(startError).detail)
-		}
-	}
-
-	const handleMarkDone = async (blockIndex: number) => {
-		setActionError(null)
-
-		try {
-			await end(3)
-			markBlockDone(blockIndex)
-			setActiveBlockIndex(null)
-		} catch (endError) {
-			setActionError(normalizeApiError(endError).detail)
-		}
+		setActiveBlockIndex(null)
 	}
 
 	return (
@@ -136,20 +108,6 @@ export function TodayPage() {
 
 			<DailyNote note={plan.daily_note} />
 
-			{actionError ? (
-				<Card>
-					<div
-						style={{
-							border: '1px solid var(--tg-destructive)',
-							borderRadius: 'var(--radius-sm)',
-							padding: '12px',
-						}}
-					>
-						<Body style={{ color: 'var(--tg-destructive)' }}>{actionError}</Body>
-					</div>
-				</Card>
-			) : null}
-
 			<Caption
 				style={{
 					display: 'block',
@@ -164,8 +122,8 @@ export function TodayPage() {
 			<div style={{ display: 'grid', gap: '12px' }}>
 				{plan.blocks.map((block, index) => {
 					const blockIsDone = completedBlocks.includes(index)
-					const blockIsActive = isActive && activeBlockIndex === index
-					const isBlockedByAnotherSession = isActive && activeBlockIndex !== null && activeBlockIndex !== index
+					const blockIsActive = activeBlockIndex === index
+					const isBlockedByAnotherSession = activeBlockIndex !== null && activeBlockIndex !== index
 
 					return (
 						<div key={`${block.topic}-${index}`} style={{ pointerEvents: isBlockedByAnotherSession ? 'none' : 'auto' }}>
@@ -174,11 +132,11 @@ export function TodayPage() {
 								index={index}
 								isDone={blockIsDone}
 								isActive={blockIsActive}
-								onStart={async () => {
-									await handleStart(index, block.topic)
+								onStart={() => {
+									setActiveBlockIndex(index)
 								}}
-								onMarkDone={async () => {
-									await handleMarkDone(index)
+								onMarkDone={() => {
+									setActiveBlockIndex(index)
 								}}
 							/>
 						</div>
@@ -201,6 +159,37 @@ export function TodayPage() {
 						<Caption style={{ display: 'block' }}>Возвращайся завтра за новым планом</Caption>
 					</div>
 				</Card>
+			) : null}
+
+			{activeBlockIndex !== null && activeBlock ? (
+				<div
+					style={{
+						position: 'fixed',
+						inset: 0,
+						background: 'var(--tg-bg)',
+						zIndex: 150,
+						padding: '24px 16px',
+						overflowY: 'auto',
+					}}
+				>
+					<Button variant="ghost" size="sm" onClick={() => setActiveBlockIndex(null)}>
+						← Назад
+					</Button>
+					<div
+						style={{
+							maxWidth: '420px',
+							margin: '24px auto 0',
+							display: 'grid',
+							placeItems: 'center',
+						}}
+					>
+						<PomodoroScreen
+							suggestedTopic={activeBlock.topic}
+							stageId={stage?.id}
+							onSessionComplete={handleSessionComplete}
+						/>
+					</div>
+				</div>
 			) : null}
 		</div>
 	)
