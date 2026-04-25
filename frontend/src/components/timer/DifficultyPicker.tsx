@@ -7,11 +7,11 @@ type DifficultyPickerProps = {
 }
 
 const difficulties = [
-	{ value: 1, emoji: '😴', label: 'Легко' },
+	{ value: 1, emoji: '😴', label: 'Easy' },
 	{ value: 2, emoji: '🙂', label: '' },
 	{ value: 3, emoji: '😤', label: '' },
 	{ value: 4, emoji: '🔥', label: '' },
-	{ value: 5, emoji: '🤯', label: 'Тяжело' },
+	{ value: 5, emoji: '🤯', label: 'Hard' },
 ]
 
 const backdropStyle: CSSProperties = {
@@ -63,8 +63,8 @@ export function DifficultyPicker({ onSelect, loading }: DifficultyPickerProps) {
 			<div style={backdropStyle} aria-hidden="true" />
 			<div role="dialog" aria-modal="true" aria-labelledby="difficulty-picker-title" style={sheetStyle}>
 				<div id="difficulty-picker-title" style={{ display: 'grid', gap: '8px', textAlign: 'center' }}>
-					<Title style={{ fontSize: 'var(--text-xl)' }}>Как прошла сессия?</Title>
-					<Caption>Оцени сложность материала</Caption>
+					<Title style={{ fontSize: 'var(--text-xl)' }}>How did the session go?</Title>
+					<Caption>Rate the material difficulty</Caption>
 				</div>
 
 				<div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '24px' }}>
@@ -72,7 +72,7 @@ export function DifficultyPicker({ onSelect, loading }: DifficultyPickerProps) {
 						<button
 							key={difficulty.value}
 							type="button"
-							aria-label={`Сложность ${difficulty.value}`}
+							aria-label={`Difficulty ${difficulty.value}`}
 							className="difficulty-picker__button"
 							disabled={loading}
 							onClick={() => onSelect(difficulty.value)}

@@ -15,13 +15,13 @@ type FocusBlockCardProps = {
 function getPriorityMeta(priority: FocusBlock['priority']): { label: string; variant: BadgeVariant } {
 	switch (priority) {
 		case 1:
-			return { label: 'Главное', variant: 'danger' }
+			return { label: 'Main', variant: 'danger' }
 		case 2:
-			return { label: 'Важно', variant: 'warning' }
+			return { label: 'Important', variant: 'warning' }
 		case 3:
-			return { label: 'Полезно', variant: 'default' }
+			return { label: 'Useful', variant: 'default' }
 		default:
-			return { label: 'Бонус', variant: 'default' }
+			return { label: 'Bonus', variant: 'default' }
 	}
 }
 
@@ -82,7 +82,7 @@ export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMark
 				<div>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
 						<Badge variant={priority.variant}>{priority.label}</Badge>
-						<Caption style={{ color: 'var(--tg-hint)' }}>{block.duration_minutes} мин</Caption>
+						<Caption style={{ color: 'var(--tg-hint)' }}>{block.duration_minutes} min</Caption>
 					</div>
 
 					<Subtitle
@@ -107,14 +107,14 @@ export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMark
 					<div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
 						{!isDone && !isActive ? (
 							<Button variant="primary" size="sm" onClick={onStart}>
-								Начать
+								Start
 							</Button>
 						) : null}
 
 						{isActive ? (
 							<>
 								<Button variant="secondary" size="sm" onClick={onMarkDone}>
-									Завершить
+									Finish
 								</Button>
 								<Caption
 									data-pulse="true"
@@ -123,7 +123,7 @@ export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMark
 										fontSize: 'var(--text-xs)',
 									}}
 								>
-									Идёт сессия...
+									Session running...
 								</Caption>
 							</>
 						) : null}
@@ -141,7 +141,7 @@ export function FocusBlockCard({ block, index, isDone, isActive, onStart, onMark
 										/>
 									</svg>
 								</span>
-								<Caption style={{ color: 'var(--tg-hint)' }}>Выполнено</Caption>
+								<Caption style={{ color: 'var(--tg-hint)' }}>Done</Caption>
 							</>
 						) : null}
 					</div>

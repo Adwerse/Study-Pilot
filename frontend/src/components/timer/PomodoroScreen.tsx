@@ -60,8 +60,8 @@ export function PomodoroScreen({ suggestedTopic, stageId, onSessionComplete }: P
 			<div style={{ ...centeredStackStyle, gap: '24px', textAlign: 'center' }}>
 				<CircularTimer remaining={remaining} progress={progress} status={status} />
 				<div style={{ display: 'grid', gap: '8px' }}>
-					<Title>Сессия завершена 🎯</Title>
-					<Caption>Оцени насколько было сложно</Caption>
+					<Title>Session complete 🎯</Title>
+					<Caption>Rate how difficult it felt</Caption>
 				</div>
 				{error ? <Body style={{ color: 'var(--tg-destructive)' }}>{error}</Body> : null}
 				<DifficultyPicker onSelect={handleStop} loading={loading} />
@@ -75,7 +75,7 @@ export function PomodoroScreen({ suggestedTopic, stageId, onSessionComplete }: P
 			<Caption style={{ color: 'var(--tg-text)', fontWeight: 500 }}>{topic}</Caption>
 			<div style={{ display: 'grid', gap: '10px', justifyItems: 'center' }}>
 				<Button variant="ghost" size="sm" onClick={() => setShowPicker(true)}>
-					Остановить
+					Stop
 				</Button>
 				{error ? <Body style={{ color: 'var(--tg-destructive)' }}>{error}</Body> : null}
 			</div>

@@ -7,7 +7,7 @@ import { StageProgress } from '../components/today/StageProgress'
 import { Body, Button, Caption, Card, Skeleton, Title } from '../components/ui'
 import { useTodayPlan } from '../hooks/useTodayPlan'
 
-const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
 	weekday: 'short',
 	day: 'numeric',
 	month: 'long',
@@ -51,7 +51,7 @@ export function TodayPage() {
 								refetch()
 							}}
 						>
-							Обновить
+							Refresh
 						</Button>
 					</div>
 				</Card>
@@ -70,10 +70,10 @@ export function TodayPage() {
 				}}
 			>
 				<div style={{ display: 'grid', gap: '8px', justifyItems: 'center', textAlign: 'center' }}>
-					<Title>Начни с цели</Title>
-					<Caption style={{ display: 'block' }}>Поставь учебную цель — составлю план на сегодня</Caption>
+					<Title>Start with a goal</Title>
+					<Caption style={{ display: 'block' }}>Set a learning goal and I'll build today's plan</Caption>
 					<Button variant="primary" size="md" onClick={() => navigate('/roadmap')}>
-						Поставить цель
+						Set goal
 					</Button>
 				</div>
 			</div>
@@ -94,7 +94,7 @@ export function TodayPage() {
 	return (
 		<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
 			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-				<Title>Сегодня</Title>
+				<Title>Today</Title>
 				<Caption style={{ marginTop: '4px' }}>{formattedDate}</Caption>
 			</header>
 
@@ -116,7 +116,7 @@ export function TodayPage() {
 					color: 'var(--tg-text)',
 				}}
 			>
-				Фокус-блоки на день
+				Focus blocks for today
 			</Caption>
 
 			<div style={{ display: 'grid', gap: '12px' }}>
@@ -155,8 +155,8 @@ export function TodayPage() {
 							gap: '4px',
 						}}
 					>
-						<Body>Отличная работа! План на сегодня выполнен 🎯</Body>
-						<Caption style={{ display: 'block' }}>Возвращайся завтра за новым планом</Caption>
+						<Body>Great work! Today's plan is complete 🎯</Body>
+						<Caption style={{ display: 'block' }}>Come back tomorrow for a new plan</Caption>
 					</div>
 				</Card>
 			) : null}
@@ -173,7 +173,7 @@ export function TodayPage() {
 					}}
 				>
 					<Button variant="ghost" size="sm" onClick={() => setActiveBlockIndex(null)}>
-						← Назад
+						← Back
 					</Button>
 					<div
 						style={{

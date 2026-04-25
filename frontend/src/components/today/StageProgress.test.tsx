@@ -9,31 +9,31 @@ describe('StageProgress', () => {
 		id: '1',
 		plan_id: 'p1',
 		week_number: 2,
-		title: 'Структуры данных',
-		deliverable: 'Реализовать стек и очередь',
+		title: 'Data structures',
+		deliverable: 'Implement a stack and a queue',
 		status: 'in_progress',
 		order_index: 1,
 	}
 
-	it('отображает название этапа', () => {
+	it('renders the stage title', () => {
 		render(<StageProgress stage={mockStage} completedToday={2} totalToday={4} />)
-		expect(screen.getByText('Структуры данных')).toBeInTheDocument()
+		expect(screen.getByText('Data structures')).toBeInTheDocument()
 	})
 
-	it('показывает правильный счётчик блоков', () => {
+	it('shows the correct block counter', () => {
 		render(<StageProgress stage={mockStage} completedToday={2} totalToday={4} />)
-		expect(screen.getByText(/2 из 4/)).toBeInTheDocument()
+		expect(screen.getByText(/2 of 4/)).toBeInTheDocument()
 	})
 
-	it('обрезает длинный deliverable', () => {
-		const longStage = { ...mockStage, deliverable: 'А'.repeat(100) }
+	it('truncates a long deliverable', () => {
+		const longStage = { ...mockStage, deliverable: 'A'.repeat(100) }
 		render(<StageProgress stage={longStage} completedToday={2} totalToday={4} />)
 
 		const element = screen.getByText(/\.\.\./)
 		expect(element.textContent?.length).toBeLessThanOrEqual(83)
 	})
 
-	it('ширина прогресс-бара соответствует прогрессу', () => {
+	it('sets the progress bar width from progress', () => {
 		const { container } = render(<StageProgress stage={mockStage} completedToday={1} totalToday={4} />)
 		const bar = container.querySelector('[data-testid="progress-fill"]')
 

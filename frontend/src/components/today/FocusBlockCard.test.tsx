@@ -7,14 +7,14 @@ import { FocusBlockCard } from './FocusBlockCard'
 
 describe('FocusBlockCard', () => {
 	const mockBlock: FocusBlock = {
-		title: 'Разобрать списки',
+		title: 'Review lists',
 		topic: 'Python basics',
 		duration_minutes: 25,
-		description: 'Изучить list comprehension',
+		description: 'Study list comprehension',
 		priority: 1,
 	}
 
-	it('показывает заголовок и описание', () => {
+	it('shows title and description', () => {
 		render(
 			<FocusBlockCard
 				block={mockBlock}
@@ -26,11 +26,11 @@ describe('FocusBlockCard', () => {
 			/>,
 		)
 
-		expect(screen.getByText('Разобрать списки')).toBeInTheDocument()
-		expect(screen.getByText('Изучить list comprehension')).toBeInTheDocument()
+		expect(screen.getByText('Review lists')).toBeInTheDocument()
+		expect(screen.getByText('Study list comprehension')).toBeInTheDocument()
 	})
 
-	it('показывает кнопку Начать если блок не активен', () => {
+	it('shows the Start button when the block is inactive', () => {
 		render(
 			<FocusBlockCard
 				block={mockBlock}
@@ -42,10 +42,10 @@ describe('FocusBlockCard', () => {
 			/>,
 		)
 
-		expect(screen.getByText('Начать')).toBeInTheDocument()
+		expect(screen.getByText('Start')).toBeInTheDocument()
 	})
 
-	it('показывает кнопку Завершить если блок активен', () => {
+	it('shows the Finish button when the block is active', () => {
 		render(
 			<FocusBlockCard
 				block={mockBlock}
@@ -57,10 +57,10 @@ describe('FocusBlockCard', () => {
 			/>,
 		)
 
-		expect(screen.getByText('Завершить')).toBeInTheDocument()
+		expect(screen.getByText('Finish')).toBeInTheDocument()
 	})
 
-	it('вызывает onStart при клике Начать', async () => {
+	it('calls onStart when Start is clicked', async () => {
 		const onStart = vi.fn()
 		const user = userEvent.setup()
 
@@ -75,11 +75,11 @@ describe('FocusBlockCard', () => {
 			/>,
 		)
 
-		await user.click(screen.getByText('Начать'))
+		await user.click(screen.getByText('Start'))
 		expect(onStart).toHaveBeenCalledTimes(1)
 	})
 
-	it('показывает зачёркнутый текст и галочку если isDone', () => {
+	it('shows strikethrough text and a check when isDone', () => {
 		render(
 			<FocusBlockCard
 				block={mockBlock}
@@ -91,7 +91,7 @@ describe('FocusBlockCard', () => {
 			/>,
 		)
 
-		expect(screen.getByText('Разобрать списки')).toHaveStyle('text-decoration: line-through')
-		expect(screen.getByText('Выполнено')).toBeInTheDocument()
+		expect(screen.getByText('Review lists')).toHaveStyle('text-decoration: line-through')
+		expect(screen.getByText('Done')).toBeInTheDocument()
 	})
 })

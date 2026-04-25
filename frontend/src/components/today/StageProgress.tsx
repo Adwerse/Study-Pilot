@@ -31,8 +31,8 @@ export function StageProgress({ stage, completedToday, totalToday }: StageProgre
 		<Card padding="sm">
 			<div>
 				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-					<Caption style={{ color: 'var(--tg-text)' }}>Текущий этап</Caption>
-					<Badge variant="info">Неделя {stage.week_number}</Badge>
+					<Caption style={{ color: 'var(--tg-text)' }}>Current stage</Caption>
+					<Badge variant="info">Week {stage.week_number}</Badge>
 				</div>
 
 				<Subtitle style={{ marginTop: '4px' }}>{stage.title}</Subtitle>
@@ -76,7 +76,7 @@ export function StageProgress({ stage, completedToday, totalToday }: StageProgre
 						textAlign: 'right',
 					}}
 				>
-					{completedToday} из {totalToday} блоков сегодня
+					{completedToday} of {totalToday} blocks today
 				</Caption>
 			</div>
 		</Card>

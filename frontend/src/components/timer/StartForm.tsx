@@ -19,11 +19,11 @@ export function StartForm({ onStart, loading, suggestedTopic }: StartFormProps) 
 	return (
 		<div style={{ display: 'grid', gap: '12px', width: '100%' }}>
 			<label style={{ display: 'grid', gap: '8px' }}>
-				<span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--tg-text)' }}>Тема сессии</span>
+				<span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--tg-text)' }}>Session topic</span>
 				<input
 					ref={inputRef}
 					value={topic}
-					placeholder="Что будешь изучать?"
+					placeholder="What will you study?"
 					onChange={(event) => setTopic(event.target.value)}
 					style={{
 						width: '100%',
@@ -40,7 +40,7 @@ export function StartForm({ onStart, loading, suggestedTopic }: StartFormProps) 
 				/>
 			</label>
 
-			<Caption style={{ display: 'block' }}>25 минут глубокой работы</Caption>
+			<Caption style={{ display: 'block' }}>25 minutes of deep work</Caption>
 
 			<Button
 				variant="primary"
@@ -54,7 +54,7 @@ export function StartForm({ onStart, loading, suggestedTopic }: StartFormProps) 
 					}
 				}}
 			>
-				Начать сессию
+				Start session
 			</Button>
 		</div>
 	)

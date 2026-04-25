@@ -17,11 +17,11 @@ function formatTime(totalSeconds: number): string {
 
 function getCaption(status: CircularTimerStatus): string {
 	if (status === 'running') {
-		return 'осталось'
+		return 'remaining'
 	}
 
 	if (status === 'finished') {
-		return 'готово!'
+		return 'done!'
 	}
 
 	return '25:00'
