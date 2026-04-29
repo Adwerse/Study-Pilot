@@ -1,10 +1,8 @@
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
-from app.models.focus_log import FocusLog
 from app.repositories.focus_repository import FocusRepository
 
 

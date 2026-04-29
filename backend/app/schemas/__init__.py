@@ -1,4 +1,9 @@
-from .focus_log import FocusSessionEnd, FocusSessionRead, FocusSessionStart
+from .focus_log import (
+    FocusHistoryResponse,
+    FocusSessionEnd,
+    FocusSessionRead,
+    FocusSessionStart,
+)
 from .focus_session import FocusSession
 from .focus_block import DailyPlan, FocusBlock
 from .metrics import MetricsCreate, MetricsRead
@@ -16,6 +21,7 @@ __all__ = [
     "FocusSessionStart",
     "FocusSessionEnd",
     "FocusSessionRead",
+    "FocusHistoryResponse",
     "FocusSession",
     "FocusBlock",
     "DailyPlan",
