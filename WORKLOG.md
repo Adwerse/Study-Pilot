@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-23
+Last updated: 2026-04-29
 
 ## Repository Context
 
@@ -233,6 +233,205 @@ Checks:
 Архитектурное решение:
   Polling вместо WebSocket — проще деплой, достаточно для Pomodoro UX.
   Таймер считается на фронте по `started_at` из БД.
+
+## [Sprint 4] Focus API Backend
+Date: 2026-04-29
+Status: completed
+
+What was done:
+- Checked compatibility with the current backend architecture before implementation.
+- Kept the existing stack and patterns: FastAPI, async SQLAlchemy ORM, raw SQL migrations, current Telegram `get_current_user` dependency, async repositories, and `/api/v1` routers.
+- Extended `backend/app/models/focus_log.py` from the old `completed`/`duration_minutes` shape to the Sprint 4 contract:
+  - `status`: `active`, `completed`, `cancelled`
+  - `plan_id`
+  - `plan_stage_id`
+  - `planned_duration_minutes`
+  - `actual_duration_seconds`
+  - `notes`
+  - `created_at`
+  - `updated_at`
+- Added compatibility aliases on the ORM model:
+  - `stage_id` -> `plan_stage_id`
+  - `completed` -> `status == "completed"`
+  - `duration_minutes` -> derived from `actual_duration_seconds` or planned duration
+- Added `backend/migrations/006_update_focus_log_sprint4.sql`.
+- Added PostgreSQL partial unique index `ux_focus_log_one_active_per_user` to guarantee at most one `active` focus session per user.
+- Updated `backend/app/schemas/focus_log.py` with `FocusSessionStart`, `FocusSessionEnd`, `FocusSessionRead`, and `FocusHistoryResponse`.
+- Added `backend/app/services/focus_service.py` for business rules:
+  - reject second active session with `409`
+  - end by explicit `session_id` or current active session
+  - reject ending another user's session
+  - reject already ended sessions with `409`
+  - calculate `actual_duration_seconds` with timezone-aware UTC datetimes
+  - validate owned `plan_id` / `plan_stage_id`
+- Updated `backend/app/repositories/focus_repository.py` for create, finish, active lookup, paginated history, and owned plan/stage lookups.
+- Updated `backend/app/api/focus.py`:
+  - `POST /focus/start`
+  - `POST /focus/end`
+  - `GET /focus/history`
+  - kept `GET /focus/active` for the current frontend polling flow
+- Added backend tests in `backend/tests/test_focus_service.py`.
+- Cleaned stale unused imports in `backend/tests/test_focus_repository.py`.
+
+Checks:
+- `python -m ruff check app tests` passed.
+- `python -m ruff format --check` passed for changed files.
+- `python -m pytest tests/test_focus_repository.py tests/test_focus_service.py -q` passed with `11 passed`.
+- Full `pytest tests -q` was blocked locally when PostgreSQL was not running; after Docker/Postgres startup, the app was able to run against the dev database.
+
+## Dev Runbook: Bot + Mini App With HTTP Tunnels
+Date: 2026-04-29
+Status: current dev procedure
+
+Goal:
+- Run the Telegram bot in polling mode.
+- Serve the Mini App through an HTTPS frontend tunnel.
+- Serve FastAPI through an HTTPS backend tunnel.
+- Make frontend API calls work from Telegram WebView by aligning `VITE_API_BASE_URL` and backend `ALLOWED_ORIGINS`.
+
+Prerequisites:
+- Docker Desktop is running.
+- `cloudflared` is installed.
+- Backend virtualenv exists at `backend/.venv`.
+- Bot virtualenv exists at `bot/.venv`.
+- Frontend dependencies are installed in `frontend/node_modules`.
+- Root `.env` contains valid `BOT_TOKEN`, `MINI_APP_URL`, database settings, and API keys as needed.
+
+1. Start local infrastructure:
+
+```powershell
+docker compose up -d postgres redis
+docker compose ps
+```
+
+2. Apply the Sprint 4 focus migration if the dev database already exists:
+
+```powershell
+Get-Content backend\migrations\006_update_focus_log_sprint4.sql |
+  docker exec -i learning-os-postgres psql -U postgres -d learning_os -v ON_ERROR_STOP=1
+```
+
+For a clean database, run all migration files in order instead.
+
+3. Start the backend locally:
+
+```powershell
+cd backend
+.\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
+```
+
+Verify:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health
+```
+
+4. Create the backend HTTPS tunnel:
+
+```powershell
+cloudflared tunnel --url http://127.0.0.1:8000
+```
+
+Copy the printed URL, for example:
+
+```text
+https://<backend-tunnel>.trycloudflare.com
+```
+
+Verify:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://<backend-tunnel>.trycloudflare.com/health
+```
+
+5. Start the frontend with the backend tunnel as API base URL:
+
+```powershell
+cd frontend
+$env:VITE_API_BASE_URL = "https://<backend-tunnel>.trycloudflare.com"
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+6. Create the frontend HTTPS tunnel:
+
+```powershell
+cloudflared tunnel --url http://127.0.0.1:5173
+```
+
+Copy the printed URL, for example:
+
+```text
+https://<frontend-tunnel>.trycloudflare.com
+```
+
+Verify:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://<frontend-tunnel>.trycloudflare.com
+```
+
+7. Restart the backend with the frontend tunnel allowed by CORS.
+
+Stop the backend process, then start it again:
+
+```powershell
+cd backend
+$env:ALLOWED_ORIGINS = '["http://localhost:5173","http://127.0.0.1:5173","https://<frontend-tunnel>.trycloudflare.com"]'
+.\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
+```
+
+Verify CORS preflight:
+
+```powershell
+$headers = @{
+  Origin = "https://<frontend-tunnel>.trycloudflare.com"
+  "Access-Control-Request-Method" = "GET"
+  "Access-Control-Request-Headers" = "authorization"
+}
+
+Invoke-WebRequest `
+  -UseBasicParsing `
+  -Method Options `
+  -Uri "https://<backend-tunnel>.trycloudflare.com/api/v1/users/me" `
+  -Headers $headers
+```
+
+Expected:
+- HTTP `200`
+- `Access-Control-Allow-Origin` equals the frontend tunnel URL.
+
+8. Start the bot in dev polling mode with the frontend tunnel as Mini App URL:
+
+```powershell
+cd bot
+$env:MINI_APP_URL = "https://<frontend-tunnel>.trycloudflare.com"
+$env:USE_WEBHOOK = "false"
+$env:DEBUG = "false"
+.\.venv\Scripts\python.exe main.py
+```
+
+Expected bot logs:
+
+```text
+Polling mode enabled
+Start polling
+Run polling for bot @Lernify_bot
+```
+
+9. Test in Telegram:
+- Open `@Lernify_bot`.
+- Send `/start`.
+- Tap the Mini App button.
+- If the Mini App shows `Network Error`, check CORS first:
+  - frontend tunnel URL must be present in backend `ALLOWED_ORIGINS`
+  - frontend must have been started with `VITE_API_BASE_URL=https://<backend-tunnel>.trycloudflare.com`
+  - close and reopen the Telegram Mini App after changing tunnel/env values
+
+Current dev-session example from 2026-04-29:
+- Backend tunnel: `https://officers-amend-subjects-barry.trycloudflare.com`
+- Frontend tunnel: `https://julian-celebrity-vincent-bon.trycloudflare.com`
+- Bot: `@Lernify_bot`
+- Note: `trycloudflare.com` quick tunnel URLs are temporary and should not be committed into `.env` as stable values.
 
 ## Backlog (Alpha)
 Date: 2026-04-18
