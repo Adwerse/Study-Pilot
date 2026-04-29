@@ -19,6 +19,15 @@ const centeredStackStyle = {
 	width: '100%',
 } as const
 
+const timerShellStyle = {
+	position: 'relative',
+	width: 'clamp(220px, 72vw, 272px)',
+	aspectRatio: '1',
+	display: 'grid',
+	placeItems: 'center',
+	isolation: 'isolate',
+} as const
+
 export function PomodoroScreen({ suggestedTopic, stageId, pomodoroCount = 1, onSessionComplete }: PomodoroScreenProps) {
 	const {
 		status,
@@ -46,6 +55,86 @@ export function PomodoroScreen({ suggestedTopic, stageId, pomodoroCount = 1, onS
 		setShowPicker(false)
 		onSessionComplete?.()
 	}
+	const timerShellClassName = `pomodoro-timer-shell${status === 'running' ? ' pomodoro-timer-shell--running' : ''}`
+
+	const timerStyles = (
+		<style>
+			{`
+				.pomodoro-timer-shell::before,
+				.pomodoro-timer-shell::after {
+					content: '';
+					position: absolute;
+					inset: 0;
+					border-radius: 50%;
+					opacity: 0;
+					pointer-events: none;
+					z-index: -1;
+				}
+
+				.pomodoro-timer-shell::before {
+					background: conic-gradient(
+						from 90deg,
+						var(--tg-button),
+						var(--tg-success),
+						var(--tg-warning),
+						var(--tg-button)
+					);
+					filter: blur(18px);
+					transform: scale(0.9);
+				}
+
+				.pomodoro-timer-shell::after {
+					inset: 18px;
+					background: radial-gradient(
+						circle,
+						rgba(59, 130, 246, 0.16),
+						transparent 68%
+					);
+				}
+
+				.pomodoro-timer-shell--running::before {
+					animation: pomodoro-gradient-spin 8s linear infinite, pomodoro-gradient-breathe 2.8s ease-in-out infinite;
+					opacity: 0.72;
+				}
+
+				.pomodoro-timer-shell--running::after {
+					animation: pomodoro-gradient-pulse 2.8s ease-in-out infinite;
+					opacity: 1;
+				}
+
+				@keyframes pomodoro-gradient-spin {
+					to {
+						transform: scale(0.9) rotate(360deg);
+					}
+				}
+
+				@keyframes pomodoro-gradient-breathe {
+					0%, 100% {
+						filter: blur(18px);
+					}
+					50% {
+						filter: blur(24px);
+					}
+				}
+
+				@keyframes pomodoro-gradient-pulse {
+					0%, 100% {
+						transform: scale(0.94);
+					}
+					50% {
+						transform: scale(1.02);
+					}
+				}
+
+				@media (prefers-reduced-motion: reduce) {
+					.pomodoro-timer-shell--running::before,
+					.pomodoro-timer-shell--running::after {
+						animation: none;
+					}
+				}
+			`}
+		</style>
+	)
 
 	if (loading && status === 'idle') {
 		return (
@@ -72,7 +161,10 @@ export function PomodoroScreen({ suggestedTopic, stageId, pomodoroCount = 1, onS
 	if (status === 'finished') {
 		return (
 			<div style={{ ...centeredStackStyle, gap: '24px', textAlign: 'center' }}>
-				<CircularTimer remaining={remaining} progress={progress} status={status} />
+				{timerStyles}
+				<div className={timerShellClassName} style={timerShellStyle}>
+					<CircularTimer remaining={remaining} progress={progress} status={status} />
+				</div>
 				<div style={{ display: 'grid', gap: '8px' }}>
 					<Title>Session complete 🎯</Title>
 					<Caption>Rate how difficult it felt</Caption>
@@ -85,7 +177,10 @@ export function PomodoroScreen({ suggestedTopic, stageId, pomodoroCount = 1, onS
 
 	return (
 		<div style={{ ...centeredStackStyle, gap: '32px', textAlign: 'center' }}>
-			<CircularTimer remaining={remaining} progress={progress} status={status} />
+			{timerStyles}
+			<div className={timerShellClassName} style={timerShellStyle}>
+				<CircularTimer remaining={remaining} progress={progress} status={status} />
+			</div>
 			<div style={{ display: 'grid', gap: '6px' }}>
 				<Caption style={{ color: 'var(--tg-text)', fontWeight: 500 }}>{topic}</Caption>
 				<Caption>

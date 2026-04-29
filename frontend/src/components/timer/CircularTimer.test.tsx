@@ -27,4 +27,13 @@ describe('CircularTimer', () => {
 
 		expect(screen.getByText('remaining')).toBeInTheDocument()
 	})
+
+	it('uses an animated gradient stroke while running', () => {
+		const { container } = render(<CircularTimer remaining={90} progress={0.94} status="running" />)
+		const progressCircle = container.querySelector('.circular-timer__progress')
+
+		expect(container.querySelector('linearGradient')).toBeInTheDocument()
+		expect(progressCircle).toHaveClass('circular-timer__progress--running')
+		expect(progressCircle?.getAttribute('stroke')).toContain('url(#circular-timer-gradient-')
+	})
 })
