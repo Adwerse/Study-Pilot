@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, timezone
 from uuid import UUID
 
@@ -10,6 +11,10 @@ from app.schemas.focus_log import (
     FocusSessionEnd,
     FocusSessionStart,
 )
+from app.services.notification_service import NotificationService
+
+
+logger = logging.getLogger(__name__)
 
 
 class FocusServiceError(Exception):
@@ -29,10 +34,20 @@ class FocusConflictError(FocusServiceError):
 
 
 class FocusService:
-    def __init__(self, repo: FocusRepository):
+    def __init__(
+        self,
+        repo: FocusRepository,
+        notification_service: NotificationService | None = None,
+    ):
         self.repo = repo
+        self.notification_service = notification_service
 
-    async def start_session(self, user_id: UUID, body: FocusSessionStart) -> FocusLog:
+    async def start_session(
+        self,
+        user_id: UUID,
+        body: FocusSessionStart,
+        telegram_id: int | str | None = None,
+    ) -> FocusLog:
         active = await self.repo.get_active_session(user_id)
         if active:
             raise FocusConflictError("User already has an active focus session")
@@ -44,7 +59,7 @@ class FocusService:
         )
 
         try:
-            return await self.repo.create_session(
+            session = await self.repo.create_session(
                 user_id=user_id,
                 topic=body.topic,
                 plan_id=plan_id,
@@ -56,6 +71,9 @@ class FocusService:
             raise FocusConflictError(
                 "User already has an active focus session"
             ) from exc
+
+        await self._schedule_focus_end_notification(session, telegram_id)
+        return session
 
     async def end_session(self, user_id: UUID, body: FocusSessionEnd) -> FocusLog:
         if body.session_id is not None:
@@ -80,7 +98,7 @@ class FocusService:
         if notes == "":
             notes = None
 
-        return await self.repo.finish_session(
+        ended_session = await self.repo.finish_session(
             session=session,
             status=body.status,
             ended_at=ended_at,
@@ -88,6 +106,8 @@ class FocusService:
             difficulty=body.difficulty,
             notes=notes,
         )
+        await self._cancel_pending_focus_notifications(ended_session.id)
+        return ended_session
 
     async def get_history(
         self,
@@ -128,3 +148,37 @@ class FocusService:
                 raise FocusNotFoundError("Plan not found")
 
         return plan_id, plan_stage_id
+
+    async def _schedule_focus_end_notification(
+        self, session: FocusLog, telegram_id: int | str | None
+    ) -> None:
+        if self.notification_service is None:
+            return
+
+        try:
+            await self.notification_service.schedule_focus_end_notification(
+                session=session,
+                telegram_id=telegram_id,
+            )
+        except Exception:
+            await self.repo.db.rollback()
+            logger.exception(
+                "Failed to schedule focus notification user_id=%s focus_session_id=%s",
+                session.user_id,
+                session.id,
+            )
+
+    async def _cancel_pending_focus_notifications(self, focus_session_id: UUID) -> None:
+        if self.notification_service is None:
+            return
+
+        try:
+            await self.notification_service.cancel_pending_focus_notifications(
+                focus_session_id
+            )
+        except Exception:
+            await self.repo.db.rollback()
+            logger.exception(
+                "Failed to cancel focus notifications focus_session_id=%s",
+                focus_session_id,
+            )

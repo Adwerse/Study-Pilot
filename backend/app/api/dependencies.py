@@ -18,5 +18,5 @@ async def get_current_user(
     if not init_data:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
 
-    user_data = get_telegram_user(init_data, settings.BOT_TOKEN)
+    user_data = get_telegram_user(init_data, settings.telegram_bot_token)
     return user_data

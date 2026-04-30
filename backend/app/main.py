@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import analytics, ask, focus, plans, users
 from app.config import settings
+from app.services.notification_worker import notification_worker_loop
 
 
 logger = logging.getLogger(__name__)
@@ -14,9 +16,18 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
 	logger.info("Starting Learning OS API")
+	notification_task: asyncio.Task | None = None
+	if settings.NOTIFICATIONS_ENABLED:
+		notification_task = asyncio.create_task(notification_worker_loop())
 	try:
 		yield
 	finally:
+		if notification_task is not None:
+			notification_task.cancel()
+			try:
+				await notification_task
+			except asyncio.CancelledError:
+				logger.info("Notification worker stopped")
 		logger.info("Shutting down")
 
 

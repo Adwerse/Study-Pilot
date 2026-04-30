@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_current_user
 from app.database import get_db
 from app.repositories.focus_repository import FocusRepository
+from app.repositories.notification_repository import NotificationRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.focus_log import (
     FocusHistoryResponse,
@@ -16,6 +17,7 @@ from app.schemas.focus_log import (
     FocusSessionStart,
 )
 from app.services.focus_service import FocusService, FocusServiceError
+from app.services.notification_service import NotificationService
 
 
 router = APIRouter(prefix="/focus", tags=["focus"])
@@ -36,7 +38,8 @@ async def resolve_user_id(current_user: dict, db: AsyncSession) -> UUID:
 
 
 def build_focus_service(db: AsyncSession) -> FocusService:
-    return FocusService(FocusRepository(db))
+    notification_service = NotificationService(NotificationRepository(db))
+    return FocusService(FocusRepository(db), notification_service)
 
 
 def raise_http_error(error: FocusServiceError) -> None:
@@ -49,11 +52,16 @@ async def start_session(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    telegram_id = current_user.get("id")
     user_id = await resolve_user_id(current_user, db)
     service = build_focus_service(db)
 
     try:
-        return await service.start_session(user_id=user_id, body=body)
+        return await service.start_session(
+            user_id=user_id,
+            body=body,
+            telegram_id=telegram_id,
+        )
     except FocusServiceError as error:
         raise_http_error(error)
 
