@@ -1,18 +1,18 @@
 def build_focus_end_message(*, topic: str | None, planned_duration_minutes: int) -> str:
-    lines = ["Фокус-сессия завершена ✅", ""]
+    lines = ["Focus session completed ✅", ""]
 
     if topic:
-        lines.append(f"Тема: {topic}")
+        lines.append(f"Topic: {topic}")
 
     lines.extend(
         [
-            f"Время: {planned_duration_minutes} мин",
+            f"Duration: {planned_duration_minutes} min",
             "",
-            "Пора сделать короткую паузу.",
+            "Time for a short break.",
         ]
     )
     return "\n".join(lines)
 
 
 def build_break_end_message() -> str:
-    return "Пауза закончилась ☕️\n\nГотов к следующему фокус-блоку? 🚀"
+    return "Break is over ☕️\n\nReady for the next focus block? 🚀"

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiClient, normalizeApiError } from '../lib/api'
-import type { DailyPlan, PlanStage } from '../types/api'
+import type { DailyPlan, FocusBlock, PlanStage } from '../types/api'
 
 export interface UseTodayPlanReturn {
 	plan: DailyPlan | null
@@ -12,12 +12,38 @@ export interface UseTodayPlanReturn {
 	completedBlocks: number[]
 }
 
-function getTodayStorageKey(date: Date): string {
+function getDateStorageSegment(date: Date): string {
 	const year = date.getFullYear()
 	const month = String(date.getMonth() + 1).padStart(2, '0')
 	const day = String(date.getDate()).padStart(2, '0')
 
-	return `completed_blocks_${year}-${month}-${day}`
+	return `${year}-${month}-${day}`
+}
+
+function hashString(value: string): string {
+	let hash = 0
+
+	for (let index = 0; index < value.length; index += 1) {
+		hash = (hash * 31 + value.charCodeAt(index)) | 0
+	}
+
+	return Math.abs(hash).toString(36)
+}
+
+function getBlockSignature(block: FocusBlock): string {
+	return [
+		block.title,
+		block.topic,
+		block.description,
+		block.duration_minutes,
+		block.priority,
+	].join('|')
+}
+
+function getTodayStorageKey(date: Date, plan: DailyPlan, stage: PlanStage | null): string {
+	const stageSegment = stage?.id ?? 'no-stage'
+	const planSegment = hashString(plan.blocks.map(getBlockSignature).join('||'))
+	return `completed_blocks_${getDateStorageSegment(date)}_${stageSegment}_${planSegment}`
 }
 
 function sanitizeCompletedBlocks(value: unknown): number[] {
@@ -67,7 +93,7 @@ function getCurrentStage(stages: PlanStage[] | undefined): PlanStage | null {
 }
 
 export function useTodayPlan(): UseTodayPlanReturn {
-	const storageKey = useMemo(() => getTodayStorageKey(new Date()), [])
+	const today = useMemo(() => new Date(), [])
 	const [plan, setPlan] = useState<DailyPlan | null>(null)
 	const [stage, setStage] = useState<PlanStage | null>(null)
 	const [loading, setLoading] = useState(true)
@@ -136,10 +162,11 @@ export function useTodayPlan(): UseTodayPlanReturn {
 			return
 		}
 
+		const storageKey = getTodayStorageKey(today, plan, stage)
 		const sanitizedBlocks = readCompletedBlocks(storageKey).filter((blockIndex) => blockIndex < plan.blocks.length)
 		setCompletedBlocks(sanitizedBlocks)
 		writeCompletedBlocks(storageKey, sanitizedBlocks)
-	}, [plan, storageKey])
+	}, [plan, stage, today])
 
 	const markBlockDone = useCallback(
 		(blockIndex: number) => {
@@ -153,11 +180,12 @@ export function useTodayPlan(): UseTodayPlanReturn {
 				}
 
 				const nextCompletedBlocks = [...previous, blockIndex].sort((left, right) => left - right)
+				const storageKey = getTodayStorageKey(today, plan, stage)
 				writeCompletedBlocks(storageKey, nextCompletedBlocks)
 				return nextCompletedBlocks
 			})
 		},
-		[plan, storageKey],
+		[plan, stage, today],
 	)
 
 	return {

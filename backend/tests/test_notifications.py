@@ -344,7 +344,7 @@ async def test_process_due_notifications_sends_message_and_marks_sent():
     assert notification_repo.jobs[0].status == "sent"
     assert notification_repo.jobs[0].sent_at is not None
     assert telegram.messages[0]["telegram_id"] == 123456
-    assert "Тема: SQL" in str(telegram.messages[0]["text"])
+    assert "Topic: SQL" in str(telegram.messages[0]["text"])
 
 
 @pytest.mark.asyncio

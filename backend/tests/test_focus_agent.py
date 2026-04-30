@@ -17,7 +17,7 @@ def agent():
 def mock_session():
     session = MagicMock(spec=FocusLog)
     session.id = uuid4()
-    session.topic = "Структуры данных"
+    session.topic = "Data structures"
     session.started_at = datetime.now(timezone.utc)
     session.duration_minutes = 25
     return session
@@ -25,20 +25,20 @@ def mock_session():
 
 def test_start_message_contains_topic(agent, mock_session):
     msg = agent.format_start_message(mock_session)
-    assert "Структуры данных" in msg
+    assert "Data structures" in msg
     assert str(POMODORO_DURATION) in msg
 
 
 def test_end_message_short_break_after_first_session(agent, mock_session):
     msg = agent.format_end_message(mock_session, sessions_today=1)
     assert str(SHORT_BREAK) in msg
-    assert "короткий" in msg
+    assert "short break" in msg
 
 
 def test_end_message_long_break_after_fourth_session(agent, mock_session):
     msg = agent.format_end_message(mock_session, sessions_today=4)
     assert str(LONG_BREAK) in msg
-    assert "длинный" in msg
+    assert "long break" in msg
 
 
 def test_should_send_reminder_false_if_recent(agent):
