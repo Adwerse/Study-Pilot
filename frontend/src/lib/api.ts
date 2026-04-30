@@ -101,7 +101,7 @@ export const apiClient = {
 
   // Plans
   createPlan: (goal: string, payload?: Partial<CreatePlanPayload>, signal?: AbortSignal) =>
-    api.post<Plan>('/api/v1/plans', { ...payload, goal }, { signal }),
+    api.post<Plan>('/api/v1/plans/', { ...payload, goal }, { signal }),
   getCurrentPlan: (signal?: AbortSignal) => api.get<Plan | null>('/api/v1/plans/current', { signal }),
   getToday: (signal?: AbortSignal) => api.get<DailyPlan>('/api/v1/plans/current/today', { signal }),
   recalculatePlan: (planId: string, signal?: AbortSignal) =>

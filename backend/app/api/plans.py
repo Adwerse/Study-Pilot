@@ -90,6 +90,7 @@ async def generate_daily_plan_for_stage(stage: PlanStage, current_user: dict) ->
     )
 
 
+@router.post("", response_model=PlanRead, include_in_schema=False)
 @router.post("/", response_model=PlanRead)
 async def create_plan(
     body: PlanRequest,

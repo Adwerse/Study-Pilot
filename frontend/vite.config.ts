@@ -8,6 +8,9 @@ export default defineConfig({
 		host: true,
 		strictPort: true,
 		allowedHosts: true,
+		proxy: {
+			'/api': 'http://127.0.0.1:8000',
+		},
 	},
 	test: {
 		globals: true,
