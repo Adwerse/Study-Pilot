@@ -18,7 +18,7 @@ function formatTime(value: string): string {
 
 export function formatSessionTimeRange(startedAt: string, endedAt?: string | null): string {
 	const startTime = formatTime(startedAt)
-	const endTime = endedAt ? formatTime(endedAt) : 'сейчас'
+	const endTime = endedAt ? formatTime(endedAt) : 'now'
 
 	return `${startTime}–${endTime}`
 }
@@ -29,7 +29,7 @@ export function formatDuration(seconds: number | null | undefined): string {
 	}
 
 	if (seconds < 60) {
-		return '<1 мин'
+		return '<1 min'
 	}
 
 	const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -38,11 +38,11 @@ export function formatDuration(seconds: number | null | undefined): string {
 	const parts: string[] = []
 
 	if (hours > 0) {
-		parts.push(`${hours} ч`)
+		parts.push(`${hours} h`)
 	}
 
 	if (minutes > 0) {
-		parts.push(`${minutes} мин`)
+		parts.push(`${minutes} min`)
 	}
 
 	return parts.join(' ')
@@ -58,9 +58,9 @@ export function formatDifficulty(difficulty: number | null | undefined): string 
 
 export function formatStatus(status: FocusSessionStatus): string {
 	const statuses: Record<FocusSessionStatus, string> = {
-		active: 'В процессе',
-		completed: 'Завершена',
-		cancelled: 'Отменена',
+		active: 'In progress',
+		completed: 'Completed',
+		cancelled: 'Cancelled',
 	}
 
 	return statuses[status]

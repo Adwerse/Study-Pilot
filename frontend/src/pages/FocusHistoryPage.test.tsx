@@ -66,7 +66,7 @@ describe('FocusHistoryScreen', () => {
 
 		renderScreen()
 
-		expect(screen.getByLabelText('Загрузка истории')).toBeInTheDocument()
+		expect(screen.getByLabelText('Loading focus history')).toBeInTheDocument()
 	})
 
 	it('shows an empty state', () => {
@@ -74,7 +74,7 @@ describe('FocusHistoryScreen', () => {
 
 		renderScreen()
 
-		expect(screen.getByText('Сессий за этот день нет')).toBeInTheDocument()
+		expect(screen.getByText('No sessions for this day')).toBeInTheDocument()
 	})
 
 	it('shows an error state with retry', async () => {
@@ -88,7 +88,7 @@ describe('FocusHistoryScreen', () => {
 		renderScreen()
 
 		expect(screen.getByText('Backend exploded')).toBeInTheDocument()
-		await user.click(screen.getByText('Повторить'))
+		await user.click(screen.getByText('Retry'))
 		expect(refetch).toHaveBeenCalledTimes(1)
 	})
 
@@ -101,9 +101,9 @@ describe('FocusHistoryScreen', () => {
 		renderScreen()
 
 		expect(screen.getByText('React hooks')).toBeInTheDocument()
-		expect(screen.getByText('25 мин из 25 мин')).toBeInTheDocument()
-		expect(screen.getByText('Завершена')).toBeInTheDocument()
-		expect(screen.getByText('Сложность: 4/5')).toBeInTheDocument()
+		expect(screen.getByText('25 min of 25 min')).toBeInTheDocument()
+		expect(screen.getByText('Completed')).toBeInTheDocument()
+		expect(screen.getByText('Difficulty: 4/5')).toBeInTheDocument()
 		expect(screen.getByText('Review useEffect dependencies')).toBeInTheDocument()
 	})
 
@@ -127,9 +127,9 @@ describe('FocusHistoryScreen', () => {
 
 		renderScreen()
 
-		expect(screen.getByText('Без темы')).toBeInTheDocument()
-		expect(screen.getByText('В процессе')).toBeInTheDocument()
-		expect(screen.getByText(/1 мин из 25 мин/)).toBeInTheDocument()
+		expect(screen.getByText('No topic')).toBeInTheDocument()
+		expect(screen.getByText('In progress')).toBeInTheDocument()
+		expect(screen.getByText(/1 min of 25 min/)).toBeInTheDocument()
 	})
 
 	it('calls loadMore from the load more button', async () => {
@@ -144,7 +144,7 @@ describe('FocusHistoryScreen', () => {
 
 		renderScreen()
 
-		await user.click(screen.getByText('Загрузить ещё'))
+		await user.click(screen.getByText('Load more'))
 		expect(loadMore).toHaveBeenCalledTimes(1)
 	})
 
@@ -153,7 +153,7 @@ describe('FocusHistoryScreen', () => {
 
 		renderScreen()
 
-		fireEvent.change(screen.getByLabelText('Выбрать дату'), { target: { value: '2026-04-30' } })
+		fireEvent.change(screen.getByLabelText('Choose date'), { target: { value: '2026-04-30' } })
 
 		expect(useFocusHistoryMock).toHaveBeenLastCalledWith(
 			expect.objectContaining({

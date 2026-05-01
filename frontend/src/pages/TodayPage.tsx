@@ -101,7 +101,7 @@ export function TodayPage() {
 					<Caption>{formattedDate}</Caption>
 				</div>
 				<Button variant="secondary" size="sm" onClick={() => navigate('/focus/history')}>
-					История
+					History
 				</Button>
 			</header>
 

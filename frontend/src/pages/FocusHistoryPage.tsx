@@ -78,7 +78,7 @@ function getStatusBadgeVariant(status: FocusSessionStatus): 'success' | 'danger'
 }
 
 function getSessionTitle(session: FocusSession): string {
-	return session.topic?.trim() || 'Без темы'
+	return session.topic?.trim() || 'No topic'
 }
 
 function getActualDurationSeconds(session: FocusSession, now: number): number | null {
@@ -109,7 +109,7 @@ function getActualDurationSeconds(session: FocusSession, now: number): number | 
 
 function FocusHistorySkeleton() {
 	return (
-		<div style={{ display: 'grid', gap: '12px' }} aria-label="Загрузка истории">
+		<div style={{ display: 'grid', gap: '12px' }} aria-label="Loading focus history">
 			<Skeleton height={88} />
 			<Skeleton height={88} />
 			<Skeleton height={88} />
@@ -124,7 +124,7 @@ function FocusSessionCard({ session, now }: { session: FocusSession; now: number
 	const plannedDuration = session.planned_duration_minutes
 		? formatDuration(session.planned_duration_minutes * 60)
 		: null
-	const durationLabel = plannedDuration ? `${actualDuration} из ${plannedDuration}` : actualDuration
+	const durationLabel = plannedDuration ? `${actualDuration} of ${plannedDuration}` : actualDuration
 	const notes = session.notes?.trim()
 
 	return (
@@ -151,7 +151,7 @@ function FocusSessionCard({ session, now }: { session: FocusSession; now: number
 
 				{difficulty || notes ? (
 					<div style={{ display: 'grid', gap: '4px' }}>
-						{difficulty ? <Caption style={{ color: 'var(--tg-text)' }}>Сложность: {difficulty}</Caption> : null}
+						{difficulty ? <Caption style={{ color: 'var(--tg-text)' }}>Difficulty: {difficulty}</Caption> : null}
 						{notes ? (
 							<Caption
 								style={{
@@ -203,10 +203,10 @@ export function FocusHistoryScreen() {
 		<div style={pageStyle}>
 			<header style={{ display: 'grid', gap: '12px' }}>
 				<Button variant="ghost" size="sm" onClick={() => navigate('/today')}>
-					← Сегодня
+					← Today
 				</Button>
 				<div style={{ display: 'grid', gap: '4px' }}>
-					<Title>История фокуса</Title>
+					<Title>Focus history</Title>
 					<Caption style={{ textTransform: 'capitalize' }}>{getSelectedDateLabel(selectedDate)}</Caption>
 				</div>
 			</header>
@@ -218,18 +218,18 @@ export function FocusHistoryScreen() {
 						size="md"
 						onClick={() => setSelectedDate(today)}
 					>
-						Сегодня
+						Today
 					</Button>
 					<Button
 						variant={selectedDate === yesterday ? 'primary' : 'secondary'}
 						size="md"
 						onClick={() => setSelectedDate(yesterday)}
 					>
-						Вчера
+						Yesterday
 					</Button>
 				</div>
 				<input
-					aria-label="Выбрать дату"
+					aria-label="Choose date"
 					type="date"
 					value={selectedDate}
 					onChange={(event) => {
@@ -255,10 +255,10 @@ export function FocusHistoryScreen() {
 						}}
 					>
 						<Body style={{ color: 'var(--tg-destructive)' }}>
-							{error.status === 401 ? 'Не удалось подтвердить Telegram-сессию.' : error.detail}
+							{error.status === 401 ? 'Could not verify your Telegram session.' : error.detail}
 						</Body>
 						<Button variant="secondary" size="md" onClick={refetch}>
-							Повторить
+							Retry
 						</Button>
 					</div>
 				</Card>
@@ -267,14 +267,14 @@ export function FocusHistoryScreen() {
 			{!loading && !error && items.length === 0 ? (
 				<Card>
 					<div style={{ display: 'grid', gap: '6px', justifyItems: 'center', textAlign: 'center', padding: '12px 0' }}>
-						<Body style={{ fontWeight: 600 }}>Сессий за этот день нет</Body>
-						<Caption>Запусти Pomodoro из плана на сегодня, и история появится здесь.</Caption>
+						<Body style={{ fontWeight: 600 }}>No sessions for this day</Body>
+						<Caption>Start a Pomodoro from today's plan, and your history will appear here.</Caption>
 					</div>
 				</Card>
 			) : null}
 
 			{!loading && !error && items.length > 0 ? (
-				<section style={{ display: 'grid', gap: '12px' }} aria-label="Список focus-сессий">
+				<section style={{ display: 'grid', gap: '12px' }} aria-label="Focus sessions list">
 					{items.map((session) => (
 						<FocusSessionCard key={session.id} session={session} now={now} />
 					))}
@@ -283,13 +283,13 @@ export function FocusHistoryScreen() {
 
 			{!loading && !error && hasMore ? (
 				<Button variant="secondary" size="md" fullWidth loading={loadingMore} onClick={loadMore}>
-					Загрузить ещё
+					Load more
 				</Button>
 			) : null}
 
 			{!loading && !error && total > 0 ? (
 				<Caption style={{ display: 'block', textAlign: 'center' }}>
-					Показано {items.length} из {total}
+					Showing {items.length} of {total}
 				</Caption>
 			) : null}
 		</div>
