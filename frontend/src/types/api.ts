@@ -53,16 +53,40 @@ export interface Plan {
 }
 
 // Focus session
+export type FocusSessionStatus = 'active' | 'completed' | 'cancelled'
+
 export interface FocusSession {
 	id: string
-	user_id: string
-	stage_id?: string
+	user_id?: string
+	stage_id?: string | null
+	plan_id?: string | null
+	plan_stage_id?: string | null
+	status: FocusSessionStatus
 	started_at: string
-	ended_at?: string
-	duration_minutes?: number
-	topic: string
-	difficulty?: number
-	completed: boolean
+	ended_at?: string | null
+	planned_duration_minutes?: number | null
+	actual_duration_seconds?: number | null
+	duration_minutes?: number | null
+	topic?: string | null
+	difficulty?: number | null
+	notes?: string | null
+	completed?: boolean
+	created_at?: string | null
+	updated_at?: string | null
+}
+
+export interface FocusHistoryParams {
+	date?: string
+	status?: FocusSessionStatus
+	limit?: number
+	offset?: number
+}
+
+export interface FocusHistoryResponse {
+	items: FocusSession[]
+	total: number
+	limit: number
+	offset: number
 }
 
 // Analytics

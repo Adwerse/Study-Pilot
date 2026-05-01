@@ -59,6 +59,10 @@ function getTimerValues(
 	}
 }
 
+function getSessionTopic(session: FocusSession): string {
+	return session.topic?.trim() || 'Focus session'
+}
+
 export function usePomodoro(initialPomodoroCount = MIN_POMODOROS): UsePomodoroReturn {
 	const normalizedInitialCount = normalizePomodoroCount(initialPomodoroCount)
 	const initialTotalSeconds = normalizedInitialCount * POMODORO_SECONDS
@@ -131,14 +135,14 @@ export function usePomodoro(initialPomodoroCount = MIN_POMODOROS): UsePomodoroRe
 
 		if (statusRef.current === 'paused' && isSameSession) {
 			setSession(nextSession)
-			setTopic(nextSession.topic)
+			setTopic(getSessionTopic(nextSession))
 			return
 		}
 
 		const nextTimer = getTimerValues(nextSession.started_at, totalSecondsRef.current, pausedSecondsRef.current)
 
 		setSession(nextSession)
-		setTopic(nextSession.topic)
+		setTopic(getSessionTopic(nextSession))
 		setElapsed(nextTimer.elapsed)
 		setRemaining(nextTimer.remaining)
 		setProgress(nextTimer.progress)

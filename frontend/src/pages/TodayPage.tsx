@@ -96,8 +96,13 @@ export function TodayPage() {
 	return (
 		<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
 			<header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-				<Title>Today</Title>
-				<Caption style={{ marginTop: '4px' }}>{formattedDate}</Caption>
+				<div style={{ display: 'grid', gap: '4px' }}>
+					<Title>Today</Title>
+					<Caption>{formattedDate}</Caption>
+				</div>
+				<Button variant="secondary" size="sm" onClick={() => navigate('/focus/history')}>
+					История
+				</Button>
 			</header>
 
 			{stage ? (

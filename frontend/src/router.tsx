@@ -1,6 +1,7 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { Layout } from './components/layout'
 import { AnalyticsPage } from './pages/AnalyticsPage'
+import { FocusHistoryPage } from './pages/FocusHistoryPage'
 import { KnowledgePage } from './pages/KnowledgePage'
 import { RoadmapPage } from './pages/RoadmapPage'
 import { TodayPage } from './pages/TodayPage'
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
 			{
 				path: 'analytics',
 				element: <AnalyticsPage />,
+			},
+			{
+				path: 'focus/history',
+				element: <FocusHistoryPage />,
 			},
 		],
 	},

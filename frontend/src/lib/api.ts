@@ -5,6 +5,8 @@ import type {
   DailyMetrics,
   DailyPlan,
   Document as ApiDocument,
+  FocusHistoryParams,
+  FocusHistoryResponse,
   FocusSession,
   Plan,
   User,
@@ -113,7 +115,8 @@ export const apiClient = {
   endFocus: (sessionId: string, difficulty: number, signal?: AbortSignal) =>
     api.post<FocusSession>('/api/v1/focus/end', { session_id: sessionId, difficulty }, { signal }),
   getActiveSession: (signal?: AbortSignal) => api.get<FocusSession | null>('/api/v1/focus/active', { signal }),
-  getFocusHistory: (signal?: AbortSignal) => api.get<FocusSession[]>('/api/v1/focus/history', { signal }),
+  getFocusHistory: (params: FocusHistoryParams = {}, signal?: AbortSignal) =>
+    api.get<FocusHistoryResponse>('/api/v1/focus/history', { params, signal }),
 
   // Ask / RAG
   ask: (question: string, signal?: AbortSignal) => api.post<AskResponse>('/api/v1/ask', { question }, { signal }),
