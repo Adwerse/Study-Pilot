@@ -1,3 +1,11 @@
+from .document import (
+    DocumentDetailResponse,
+    DocumentListItem,
+    DocumentListResponse,
+    DocumentSourceType,
+    DocumentStatus,
+    DocumentUploadResponse,
+)
 from .focus_log import (
     FocusHistoryResponse,
     FocusSessionEnd,
@@ -18,6 +26,12 @@ __all__ = [
     "PlanRead",
     "PlanStageCreate",
     "PlanStageRead",
+    "DocumentSourceType",
+    "DocumentStatus",
+    "DocumentUploadResponse",
+    "DocumentListItem",
+    "DocumentListResponse",
+    "DocumentDetailResponse",
     "FocusSessionStart",
     "FocusSessionEnd",
     "FocusSessionRead",
