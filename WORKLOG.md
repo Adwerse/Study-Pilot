@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-04-29
+Last updated: 2026-05-02
 
 ## Repository Context
 
@@ -278,6 +278,75 @@ Checks:
 - `python -m ruff format --check` passed for changed files.
 - `python -m pytest tests/test_focus_repository.py tests/test_focus_service.py -q` passed with `11 passed`.
 - Full `pytest tests -q` was blocked locally when PostgreSQL was not running; after Docker/Postgres startup, the app was able to run against the dev database.
+
+## [Sprint 5] RAG Document Ingest Backend
+Date: 2026-05-02
+Status: completed
+
+What was done:
+- Analyzed the existing backend architecture before implementation: FastAPI routers, async SQLAlchemy ORM, raw SQL migrations, Telegram Mini App auth through `get_current_user`, repository/service split, settings, and current AI client usage.
+- Added user-scoped document APIs under `/api/v1/documents`:
+  - `POST /documents/upload`
+  - `GET /documents`
+  - `GET /documents/{document_id}`
+- Added `backend/app/models/document.py` with ORM models:
+  - `Document`
+  - `DocumentChunk`
+- Added `backend/migrations/008_create_documents.sql`:
+  - `documents`
+  - `document_chunks`
+  - `pgvector` extension
+  - user/document indexes
+  - cosine vector index for future RAG search
+- Added `backend/app/schemas/document.py` with upload, list, and detail response schemas.
+- Added `backend/app/repositories/document_repository.py` for create, list, owned lookup, chunk replacement, retry cleanup, and failed-status updates.
+- Added `DocumentTextExtractor`:
+  - supports `.txt`, `.md`, `.pdf`
+  - validates extension and content type
+  - decodes UTF-8 text files
+  - extracts PDF text page-by-page with `pypdf`
+  - preserves `page_number` metadata for PDF chunks
+  - raises domain errors for unsupported, empty, or failed extraction cases
+- Added `DocumentChunker`:
+  - configurable char-based chunk size and overlap
+  - paragraph/sentence-aware breakpoints
+  - max chunks guard
+  - chunk metadata with `filename`, `source_type`, and optional `page_number`
+- Added `EmbeddingService` using OpenAI embeddings through settings:
+  - `OPENAI_API_KEY`
+  - `EMBEDDING_MODEL`
+  - `EMBEDDING_DIMENSIONS`
+  - batched `embed_texts`
+  - provider errors are logged and surfaced to ingest safely
+- Added `VectorIndexService` abstraction over the current pgvector-backed storage.
+- Added `DocumentIngestService` orchestration:
+  - set status to `processing`
+  - extract text
+  - chunk text
+  - generate embeddings
+  - upsert chunks and vectors
+  - set status to `ready`
+  - on failure set status to `failed` with a sanitized error message
+  - retry-friendly cleanup so repeated ingest does not duplicate chunks
+- Added settings:
+  - `DOCUMENT_MAX_FILE_SIZE_BYTES`
+  - `DOCUMENT_CHUNK_SIZE_CHARS`
+  - `DOCUMENT_CHUNK_OVERLAP_CHARS`
+  - `DOCUMENT_MAX_CHUNKS`
+  - `EMBEDDING_MODEL`
+  - `EMBEDDING_DIMENSIONS`
+- Added dependencies:
+  - `python-multipart`
+  - `pypdf`
+  - `pgvector`
+- Updated `.env.example` with document ingest and embedding settings.
+
+Checks:
+- Installed backend dependencies from `backend/requirements.txt` into `backend/.venv`.
+- `python -m pytest tests/test_document_processing_services.py tests/test_document_ingest_service.py tests/test_documents_api.py -q` passed with `16 passed`.
+- `python -m ruff check` passed for changed backend files and new tests.
+- `python -m ruff format --check` passed for changed backend files and new tests.
+- Full `python -m pytest tests -q` result: `55 passed`, `2 skipped`, `1 failed`; the failing pre-existing `test_plan_persistence.py` case was blocked by local PostgreSQL connection refusal, not by the new ingest pipeline.
 
 ## Dev Runbook: Bot + Mini App With HTTP Tunnels
 Date: 2026-04-29
