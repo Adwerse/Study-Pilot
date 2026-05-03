@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     DOCUMENT_MAX_CHUNKS: int = 500
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSIONS: int = 1536
+    RAG_REWRITE_MODEL: str = "deepseek/deepseek-chat-v3.1"
+    RAG_ANSWER_MODEL: str = "deepseek/deepseek-chat-v3.1"
+    RAG_TOP_K_DEFAULT: int = 8
+    RAG_RERANK_TOP_K_DEFAULT: int = 4
+    RAG_MIN_SCORE_THRESHOLD: float = 0.2
+    RAG_MAX_CONTEXT_CHARS: int = 12000
+    RAG_SNIPPET_CHARS: int = 300
 
     @property
     def telegram_bot_token(self) -> str:

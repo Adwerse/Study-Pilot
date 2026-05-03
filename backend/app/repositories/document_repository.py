@@ -48,6 +48,36 @@ class DocumentRepository:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
+    async def list_by_ids_for_user(
+        self, document_ids: list[UUID], user_id: UUID
+    ) -> list[Document]:
+        if not document_ids:
+            return []
+
+        result = await self.db.execute(
+            select(Document).where(
+                Document.user_id == user_id,
+                Document.id.in_(document_ids),
+            )
+        )
+        return list(result.scalars().all())
+
+    async def count_ready_by_user(
+        self,
+        user_id: UUID,
+        document_ids: list[UUID] | None = None,
+    ) -> int:
+        filters = [Document.user_id == user_id, Document.status == "ready"]
+        if document_ids is not None:
+            if not document_ids:
+                return 0
+            filters.append(Document.id.in_(document_ids))
+
+        result = await self.db.execute(
+            select(func.count()).select_from(Document).where(*filters)
+        )
+        return int(result.scalar_one())
+
     async def list_by_user(
         self,
         user_id: UUID,
