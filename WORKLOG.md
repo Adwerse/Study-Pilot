@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-05-02
+Last updated: 2026-05-03
 
 ## Repository Context
 
@@ -348,6 +348,79 @@ Checks:
 - `python -m ruff format --check` passed for changed backend files and new tests.
 - Full `python -m pytest tests -q` result: `55 passed`, `2 skipped`, `1 failed`; the failing pre-existing `test_plan_persistence.py` case was blocked by local PostgreSQL connection refusal, not by the new ingest pipeline.
 
+## [Sprint 5] RAG Agent
+Date: 2026-05-03
+Status: completed
+
+What was done:
+- Checked compatibility with the current backend architecture before implementation: FastAPI routers, Telegram Mini App auth dependency, async SQLAlchemy repositories, document ingest pipeline, pgvector-backed chunks, settings, logging, and existing tests.
+- Replaced the placeholder `POST /api/v1/ask` with a production RAG endpoint using `response_model`.
+- Added `backend/app/schemas/rag.py` with validated request and response schemas:
+  - `question`
+  - optional `document_ids`
+  - `top_k`
+  - `rerank_top_k`
+  - answer, sources, rewritten query, and confidence in the response.
+- Added `backend/app/services/rag_agent.py` as the orchestrator:
+  - validate user/document access
+  - rewrite query
+  - embed rewritten query
+  - vector search over user-scoped chunks
+  - rerank results
+  - generate grounded answer
+  - return cited sources and confidence.
+- Added `QueryRewriter`:
+  - uses the existing OpenAI-compatible LLM client
+  - keeps the user's language
+  - limits rewritten query length
+  - falls back to the original question if rewrite fails.
+- Added `VectorSearchService` over the existing pgvector storage:
+  - searches `document_chunks.embedding`
+  - filters by `user_id`
+  - optionally filters by `document_ids`
+  - joins document title and filename for source metadata.
+- Added `Reranker`:
+  - lightweight lexical overlap scoring
+  - combines vector and lexical scores
+  - falls back to vector order if an external/provider reranker fails.
+- Added `AnswerGenerator`:
+  - strictly grounded system prompt
+  - JSON response parsing
+  - citations in `[1]`, `[2]` format
+  - confidence heuristic
+  - graceful provider error propagation.
+- Extended `DocumentRepository` with:
+  - `list_by_ids_for_user`
+  - `count_ready_by_user`
+- Added RAG settings:
+  - `RAG_REWRITE_MODEL`
+  - `RAG_ANSWER_MODEL`
+  - `RAG_TOP_K_DEFAULT`
+  - `RAG_RERANK_TOP_K_DEFAULT`
+  - `RAG_MIN_SCORE_THRESHOLD`
+  - `RAG_MAX_CONTEXT_CHARS`
+  - `RAG_SNIPPET_CHARS`
+- Updated `.env.example` with the new RAG settings.
+- Added `backend/tests/test_rag_agent.py` covering API validation, ownership checks, no-context behavior, query rewrite fallback, vector search filters, rerank ordering/fallback, answer generation, snippets, citations, and source ordering.
+
+Behavior:
+- If no ready documents or no relevant chunks are found, `/ask` returns a truthful low-confidence answer with `sources: []`.
+- If `document_ids` contains another user's document, the endpoint returns `404`.
+- Embedding, vector search, and answer-generation provider errors are surfaced as `503`.
+- The RAG response only includes sources based on chunks selected for the generated answer.
+
+Checks:
+- Installed backend dependencies from `backend/requirements.txt` into the existing local `.venv` so tests and lint could run.
+- `python -m ruff check app tests` passed.
+- `python -m ruff format --check` passed for changed RAG/backend files and the new RAG tests.
+- `python -m pytest tests/test_rag_agent.py -q` passed with `18 passed`.
+- `python -m pytest tests/test_rag_agent.py tests/test_documents_api.py tests/test_document_ingest_service.py tests/test_document_processing_services.py -q` passed with `34 passed`.
+- `python -m pytest tests/ -q -k "not test_daily_plan_uses_current_stage_and_focus_history"` passed with `73 passed`, `2 skipped`, `1 deselected`.
+- Full `python -m pytest tests/ -q` result: `73 passed`, `2 skipped`, `1 failed`; the remaining failure is the pre-existing DB-dependent `test_daily_plan_uses_current_stage_and_focus_history`, blocked locally by PostgreSQL connection refusal, not by the RAG Agent.
+
+Known follow-up:
+- Frontend `KnowledgePage` and `apiClient` still point at the legacy `/api/v1/ask/documents` placeholder routes for document upload/list/delete. They need to be switched to the real `/api/v1/documents` endpoints and wired to `POST /api/v1/ask`.
+
 ## Dev Runbook: Bot + Mini App With HTTP Tunnels
 Date: 2026-04-29
 Status: current dev procedure
@@ -511,7 +584,7 @@ Status: in progress
 
 ## Current Follow-ups
 
-- Replace placeholder API endpoints in ask, analytics, and user update/delete with real logic.
+- Replace placeholder API endpoints in analytics, user update/delete, and legacy ask document routes with real logic or remove obsolete routes.
 - Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
 - Keep backend, bot, and frontend `.env` values aligned for production.
 - Add a CI pipeline for tests and lint, plus a formal release workflow.
