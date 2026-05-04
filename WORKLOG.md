@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-05-03
+Last updated: 2026-05-04
 
 ## Repository Context
 
@@ -421,6 +421,51 @@ Checks:
 Known follow-up:
 - Frontend `KnowledgePage` and `apiClient` still point at the legacy `/api/v1/ask/documents` placeholder routes for document upload/list/delete. They need to be switched to the real `/api/v1/documents` endpoints and wired to `POST /api/v1/ask`.
 
+## [Sprint 5] RAG API
+Date: 2026-05-04
+Status: completed
+
+What was done:
+- Audited the existing Sprint 5 backend before implementation: document models, ingest pipeline, `RAGAgent`, pgvector-backed search, schemas, routers, auth dependency, and tests.
+- Kept routers thin and added service-layer integration:
+  - `DocumentService`
+  - `RAGService`
+- Updated `POST /api/v1/ask`:
+  - uses `AskRequest` / `AskResponse`
+  - validates `question`, `top_k`, `rerank_top_k`, and `document_ids`
+  - rejects `rerank_top_k > top_k` with `422`
+  - maps foreign or missing `document_ids` to `404`
+  - maps RAG provider/vector errors to `503`
+  - keeps no-context / no-relevant-chunks behavior as a truthful low-confidence answer.
+- Updated RAG source alignment so response `sources` follow citation order in the answer.
+- Updated `GET /api/v1/documents`:
+  - user-scoped only
+  - `limit` / `offset`
+  - `status` filter
+  - optional case-insensitive `q` search over title and filename
+  - `created_at DESC`
+  - no chunks or full text in the response
+  - safe short `error_message` output.
+- Added `DELETE /api/v1/documents/{document_id}`:
+  - user-scoped lookup by `user_id + document_id`
+  - returns `404` for missing or foreign documents
+  - calls `VectorIndexService.delete_document(document_id, user_id)`
+  - removes chunks/vector entries before deleting the document
+  - returns `503` and keeps the document in DB if vector cleanup fails
+  - returns `204 No Content` on success.
+- Removed obsolete placeholder document routes from `backend/app/api/ask.py`.
+- Extended `DocumentRepository` with escaped `q` search and physical document deletion.
+- Added focused tests for ask validation/errors, document listing filters, user isolation, deletion cleanup, vector cleanup failures, repeated delete behavior, and source ordering.
+
+Checks:
+- `python -m pytest tests/test_documents_api.py tests/test_rag_agent.py -q` passed with `33 passed`.
+- `python -m ruff check` passed for changed backend files and focused tests.
+- `python -m ruff format --check` passed for changed backend files and focused tests.
+- Full `python -m pytest tests -q` result: `81 passed`, `2 skipped`, `1 failed`; the remaining failure is the DB-dependent `test_daily_plan_uses_current_stage_and_focus_history`, blocked locally by PostgreSQL connection refusal, not by the RAG API changes.
+
+Known follow-up:
+- Frontend `KnowledgePage` and `apiClient` still need to be switched from `/api/v1/ask/documents` to the real `/api/v1/documents` endpoints and updated for the typed RAG response shape.
+
 ## Dev Runbook: Bot + Mini App With HTTP Tunnels
 Date: 2026-04-29
 Status: current dev procedure
@@ -584,7 +629,7 @@ Status: in progress
 
 ## Current Follow-ups
 
-- Replace placeholder API endpoints in analytics, user update/delete, and legacy ask document routes with real logic or remove obsolete routes.
+- Replace placeholder API endpoints in analytics and user update/delete with real logic or remove obsolete routes.
 - Replace the temporary tunnel URL with a permanent HTTPS domain for stable Mini App testing.
 - Keep backend, bot, and frontend `.env` values aligned for production.
 - Add a CI pipeline for tests and lint, plus a formal release workflow.
