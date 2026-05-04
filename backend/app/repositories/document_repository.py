@@ -1,11 +1,24 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document, DocumentChunk
 from app.services.document_chunker import DocumentChunkInput
+
+
+LIKE_ESCAPE_CHARS = str.maketrans(
+    {
+        "\\": "\\\\",
+        "%": "\\%",
+        "_": "\\_",
+    }
+)
+
+
+def escape_like_query(value: str) -> str:
+    return value.translate(LIKE_ESCAPE_CHARS)
 
 
 class DocumentRepository:
@@ -84,10 +97,21 @@ class DocumentRepository:
         limit: int = 20,
         offset: int = 0,
         status: str | None = None,
+        q: str | None = None,
     ) -> tuple[list[Document], int]:
         filters = [Document.user_id == user_id]
         if status is not None:
             filters.append(Document.status == status)
+        if q is not None:
+            normalized_q = q.strip()
+            if normalized_q:
+                pattern = f"%{escape_like_query(normalized_q)}%"
+                filters.append(
+                    or_(
+                        Document.title.ilike(pattern, escape="\\"),
+                        Document.filename.ilike(pattern, escape="\\"),
+                    )
+                )
 
         total_result = await self.db.execute(
             select(func.count()).select_from(Document).where(*filters)
@@ -151,6 +175,11 @@ class DocumentRepository:
                 DocumentChunk.user_id == user_id,
             )
         )
+        if commit:
+            await self.db.commit()
+
+    async def delete_document(self, document: Document, commit: bool = True) -> None:
+        await self.db.delete(document)
         if commit:
             await self.db.commit()
 

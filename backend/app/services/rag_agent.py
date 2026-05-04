@@ -147,11 +147,21 @@ class RAGAgent:
         if not used_source_numbers:
             return answer, []
 
-        valid_numbers = [
+        fallback_valid_numbers = [
             source_number
             for source_number in used_source_numbers
             if 1 <= source_number <= len(context_chunks)
         ]
+        cited_valid_numbers: list[int] = []
+        for raw_source_number in CITATION_PATTERN.findall(answer):
+            source_number = int(raw_source_number)
+            if (
+                1 <= source_number <= len(context_chunks)
+                and source_number not in cited_valid_numbers
+            ):
+                cited_valid_numbers.append(source_number)
+
+        valid_numbers = cited_valid_numbers or fallback_valid_numbers
         if not valid_numbers:
             return answer, []
 

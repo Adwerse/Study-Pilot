@@ -17,6 +17,7 @@ from .focus_block import DailyPlan, FocusBlock
 from .metrics import MetricsCreate, MetricsRead
 from .plan import PlanCreate, PlanRead
 from .plan_stage import PlanStageCreate, PlanStageRead
+from .rag import AskRequest, AskResponse, RAGAnswer, RAGQuestionRequest, RAGSource
 from .user import UserCreate, UserRead
 
 __all__ = [
@@ -41,4 +42,9 @@ __all__ = [
     "DailyPlan",
     "MetricsCreate",
     "MetricsRead",
+    "AskRequest",
+    "AskResponse",
+    "RAGQuestionRequest",
+    "RAGAnswer",
+    "RAGSource",
 ]

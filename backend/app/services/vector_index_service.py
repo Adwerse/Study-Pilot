@@ -22,4 +22,4 @@ class VectorIndexService:
         )
 
     async def delete_document(self, document_id: UUID, user_id: UUID) -> None:
-        await self.document_repository.delete_chunks(document_id, user_id)
+        await self.document_repository.delete_chunks(document_id, user_id, commit=False)

@@ -1,7 +1,7 @@
-from typing import Literal
+from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.config import settings
 
@@ -9,7 +9,7 @@ from app.config import settings
 RAGConfidence = Literal["low", "medium", "high"]
 
 
-class RAGQuestionRequest(BaseModel):
+class AskRequest(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
     document_ids: list[UUID] | None = None
     top_k: int = Field(
@@ -42,6 +42,12 @@ class RAGQuestionRequest(BaseModel):
         deduped = list(dict.fromkeys(value))
         return deduped or None
 
+    @model_validator(mode="after")
+    def validate_rerank_limit(self) -> Self:
+        if self.rerank_top_k > self.top_k:
+            raise ValueError("rerank_top_k must be less than or equal to top_k")
+        return self
+
 
 class RAGSource(BaseModel):
     document_id: UUID
@@ -54,8 +60,12 @@ class RAGSource(BaseModel):
     snippet: str
 
 
-class RAGAnswer(BaseModel):
+class AskResponse(BaseModel):
     answer: str
     sources: list[RAGSource]
     rewritten_query: str
     confidence: RAGConfidence
+
+
+RAGQuestionRequest = AskRequest
+RAGAnswer = AskResponse

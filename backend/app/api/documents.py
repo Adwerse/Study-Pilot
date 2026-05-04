@@ -13,6 +13,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_current_user
@@ -28,10 +29,16 @@ from app.schemas.document import (
     DocumentUploadResponse,
 )
 from app.services.document_ingest_service import DocumentIngestService
+from app.services.document_service import (
+    DocumentNotFoundError,
+    DocumentService,
+    VectorIndexCleanupError,
+)
 from app.services.document_text_extractor import (
     DocumentTextExtractor,
     UnsupportedFileTypeError,
 )
+from app.services.vector_index_service import VectorIndexService
 
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -55,6 +62,18 @@ async def resolve_user_id(current_user: dict, db: AsyncSession) -> UUID:
 
 def build_document_repository(db: AsyncSession) -> DocumentRepository:
     return DocumentRepository(db)
+
+
+def build_vector_index_service(repo: DocumentRepository) -> VectorIndexService:
+    return VectorIndexService(repo)
+
+
+def build_document_service(db: AsyncSession) -> DocumentService:
+    repo = build_document_repository(db)
+    return DocumentService(
+        document_repository=repo,
+        vector_index=build_vector_index_service(repo),
+    )
 
 
 def build_document_ingest_service(db: AsyncSession) -> DocumentIngestService:
@@ -162,24 +181,34 @@ async def upload_document(
     return build_upload_response(processed_document)
 
 
-@router.get("", response_model=DocumentListResponse, include_in_schema=False)
-@router.get("/", response_model=DocumentListResponse)
+@router.get("", response_model=DocumentListResponse)
+@router.get("/", response_model=DocumentListResponse, include_in_schema=False)
 async def list_documents(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     status_filter: DocumentStatus | None = Query(default=None, alias="status"),
+    q: str | None = Query(default=None, min_length=1, max_length=255),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentListResponse:
-    user_id = await resolve_user_id(current_user, db)
-    repo = build_document_repository(db)
-    items, total = await repo.list_by_user(
-        user_id=user_id,
-        limit=limit,
-        offset=offset,
-        status=status_filter,
-    )
-    return DocumentListResponse(items=items, total=total, limit=limit, offset=offset)
+    try:
+        user_id = await resolve_user_id(current_user, db)
+        service = build_document_service(db)
+        items, total = await service.list_user_documents(
+            user_id=user_id,
+            limit=limit,
+            offset=offset,
+            status=status_filter,
+            q=q,
+        )
+        return DocumentListResponse(
+            items=items, total=total, limit=limit, offset=offset
+        )
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
 
 
 @router.get("/{document_id}", response_model=DocumentDetailResponse)
@@ -188,9 +217,41 @@ async def get_document(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DocumentDetailResponse:
-    user_id = await resolve_user_id(current_user, db)
-    repo = build_document_repository(db)
-    document = await repo.get_by_id(document_id, user_id=user_id)
-    if document is None:
-        raise HTTPException(status_code=404, detail="Document not found")
-    return document
+    try:
+        user_id = await resolve_user_id(current_user, db)
+        service = build_document_service(db)
+        return await service.get_user_document_or_404(
+            user_id=user_id,
+            document_id=document_id,
+        )
+    except DocumentNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Document not found") from exc
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    document_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        user_id = await resolve_user_id(current_user, db)
+        service = build_document_service(db)
+        await service.delete_user_document(user_id=user_id, document_id=document_id)
+    except DocumentNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Document not found") from exc
+    except VectorIndexCleanupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Vector index cleanup failed",
+        ) from exc
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc

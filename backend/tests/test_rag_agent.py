@@ -110,6 +110,16 @@ async def test_post_ask_rejects_too_large_top_k(client):
 
 
 @pytest.mark.asyncio
+async def test_post_ask_rejects_rerank_top_k_greater_than_top_k(client):
+    response = await client.post(
+        "/api/v1/ask",
+        json={"question": "valid question", "top_k": 3, "rerank_top_k": 4},
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_post_ask_rejects_other_users_document_id(client, monkeypatch):
     async def fake_resolve_user_id(current_user, db):
         _ = current_user, db
@@ -128,6 +138,30 @@ async def test_post_ask_rejects_other_users_document_id(client, monkeypatch):
     )
 
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_post_ask_maps_rag_provider_error_to_503(client, monkeypatch):
+    async def fake_resolve_user_id(current_user, db):
+        _ = current_user, db
+        return uuid4()
+
+    monkeypatch.setattr(ask_api, "resolve_user_id", fake_resolve_user_id)
+    monkeypatch.setattr(
+        ask_api,
+        "build_rag_agent",
+        lambda db: FakeAPIAgent(
+            error=EmbeddingProviderError("Embedding generation failed")
+        ),
+    )
+
+    response = await client.post(
+        "/api/v1/ask",
+        json={"question": "What is inside?"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "RAG service is temporarily unavailable"
 
 
 @pytest.mark.asyncio
@@ -500,6 +534,46 @@ async def test_rag_agent_snippets_truncated_and_citations_aligned(monkeypatch):
     assert answer.sources[0].chunk_id == second.chunk_id
     assert len(answer.sources[0].snippet) <= 40
     assert answer.sources[0].page_number == 2
+
+
+@pytest.mark.asyncio
+async def test_rag_agent_source_order_matches_citation_order():
+    first = make_retrieved_chunk("First chunk has background.", score=0.8)
+    second = make_retrieved_chunk("Second chunk has the answer.", score=0.9)
+
+    class StableReranker:
+        async def rerank(self, question, rewritten_query, chunks, top_k):
+            _ = question, rewritten_query, top_k
+            return [RerankedChunk(**chunk.__dict__) for chunk in chunks]
+
+    class CitationOrderAnswerGenerator:
+        async def generate_answer(self, question, chunks):
+            _ = question, chunks
+            from app.services.rag_types import GeneratedAnswer
+
+            return GeneratedAnswer(
+                answer="Use the second chunk first [2], then the first [1].",
+                confidence="high",
+                used_source_numbers=[1, 2],
+                context_source_count=len(chunks),
+            )
+
+    agent = RAGAgent(
+        document_repository=FakeDocumentRepository(ready_count=1),
+        embedding_service=FakeEmbeddingService(),
+        vector_search_service=FakeVectorSearch(chunks=[first, second]),
+        query_rewriter=FakeQueryRewriter(),
+        reranker=StableReranker(),
+        answer_generator=CitationOrderAnswerGenerator(),
+    )
+
+    answer = await agent.answer_question(user_id=uuid4(), question="question")
+
+    assert answer.answer == "Use the second chunk first [1], then the first [2]."
+    assert [source.chunk_id for source in answer.sources] == [
+        second.chunk_id,
+        first.chunk_id,
+    ]
 
 
 class FakeDBResult:

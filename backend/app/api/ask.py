@@ -6,10 +6,11 @@ from app.api.dependencies import get_current_user
 from app.api.documents import resolve_user_id
 from app.database import get_db
 from app.repositories.document_repository import DocumentRepository
-from app.schemas.rag import RAGAnswer, RAGQuestionRequest
+from app.schemas.rag import AskRequest, AskResponse
 from app.services.answer_generator import LLMProviderError
 from app.services.embedding_service import EmbeddingProviderError, EmbeddingService
 from app.services.rag_agent import RAGAgent, RAGDocumentAccessError
+from app.services.rag_service import RAGService
 from app.services.vector_search_service import VectorSearchError, VectorSearchService
 
 
@@ -27,17 +28,21 @@ def build_rag_agent(db: AsyncSession) -> RAGAgent:
     )
 
 
-@router.post("", response_model=RAGAnswer)
-@router.post("/", response_model=RAGAnswer, include_in_schema=False)
+def build_rag_service(db: AsyncSession) -> RAGService:
+    return RAGService(rag_agent=build_rag_agent(db))
+
+
+@router.post("", response_model=AskResponse)
+@router.post("/", response_model=AskResponse, include_in_schema=False)
 async def ask_question(
-    body: RAGQuestionRequest,
+    body: AskRequest,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> RAGAnswer:
+) -> AskResponse:
     try:
         user_id = await resolve_user_id(current_user, db)
-        agent = build_rag_agent(db)
-        return await agent.answer_question(
+        rag_service = build_rag_service(db)
+        return await rag_service.answer_question(
             user_id=user_id,
             question=body.question,
             document_ids=body.document_ids,
@@ -49,36 +54,20 @@ async def ask_question(
     except EmbeddingProviderError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Embedding provider unavailable",
+            detail="RAG service is temporarily unavailable",
         ) from exc
     except VectorSearchError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Vector search unavailable",
+            detail="RAG service is temporarily unavailable",
         ) from exc
     except LLMProviderError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Answer generation provider unavailable",
+            detail="RAG service is temporarily unavailable",
         ) from exc
     except SQLAlchemyError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database unavailable",
         ) from exc
-
-
-@router.post("/documents", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def upload_document() -> dict[str, str]:
-    return {"detail": "not implemented"}
-
-
-@router.get("/documents", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def get_documents() -> dict[str, str]:
-    return {"detail": "not implemented"}
-
-
-@router.delete("/documents/{doc_id}", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def delete_document(doc_id: int) -> dict[str, str]:
-    _ = doc_id
-    return {"detail": "not implemented"}
