@@ -11,6 +11,7 @@ from app.services.document_text_extractor import (
     TextExtractionError,
 )
 from app.services.embedding_service import EmbeddingProviderError
+from app.services.vector_index_service import VectorStoreUnavailableError
 
 
 class FakeDocumentRepository:
@@ -83,13 +84,25 @@ class FakeEmbeddingService:
 
 
 class FakeVectorIndex:
-    def __init__(self, repo: FakeDocumentRepository):
+    def __init__(
+        self,
+        repo: FakeDocumentRepository,
+        error: Exception | None = None,
+    ):
         self.repo = repo
+        self.error = error
         self.upsert_called = False
+        self.upsert_user_id = None
+        self.upsert_document_id = None
 
-    async def upsert_chunks(self, document, chunks, embeddings):
+    async def upsert_chunks(self, user_id, document_id, chunks, embeddings):
         self.upsert_called = True
-        return await self.repo.replace_chunks(document, chunks, embeddings)
+        self.upsert_user_id = user_id
+        self.upsert_document_id = document_id
+        if self.error is not None:
+            raise self.error
+        document = await self.repo.get_by_id(document_id, user_id)
+        await self.repo.replace_chunks(document, chunks, embeddings)
 
 
 @pytest.fixture
@@ -133,6 +146,8 @@ async def test_ingest_document_success_updates_status_and_chunks(document):
     assert extractor.called is True
     assert embeddings.texts == [chunk.content for chunk, _ in repo.chunks]
     assert vector_index.upsert_called is True
+    assert vector_index.upsert_user_id == document.user_id
+    assert vector_index.upsert_document_id == document.id
     assert result.status == "ready"
     assert result.chunks_count == len(repo.chunks)
     assert result.error_message is None
@@ -156,6 +171,27 @@ async def test_ingest_failure_in_embeddings_marks_document_failed(document):
     assert result.status == "failed"
     assert result.chunks_count == 0
     assert "Embedding generation failed" in result.error_message
+    assert repo.rollback_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_ingest_failure_in_vector_store_marks_document_failed(document):
+    repo = FakeDocumentRepository(document)
+    service = DocumentIngestService(
+        document_repository=repo,
+        text_extractor=FakeTextExtractor(ExtractedDocumentText(text="Useful text")),
+        chunker=DocumentChunker(chunk_size_chars=100, chunk_overlap_chars=10),
+        embedding_service=FakeEmbeddingService(),
+        vector_index=FakeVectorIndex(
+            repo, error=VectorStoreUnavailableError("Vector upsert failed")
+        ),
+    )
+
+    result = await service.ingest_document(document.id, b"document bytes")
+
+    assert result.status == "failed"
+    assert result.chunks_count == 0
+    assert "Vector upsert failed" in result.error_message
     assert repo.rollback_calls == 1
 
 

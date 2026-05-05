@@ -1,5 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
+-- Keep vector(1536) in sync with Settings.EMBEDDING_DIMENSIONS and
+-- .env.example EMBEDDING_DIMENSIONS. The runtime service validates dimensions
+-- before inserting embeddings.
+
 CREATE TABLE IF NOT EXISTS documents (
 	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,

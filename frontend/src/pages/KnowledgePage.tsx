@@ -78,8 +78,16 @@ function humanizeApiError(error: unknown, fallback: string): string {
 		return 'Проверь файл или текст вопроса и попробуй ещё раз.'
 	}
 
+	if (detail.includes('database unavailable')) {
+		return 'База данных временно недоступна. Проверь, что PostgreSQL запущен.'
+	}
+
 	if (error.status === 503) {
-		return 'RAG-сервис временно недоступен. Попробуй позже.'
+		if (detail.includes('rag')) {
+			return 'RAG-сервис временно недоступен. Попробуй позже.'
+		}
+
+		return 'Сервис временно недоступен. Попробуй ещё раз через минуту.'
 	}
 
 	if (detail.includes('network')) {

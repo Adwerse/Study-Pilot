@@ -15,7 +15,10 @@ from app.services.query_rewriter import QueryRewriter
 from app.services.rag_agent import RAGAgent, RAGDocumentAccessError
 from app.services.rag_types import RerankedChunk, RetrievedChunk
 from app.services.reranker import Reranker
-from app.services.vector_search_service import VectorSearchService
+from app.services.vector_index_service import (
+    VectorIndexService,
+    VectorStoreUnavailableError,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -152,6 +155,30 @@ async def test_post_ask_maps_rag_provider_error_to_503(client, monkeypatch):
         "build_rag_agent",
         lambda db: FakeAPIAgent(
             error=EmbeddingProviderError("Embedding generation failed")
+        ),
+    )
+
+    response = await client.post(
+        "/api/v1/ask",
+        json={"question": "What is inside?"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "RAG service is temporarily unavailable"
+
+
+@pytest.mark.asyncio
+async def test_post_ask_maps_vector_store_error_to_503(client, monkeypatch):
+    async def fake_resolve_user_id(current_user, db):
+        _ = current_user, db
+        return uuid4()
+
+    monkeypatch.setattr(ask_api, "resolve_user_id", fake_resolve_user_id)
+    monkeypatch.setattr(
+        ask_api,
+        "build_rag_agent",
+        lambda db: FakeAPIAgent(
+            error=VectorStoreUnavailableError("Vector search failed")
         ),
     )
 
@@ -433,7 +460,7 @@ async def test_rag_agent_rejects_foreign_document_id():
     agent = RAGAgent(
         document_repository=repo,
         embedding_service=FakeEmbeddingService(),
-        vector_search_service=FakeVectorSearch(),
+        vector_index=FakeVectorSearch(),
         query_rewriter=FakeQueryRewriter(),
     )
 
@@ -453,7 +480,7 @@ async def test_rag_agent_no_ready_documents_skips_external_calls():
     agent = RAGAgent(
         document_repository=FakeDocumentRepository(ready_count=0),
         embedding_service=embeddings,
-        vector_search_service=vector_search,
+        vector_index=vector_search,
         query_rewriter=FakeQueryRewriter(),
     )
 
@@ -471,7 +498,7 @@ async def test_rag_agent_returns_honest_answer_when_vector_search_has_no_chunks(
     agent = RAGAgent(
         document_repository=FakeDocumentRepository(ready_count=1),
         embedding_service=FakeEmbeddingService(),
-        vector_search_service=FakeVectorSearch(chunks=[]),
+        vector_index=FakeVectorSearch(chunks=[]),
         query_rewriter=FakeQueryRewriter(),
     )
 
@@ -491,7 +518,7 @@ async def test_rag_agent_embedding_error_propagates_as_provider_error():
         embedding_service=FakeEmbeddingService(
             error=EmbeddingProviderError("Embedding generation failed")
         ),
-        vector_search_service=FakeVectorSearch(),
+        vector_index=FakeVectorSearch(),
         query_rewriter=FakeQueryRewriter(),
     )
 
@@ -517,7 +544,7 @@ async def test_rag_agent_snippets_truncated_and_citations_aligned(monkeypatch):
     agent = RAGAgent(
         document_repository=FakeDocumentRepository(ready_count=1),
         embedding_service=FakeEmbeddingService(),
-        vector_search_service=FakeVectorSearch(chunks=[first, second]),
+        vector_index=FakeVectorSearch(chunks=[first, second]),
         query_rewriter=FakeQueryRewriter(),
         reranker=StableReranker(),
         answer_generator=FakeAnswerGenerator(),
@@ -561,7 +588,7 @@ async def test_rag_agent_source_order_matches_citation_order():
     agent = RAGAgent(
         document_repository=FakeDocumentRepository(ready_count=1),
         embedding_service=FakeEmbeddingService(),
-        vector_search_service=FakeVectorSearch(chunks=[first, second]),
+        vector_index=FakeVectorSearch(chunks=[first, second]),
         query_rewriter=FakeQueryRewriter(),
         reranker=StableReranker(),
         answer_generator=CitationOrderAnswerGenerator(),
@@ -611,11 +638,12 @@ async def test_vector_search_filters_by_user_id_and_document_ids():
     chunk = FakeChunkRow(user_id=user_id, document_id=document_id)
     db = FakeDB(rows=[(chunk, "Doc", "doc.pdf", 0.15)])
 
-    results = await VectorSearchService(db).search(
+    repo = type("FakeRepo", (), {"db": db})()
+    results = await VectorIndexService(repo, embedding_dimensions=3).search(
         user_id=user_id,
         query_embedding=[0.1, 0.2, 0.3],
-        document_ids=[document_id],
         top_k=8,
+        document_ids=[document_id],
     )
 
     compiled_query = str(db.query)

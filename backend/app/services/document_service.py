@@ -2,7 +2,7 @@ from uuid import UUID
 
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
-from app.services.vector_index_service import VectorIndexService
+from app.services.vector_index_service import VectorIndexService, VectorStoreError
 
 
 class DocumentNotFoundError(Exception):
@@ -62,8 +62,11 @@ class DocumentService:
         )
 
         try:
-            await self.vector_index.delete_document(document.id, user_id)
-        except Exception as exc:
+            await self.vector_index.delete_document(
+                user_id=user_id,
+                document_id=document.id,
+            )
+        except VectorStoreError as exc:
             await self.document_repository.rollback()
             raise VectorIndexCleanupError("Vector index cleanup failed") from exc
 

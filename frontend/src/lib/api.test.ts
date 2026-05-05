@@ -58,7 +58,7 @@ describe('apiClient knowledge methods', () => {
 		expect(form.get('title')).toBe('Notes')
 		expect(form.get('source_type')).toBe('upload')
 		expect(form.get('tags')).toBe('rag,study')
-		expect(config?.headers).toEqual(expect.objectContaining({ 'Content-Type': 'multipart/form-data' }))
+		expect(config?.headers).toBeUndefined()
 	})
 
 	it('deleteDocument calls the document delete endpoint', async () => {

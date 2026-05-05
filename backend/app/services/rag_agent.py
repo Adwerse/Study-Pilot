@@ -10,7 +10,7 @@ from app.services.embedding_service import EmbeddingService
 from app.services.query_rewriter import QueryRewriter
 from app.services.rag_types import RerankedChunk
 from app.services.reranker import Reranker
-from app.services.vector_search_service import VectorSearchService
+from app.services.vector_index_service import VectorIndexService
 
 
 logger = logging.getLogger(__name__)
@@ -27,14 +27,14 @@ class RAGAgent:
         self,
         document_repository: DocumentRepository,
         embedding_service: EmbeddingService,
-        vector_search_service: VectorSearchService,
+        vector_index: VectorIndexService,
         query_rewriter: QueryRewriter | None = None,
         reranker: Reranker | None = None,
         answer_generator: AnswerGenerator | None = None,
     ):
         self.document_repository = document_repository
         self.embedding_service = embedding_service
-        self.vector_search_service = vector_search_service
+        self.vector_index = vector_index
         self.query_rewriter = query_rewriter or QueryRewriter()
         self.reranker = reranker or Reranker()
         self.answer_generator = answer_generator or AnswerGenerator()
@@ -60,11 +60,11 @@ class RAGAgent:
         query_embedding = (await self.embedding_service.embed_texts([rewritten_query]))[
             0
         ]
-        retrieved_chunks = await self.vector_search_service.search(
+        retrieved_chunks = await self.vector_index.search(
             user_id=user_id,
             query_embedding=query_embedding,
-            document_ids=scoped_document_ids,
             top_k=top_k,
+            document_ids=scoped_document_ids,
         )
         if not retrieved_chunks:
             return self._empty_answer(

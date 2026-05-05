@@ -164,21 +164,29 @@ async def upload_document(
     file_bytes = await read_upload_file(file)
     validate_supported_upload(filename, content_type)
 
-    user_id = await resolve_user_id(current_user, db)
-    repo = build_document_repository(db)
-    document = await repo.create_document(
-        user_id=user_id,
-        title=normalize_title(title, filename),
-        filename=filename,
-        content_type=content_type,
-        size_bytes=len(file_bytes),
-        source_type=source_type,
-        tags=parse_tags(tags),
-    )
+    try:
+        user_id = await resolve_user_id(current_user, db)
+        repo = build_document_repository(db)
+        document = await repo.create_document(
+            user_id=user_id,
+            title=normalize_title(title, filename),
+            filename=filename,
+            content_type=content_type,
+            size_bytes=len(file_bytes),
+            source_type=source_type,
+            tags=parse_tags(tags),
+        )
 
-    ingest_service = build_document_ingest_service(db)
-    processed_document = await ingest_service.ingest_document(document.id, file_bytes)
-    return build_upload_response(processed_document)
+        ingest_service = build_document_ingest_service(db)
+        processed_document = await ingest_service.ingest_document(
+            document.id, file_bytes
+        )
+        return build_upload_response(processed_document)
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        ) from exc
 
 
 @router.get("", response_model=DocumentListResponse)

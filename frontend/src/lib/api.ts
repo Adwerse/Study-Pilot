@@ -149,7 +149,6 @@ export const apiClient = {
     }
 
     return api.post<DocumentUploadResponse>('/api/v1/documents/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       signal: options.signal,
       onUploadProgress: options.onUploadProgress,
     })

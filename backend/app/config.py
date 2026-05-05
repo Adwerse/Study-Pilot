@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     DOCUMENT_MAX_CHUNKS: int = 500
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSIONS: int = 1536
+    VECTOR_STORE_PROVIDER: Literal["pgvector", "qdrant"] = "pgvector"
+    VECTOR_SEARCH_TOP_K_DEFAULT: int = 8
+    VECTOR_SEARCH_SCORE_THRESHOLD: float = 0.2
     RAG_REWRITE_MODEL: str = "deepseek/deepseek-chat-v3.1"
     RAG_ANSWER_MODEL: str = "deepseek/deepseek-chat-v3.1"
     RAG_TOP_K_DEFAULT: int = 8

@@ -11,7 +11,10 @@ from app.services.answer_generator import LLMProviderError
 from app.services.embedding_service import EmbeddingProviderError, EmbeddingService
 from app.services.rag_agent import RAGAgent, RAGDocumentAccessError
 from app.services.rag_service import RAGService
-from app.services.vector_search_service import VectorSearchError, VectorSearchService
+from app.services.vector_index_service import (
+    VectorIndexService,
+    VectorStoreError,
+)
 
 
 router = APIRouter(
@@ -24,7 +27,7 @@ def build_rag_agent(db: AsyncSession) -> RAGAgent:
     return RAGAgent(
         document_repository=document_repository,
         embedding_service=EmbeddingService(),
-        vector_search_service=VectorSearchService(db),
+        vector_index=VectorIndexService(document_repository),
     )
 
 
@@ -56,7 +59,7 @@ async def ask_question(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="RAG service is temporarily unavailable",
         ) from exc
-    except VectorSearchError as exc:
+    except VectorStoreError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="RAG service is temporarily unavailable",

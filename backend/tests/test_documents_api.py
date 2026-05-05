@@ -7,6 +7,7 @@ from app.api import documents as documents_api
 from app.api.dependencies import get_current_user
 from app.database import get_db
 from app.models.document import Document, DocumentChunk
+from app.services.vector_index_service import VectorStoreUnavailableError
 
 
 class FakeDocumentRepository:
@@ -101,8 +102,8 @@ class FakeVectorIndex:
         self.error = error
         self.calls = []
 
-    async def delete_document(self, document_id, user_id):
-        self.calls.append((document_id, user_id))
+    async def delete_document(self, user_id, document_id):
+        self.calls.append((user_id, document_id))
         if self.error is not None:
             raise self.error
         await self.repo.delete_chunks(document_id, user_id, commit=False)
@@ -431,7 +432,7 @@ async def test_delete_document_deletes_own_document_chunks_and_vectors(
     response = await client.delete(f"/api/v1/documents/{document.id}")
 
     assert response.status_code == 204
-    assert vector_index.calls == [(document.id, user_id)]
+    assert vector_index.calls == [(user_id, document.id)]
     assert repo.deleted_chunks_for == (document.id, user_id)
     assert repo.deleted_document_id == document.id
     assert repo.documents == []
@@ -510,7 +511,9 @@ async def test_delete_document_vector_failure_keeps_document_and_chunks(
     )
     repo = FakeDocumentRepository([document])
     repo.chunks = [chunk]
-    vector_index = FakeVectorIndex(repo, error=RuntimeError("qdrant down"))
+    vector_index = FakeVectorIndex(
+        repo, error=VectorStoreUnavailableError("vector delete failed")
+    )
 
     async def fake_resolve_user_id(current_user, db):
         _ = current_user, db
