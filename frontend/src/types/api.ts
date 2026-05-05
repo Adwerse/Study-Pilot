@@ -99,16 +99,76 @@ export interface DailyMetrics {
 	best_hour?: number
 }
 
-// RAG answer
-export interface AskResponse {
-	answer: string
-	sources: Array<{ title: string; chunk: string }>
-}
+// Knowledge base / RAG
+export type DocumentStatus = 'processing' | 'ready' | 'failed'
+export type DocumentSourceType = 'upload' | 'telegram' | 'manual'
 
-// Document
-export interface Document {
+export interface KnowledgeDocument {
 	id: string
 	title: string
+	filename: string
+	content_type: string
+	size_bytes: number
+	status: DocumentStatus
+	chunks_count: number
+	error_message?: string | null
 	created_at: string
+	updated_at: string
+}
+
+export interface DocumentListParams {
+	limit?: number
+	offset?: number
+	status?: DocumentStatus
+	q?: string
+}
+
+export interface DocumentListResponse {
+	items: KnowledgeDocument[]
+	total: number
+	limit: number
+	offset: number
+}
+
+export interface DocumentUploadMetadata {
+	title?: string
+	source_type?: DocumentSourceType
 	tags?: string[]
+}
+
+export interface DocumentUploadResponse {
+	document_id: string
+	status: DocumentStatus
+	title: string
+	filename: string
+	content_type: string
+	size_bytes: number
+	chunks_count: number
+}
+
+export type RAGConfidence = 'low' | 'medium' | 'high'
+
+export interface RAGSource {
+	document_id: string
+	document_title: string
+	filename: string
+	chunk_id: string
+	chunk_index: number
+	score: number
+	page_number?: number | null
+	snippet: string
+}
+
+export interface AskQuestionPayload {
+	question: string
+	document_ids?: string[]
+	top_k?: number
+	rerank_top_k?: number
+}
+
+export interface AskResponse {
+	answer: string
+	sources: RAGSource[]
+	rewritten_query?: string | null
+	confidence: RAGConfidence
 }

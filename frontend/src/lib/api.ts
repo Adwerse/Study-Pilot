@@ -1,10 +1,14 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosProgressEvent } from 'axios'
 import type {
+  AskQuestionPayload,
   AskResponse,
   ApiError,
   DailyMetrics,
   DailyPlan,
-  Document as ApiDocument,
+  DocumentListParams,
+  DocumentListResponse,
+  DocumentUploadMetadata,
+  DocumentUploadResponse,
   FocusHistoryParams,
   FocusHistoryResponse,
   FocusSession,
@@ -18,6 +22,11 @@ type CreatePlanPayload = {
   level?: 'beginner' | 'intermediate' | 'advanced'
   weekly_hours?: number
   deadline?: string
+}
+
+type UploadDocumentOptions = {
+  signal?: AbortSignal
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
 }
 
 const api = axios.create({
@@ -118,18 +127,39 @@ export const apiClient = {
   getFocusHistory: (params: FocusHistoryParams = {}, signal?: AbortSignal) =>
     api.get<FocusHistoryResponse>('/api/v1/focus/history', { params, signal }),
 
-  // Ask / RAG
-  ask: (question: string, signal?: AbortSignal) => api.post<AskResponse>('/api/v1/ask', { question }, { signal }),
-  uploadDocument: (file: File, signal?: AbortSignal) => {
+  // Knowledge base / RAG
+  uploadDocument: (
+    file: File,
+    metadata: DocumentUploadMetadata = {},
+    options: UploadDocumentOptions = {},
+  ) => {
     const form = new FormData()
     form.append('file', file)
-    return api.post<ApiDocument>('/api/v1/ask/documents', form, {
+
+    if (metadata.title) {
+      form.append('title', metadata.title)
+    }
+
+    if (metadata.source_type) {
+      form.append('source_type', metadata.source_type)
+    }
+
+    if (metadata.tags?.length) {
+      form.append('tags', metadata.tags.join(','))
+    }
+
+    return api.post<DocumentUploadResponse>('/api/v1/documents/upload', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      signal,
+      signal: options.signal,
+      onUploadProgress: options.onUploadProgress,
     })
   },
-  getDocuments: (signal?: AbortSignal) => api.get<ApiDocument[]>('/api/v1/ask/documents', { signal }),
-  deleteDocument: (id: string, signal?: AbortSignal) => api.delete(`/api/v1/ask/documents/${id}`, { signal }),
+  getDocuments: (params: DocumentListParams = {}, signal?: AbortSignal) =>
+    api.get<DocumentListResponse>('/api/v1/documents', { params, signal }),
+  deleteDocument: (documentId: string, signal?: AbortSignal) =>
+    api.delete<void>(`/api/v1/documents/${documentId}`, { signal }),
+  askQuestion: (payload: AskQuestionPayload, signal?: AbortSignal) => api.post<AskResponse>('/api/v1/ask', payload, { signal }),
+  ask: (question: string, signal?: AbortSignal) => api.post<AskResponse>('/api/v1/ask', { question }, { signal }),
 
   // Analytics
   getDailyMetrics: (signal?: AbortSignal) => api.get<DailyMetrics>('/api/v1/analytics/today', { signal }),

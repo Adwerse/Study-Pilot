@@ -35,7 +35,7 @@ export function BottomTab({ icon, label, to, active }: BottomTabProps) {
 			}}
 		>
 			{icon}
-			<span>{label}</span>
+			<span style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
 		</Link>
 	)
 }
