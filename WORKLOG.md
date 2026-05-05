@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-05-04
+Last updated: 2026-05-05
 
 ## Repository Context
 
@@ -465,6 +465,41 @@ Checks:
 
 Known follow-up:
 - Frontend `KnowledgePage` and `apiClient` still need to be switched from `/api/v1/ask/documents` to the real `/api/v1/documents` endpoints and updated for the typed RAG response shape.
+
+## [Sprint 5] Knowledge Base Frontend
+Date: 2026-05-05
+Status: completed
+
+What was done:
+- Checked compatibility with the current frontend and backend before implementation: Vite + React + TypeScript, existing axios API client, local hooks pattern, Telegram theme CSS variables, `/knowledge` route, bottom navigation, UI primitives, and Sprint 5 backend schemas/endpoints.
+- Replaced the placeholder `KnowledgePage` with a full Telegram Mini App knowledge base screen:
+  - upload block for PDF, TXT, and MD files up to 10 MB
+  - materials list with processing, ready, and failed statuses
+  - document search, status filter, pagination, and empty/loading/error states
+  - delete flow with confirmation before removing a document
+  - ready-document selection for scoped RAG search
+  - RAG chat with disabled state when no ready documents exist
+  - assistant answers with confidence indicator and compact source cards.
+- Updated `frontend/src/lib/api.ts`:
+  - `uploadDocument(file, metadata)`
+  - `getDocuments(params)`
+  - `deleteDocument(documentId)`
+  - `askQuestion(payload)`
+  - switched from the legacy `/api/v1/ask/documents` placeholder routes to `/api/v1/documents` and `/api/v1/ask`.
+- Updated `frontend/src/types/api.ts` with Sprint 5 document and RAG response types.
+- Added `frontend/src/hooks/useKnowledge.ts`:
+  - `useDocuments`
+  - `useUploadDocument`
+  - `useDeleteDocument`
+  - `useAskQuestion`
+- Added `frontend/src/utils/knowledgeFormatters.ts` for file size, status, date/time, confidence, and safe displayed text formatting.
+- Updated the bottom tab label from `Knowledge` to `База знаний` and guarded tab text against overflow.
+- Added frontend tests for API methods, hooks, formatters, and the main Knowledge Base UI flows.
+
+Checks:
+- `npm test` passed with `61 passed`.
+- `npm run build` passed.
+- Local Vite dev server started and responded with HTTP `200` at `http://localhost:5173/`.
 
 ## Dev Runbook: Bot + Mini App With HTTP Tunnels
 Date: 2026-04-29
