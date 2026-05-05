@@ -501,6 +501,32 @@ Checks:
 - `npm run build` passed.
 - Local Vite dev server started and responded with HTTP `200` at `http://localhost:5173/`.
 
+## [Sprint 5] Knowledge Upload Dev Fix
+Date: 2026-05-05
+Status: completed
+
+What was done:
+- Investigated the Mini App failure where document upload showed `Не удалось загрузить файл` and the materials list also failed to load.
+- Confirmed the root cause was environment/database availability, not the selected `.md` file:
+  - local PostgreSQL was not listening on `127.0.0.1:5432`
+  - Docker Desktop was initially not running
+  - the active dev database did not yet have `documents`, `document_chunks`, or the `vector` extension.
+- Started local PostgreSQL with the pgvector-compatible image from `docker-compose.yml`:
+  - `pgvector/pgvector:pg16`
+- Applied `backend/migrations/008_create_documents.sql` to the dev database.
+- Restarted the FastAPI backend so it used the current code and the now-available database.
+- Updated `backend/app/api/documents.py` so upload database failures return a clear `503 Database unavailable` instead of surfacing as an unclear upload failure.
+- Updated `frontend/src/lib/api.ts` to let the browser/axios set the multipart `Content-Type` boundary for `FormData` uploads.
+- Updated `KnowledgePage` error mapping so database downtime is shown as a human-readable database availability message rather than a generic RAG/upload error.
+- Removed smoke-test documents/users created during manual verification.
+
+Checks:
+- `GET /api/v1/documents` with valid Telegram initData returned `200` and a document list payload.
+- `POST /api/v1/documents/upload` with a markdown file returned `status: ready`.
+- Upload through the frontend Cloudflare tunnel also returned `status: ready`.
+- `python -m pytest tests/test_documents_api.py -q` passed with `12 passed`.
+- `npm test -- --run src/lib/api.test.ts src/pages/KnowledgePage.test.tsx` passed with `12 passed`.
+
 ## Dev Runbook: Bot + Mini App With HTTP Tunnels
 Date: 2026-04-29
 Status: current dev procedure
