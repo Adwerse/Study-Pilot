@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     RAG_MIN_SCORE_THRESHOLD: float = 0.2
     RAG_MAX_CONTEXT_CHARS: int = 12000
     RAG_SNIPPET_CHARS: int = 300
+    ANALYTICS_AI_ENABLED: bool = True
+    ANALYTICS_MODEL: str = ""
 
     @property
     def telegram_bot_token(self) -> str:

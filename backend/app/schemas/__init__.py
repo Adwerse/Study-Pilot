@@ -1,3 +1,14 @@
+from .analytics import (
+    AnalyticsDataQuality,
+    AnalyticsMetrics,
+    AnalyticsNarrative,
+    AnalyticsPeriod,
+    AnalyticsPeriodType,
+    AnalyticsReportResponse,
+    DailyBreakdownItem,
+    PlanProgressMetric,
+    TopicFocusMetric,
+)
 from .document import (
     DocumentDetailResponse,
     DocumentListItem,
@@ -47,4 +58,13 @@ __all__ = [
     "RAGQuestionRequest",
     "RAGAnswer",
     "RAGSource",
+    "AnalyticsPeriodType",
+    "AnalyticsDataQuality",
+    "AnalyticsPeriod",
+    "TopicFocusMetric",
+    "PlanProgressMetric",
+    "AnalyticsMetrics",
+    "DailyBreakdownItem",
+    "AnalyticsNarrative",
+    "AnalyticsReportResponse",
 ]

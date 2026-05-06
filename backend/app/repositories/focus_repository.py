@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import date, datetime, time, timedelta, timezone
 from uuid import UUID
 
@@ -151,6 +152,41 @@ class FocusRepository:
             user_id=user_id, session_date=today, limit=1000, status="completed"
         )
         return items
+
+    async def list_sessions_between(
+        self,
+        user_id: UUID,
+        start_utc: datetime,
+        end_utc: datetime,
+        statuses: Sequence[str] | None = None,
+    ) -> list[FocusLog]:
+        query = select(FocusLog).where(
+            FocusLog.user_id == user_id,
+            FocusLog.started_at >= start_utc,
+            FocusLog.started_at < end_utc,
+        )
+        if statuses is not None:
+            query = query.where(FocusLog.status.in_(list(statuses)))
+
+        result = await self.db.execute(query.order_by(FocusLog.started_at.asc()))
+        return list(result.scalars().all())
+
+    async def list_completed_sessions_until(
+        self,
+        user_id: UUID,
+        end_utc: datetime,
+    ) -> list[FocusLog]:
+        result = await self.db.execute(
+            select(FocusLog)
+            .where(
+                FocusLog.user_id == user_id,
+                FocusLog.status == "completed",
+                FocusLog.actual_duration_seconds > 0,
+                FocusLog.started_at < end_utc,
+            )
+            .order_by(FocusLog.started_at.desc())
+        )
+        return list(result.scalars().all())
 
     async def get_owned_plan(self, plan_id: UUID, user_id: UUID) -> Plan | None:
         result = await self.db.execute(
