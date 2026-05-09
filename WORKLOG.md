@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-05-05
+Last updated: 2026-05-09
 
 ## Repository Context
 
@@ -680,6 +680,47 @@ Current dev-session example from 2026-04-29:
 - Frontend tunnel: `https://julian-celebrity-vincent-bon.trycloudflare.com`
 - Bot: `@Lernify_bot`
 - Note: `trycloudflare.com` quick tunnel URLs are temporary and should not be committed into `.env` as stable values.
+
+## Production Docker Compose
+Date: 2026-05-09
+Status: prepared
+
+Goal:
+- Prepare a self-hosted VPS deployment path for the Telegram Mini App without Railway.
+
+What was done:
+- Added `docker-compose.prod.yml` for a production-style stack:
+  - `postgres` using `pgvector/pgvector:pg16`
+  - one-shot `migrate` service
+  - FastAPI `backend`
+  - polling-mode Telegram `bot`
+  - Vite `frontend`
+  - `caddy` reverse proxy with automatic HTTPS
+- Added `deploy/Caddyfile`:
+  - `APP_DOMAIN` proxies to `frontend:4173`
+  - `API_DOMAIN` proxies to `backend:8000`
+- Added `deploy/run-migrations.sh` with `schema_migrations` tracking so repeated `docker compose up` does not rerun already-applied SQL migrations.
+- Added `.env.production.example` with the required production variables.
+- Updated `frontend/Dockerfile` to accept `VITE_API_BASE_URL` as a build arg, because Vite embeds it at build time.
+- Added `.dockerignore` files for `backend`, `bot`, and `frontend` so local `.env`, virtualenvs, caches, `node_modules`, and build artifacts do not get copied into Docker images.
+- Updated `.gitignore` to ignore production env files such as `.env.production`.
+
+Verification:
+- `docker compose --env-file .env.production.example -f docker-compose.prod.yml config --quiet` passed.
+- Full Docker image build was not run because Docker Desktop was not running locally:
+  - `dockerDesktopLinuxEngine` pipe was unavailable.
+
+Run command:
+
+```bash
+cp .env.production.example .env.production
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+Production notes:
+- DNS must point `APP_DOMAIN` and `API_DOMAIN` to the VPS before Caddy can issue certificates.
+- BotFather Mini App URL should be `https://APP_DOMAIN`.
+- `VITE_API_BASE_URL` changes require rebuilding the frontend image.
 
 ## Backlog (Alpha)
 Date: 2026-04-18
