@@ -1,7 +1,7 @@
 import type { AxiosResponse } from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import api, { apiClient } from './api'
-import type { AskResponse, DocumentListResponse, DocumentUploadResponse } from '../types/api'
+import type { AnalyticsReportResponse, AskResponse, DocumentListResponse, DocumentUploadResponse, WeeklyAnalyticsReportResponse } from '../types/api'
 
 function makeResponse<T>(data: T): AxiosResponse<T> {
 	return { data } as AxiosResponse<T>
@@ -100,5 +100,74 @@ describe('apiClient knowledge methods', () => {
 			},
 			{ signal },
 		)
+	})
+})
+
+describe('apiClient analytics methods', () => {
+	afterEach(() => {
+		vi.restoreAllMocks()
+	})
+
+	const dailyReport: AnalyticsReportResponse = {
+		period: {
+			type: 'daily',
+			start: '2026-05-01T00:00:00Z',
+			end: '2026-05-02T00:00:00Z',
+			timezone: 'UTC',
+		},
+		metrics: {
+			total_focus_minutes: 95,
+			sessions_count: 4,
+			cancelled_sessions_count: 1,
+			completion_rate: 80,
+			average_session_minutes: 24,
+			streak_days: 5,
+			best_focus_hours: ['10:00'],
+			most_focused_topics: [{ topic: 'FastAPI', minutes: 50 }],
+		},
+		summary: 'Summary',
+		recommendations: ['Start with FastAPI'],
+		data_quality: 'high',
+	}
+
+	it('getDailyAnalytics calls the daily analytics endpoint with params', async () => {
+		const get = vi.spyOn(api, 'get').mockResolvedValue(makeResponse(dailyReport))
+		const signal = new AbortController().signal
+
+		await apiClient.getDailyAnalytics({ date: '2026-05-01', timezone: 'Europe/Dublin' }, signal)
+
+		expect(get).toHaveBeenCalledWith('/api/v1/analytics/daily', {
+			params: { date: '2026-05-01', timezone: 'Europe/Dublin' },
+			signal,
+		})
+	})
+
+	it('getWeeklyAnalytics calls the weekly analytics endpoint with params', async () => {
+		const weeklyReport: WeeklyAnalyticsReportResponse = {
+			...dailyReport,
+			period: {
+				type: 'weekly',
+				start: '2026-04-27T00:00:00Z',
+				end: '2026-05-04T00:00:00Z',
+				timezone: 'UTC',
+			},
+			daily_breakdown: [
+				{
+					date: '2026-04-27',
+					focus_minutes: 60,
+					sessions_count: 3,
+					completion_rate: 100,
+				},
+			],
+		}
+		const get = vi.spyOn(api, 'get').mockResolvedValue(makeResponse(weeklyReport))
+		const signal = new AbortController().signal
+
+		await apiClient.getWeeklyAnalytics({ week_start: '2026-04-27', timezone: 'Europe/Dublin' }, signal)
+
+		expect(get).toHaveBeenCalledWith('/api/v1/analytics/weekly', {
+			params: { week_start: '2026-04-27', timezone: 'Europe/Dublin' },
+			signal,
+		})
 	})
 })

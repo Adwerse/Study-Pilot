@@ -99,6 +99,73 @@ export interface DailyMetrics {
 	best_hour?: number
 }
 
+export type AnalyticsPeriodType = 'daily' | 'weekly'
+export type AnalyticsDataQuality = 'low' | 'medium' | 'high'
+
+export interface AnalyticsPeriod {
+	type: AnalyticsPeriodType
+	start: string
+	end: string
+	timezone: string
+}
+
+export interface TopicFocusMetric {
+	topic: string
+	minutes: number
+}
+
+export interface PlanProgressMetric {
+	plan_id: string
+	title: string
+	total_stages: number
+	completed_stages: number
+	progress_percent: number
+	current_stage_id?: string | null
+	current_stage_title?: string | null
+}
+
+export interface AnalyticsMetrics {
+	total_focus_seconds?: number
+	total_focus_minutes: number
+	sessions_count: number
+	cancelled_sessions_count: number
+	completion_rate: number | null
+	average_session_minutes: number | null
+	streak_days: number
+	best_focus_hours: string[]
+	most_focused_topics: TopicFocusMetric[]
+	plan_progress?: PlanProgressMetric | null
+}
+
+export interface DailyBreakdownItem {
+	date: string
+	focus_minutes: number
+	sessions_count: number
+	completion_rate: number | null
+}
+
+export interface AnalyticsReportResponse {
+	period: AnalyticsPeriod
+	metrics: AnalyticsMetrics
+	summary: string
+	recommendations: string[]
+	data_quality: AnalyticsDataQuality
+}
+
+export interface WeeklyAnalyticsReportResponse extends AnalyticsReportResponse {
+	daily_breakdown: DailyBreakdownItem[]
+}
+
+export interface DailyAnalyticsParams {
+	date?: string
+	timezone?: string
+}
+
+export interface WeeklyAnalyticsParams {
+	week_start?: string
+	timezone?: string
+}
+
 // Knowledge base / RAG
 export type DocumentStatus = 'processing' | 'ready' | 'failed'
 export type DocumentSourceType = 'upload' | 'telegram' | 'manual'

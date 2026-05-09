@@ -1,8 +1,10 @@
 import axios, { AxiosError, AxiosProgressEvent } from 'axios'
 import type {
+  AnalyticsReportResponse,
   AskQuestionPayload,
   AskResponse,
   ApiError,
+  DailyAnalyticsParams,
   DailyMetrics,
   DailyPlan,
   DocumentListParams,
@@ -14,6 +16,8 @@ import type {
   FocusSession,
   Plan,
   User,
+  WeeklyAnalyticsParams,
+  WeeklyAnalyticsReportResponse,
 } from '../types/api'
 import { getInitData, tg } from './telegram'
 
@@ -164,6 +168,10 @@ export const apiClient = {
   getDailyMetrics: (signal?: AbortSignal) => api.get<DailyMetrics>('/api/v1/analytics/today', { signal }),
   getWeeklyMetrics: (signal?: AbortSignal) => api.get<DailyMetrics[]>('/api/v1/analytics/week', { signal }),
   getStreak: (signal?: AbortSignal) => api.get<{ streak_days: number }>('/api/v1/analytics/streak', { signal }),
+  getDailyAnalytics: (params: DailyAnalyticsParams = {}, signal?: AbortSignal) =>
+    api.get<AnalyticsReportResponse>('/api/v1/analytics/daily', { params, signal }),
+  getWeeklyAnalytics: (params: WeeklyAnalyticsParams = {}, signal?: AbortSignal) =>
+    api.get<WeeklyAnalyticsReportResponse>('/api/v1/analytics/weekly', { params, signal }),
 }
 
 export default api
