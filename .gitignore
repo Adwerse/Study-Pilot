@@ -18,6 +18,9 @@
 # Env
 .env
 **/.env
+.env.production
+.env.prod
+.env.staging
 *.local
 
 # OS
