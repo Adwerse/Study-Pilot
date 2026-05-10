@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -17,14 +17,24 @@ class PlanRepository:
         self.db.add(plan)
         await self.db.flush()
 
+        base_date = datetime.now(timezone.utc).date()
         for index, stage_data in enumerate(stages_data):
+            week_number = int(stage_data["week_number"])
+            start_date = stage_data.get("start_date")
+            end_date = stage_data.get("end_date")
+            if start_date is None:
+                start_date = base_date + timedelta(days=(max(week_number, 1) - 1) * 7)
+            if end_date is None:
+                end_date = start_date + timedelta(days=6)
             stage = PlanStage(
                 plan_id=plan.id,
-                week_number=stage_data["week_number"],
+                week_number=week_number,
                 title=stage_data["title"],
                 deliverable=stage_data["deliverable"],
                 status="in_progress" if index == 0 else "pending",
                 order_index=index,
+                start_date=start_date,
+                end_date=end_date,
             )
             self.db.add(stage)
 
@@ -36,6 +46,14 @@ class PlanRepository:
     async def get_by_id(self, plan_id: UUID) -> Plan | None:
         result = await self.db.execute(
             select(Plan).options(selectinload(Plan.stages)).where(Plan.id == plan_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_owned_by_id(self, plan_id: UUID, user_id: UUID) -> Plan | None:
+        result = await self.db.execute(
+            select(Plan)
+            .options(selectinload(Plan.stages))
+            .where(Plan.id == plan_id, Plan.user_id == user_id)
         )
         return result.scalar_one_or_none()
 

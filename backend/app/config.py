@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     RAG_SNIPPET_CHARS: int = 300
     ANALYTICS_AI_ENABLED: bool = True
     ANALYTICS_MODEL: str = ""
+    WEEKLY_REVIEW_AI_ENABLED: bool = True
+    WEEKLY_REVIEW_MODEL: str = ""
 
     @property
     def telegram_bot_token(self) -> str:

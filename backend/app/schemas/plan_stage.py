@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 from uuid import UUID
 
@@ -11,6 +12,8 @@ class PlanStageBase(BaseModel):
     deliverable: str
     status: str = "pending"
     order_index: int
+    start_date: date | None = None
+    end_date: date | None = None
 
 
 class PlanStageCreate(PlanStageBase):
@@ -24,6 +27,8 @@ class PlanStageUpdate(PlanStageBase):
     deliverable: Optional[str] = None
     status: Optional[str] = None
     order_index: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class PlanStageRead(PlanStageBase):

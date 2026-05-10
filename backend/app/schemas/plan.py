@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Optional
 from uuid import UUID
 
@@ -34,6 +34,8 @@ class PlanStage(BaseModel):
     deliverable: str
     status: str = "pending"
     order_index: int
+    start_date: date | None = None
+    end_date: date | None = None
     topics: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
@@ -44,6 +46,8 @@ class PlanStageRead(PlanStageBase):
     plan_id: UUID
     status: str
     order_index: int
+    start_date: date | None = None
+    end_date: date | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

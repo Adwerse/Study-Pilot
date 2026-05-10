@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -35,5 +35,7 @@ class PlanStage(Base):
     deliverable = Column(Text, nullable=False)
     status = Column(String(20), nullable=False, default="pending")
     order_index = Column(Integer, nullable=False)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
 
     plan = relationship("Plan", back_populates="stages")

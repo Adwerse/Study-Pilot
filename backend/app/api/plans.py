@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -74,6 +74,8 @@ def build_stage_payload(stage: PlanStageModel) -> PlanStage:
         deliverable=stage.deliverable,
         status=stage.status,
         order_index=stage.order_index,
+        start_date=stage.start_date,
+        end_date=stage.end_date,
     )
 
 
@@ -196,15 +198,22 @@ async def recalculate_plan(
 
     await repo.delete_stages(plan_id)
 
+    base_date = datetime.now(timezone.utc).date()
     for index, stage_data in enumerate(llm_result["stages"]):
+        week_number = int(stage_data["week_number"])
+        start_date = stage_data.get("start_date") or base_date + timedelta(
+            days=(max(week_number, 1) - 1) * 7
+        )
         db.add(
             PlanStageModel(
                 plan_id=plan_id,
-                week_number=stage_data["week_number"],
+                week_number=week_number,
                 title=stage_data["title"],
                 deliverable=stage_data["deliverable"],
                 status="in_progress" if index == 0 else "pending",
                 order_index=index,
+                start_date=start_date,
+                end_date=stage_data.get("end_date") or start_date + timedelta(days=6),
             )
         )
 
