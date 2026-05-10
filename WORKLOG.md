@@ -722,6 +722,49 @@ Production notes:
 - BotFather Mini App URL should be `https://APP_DOMAIN`.
 - `VITE_API_BASE_URL` changes require rebuilding the frontend image.
 
+## Sprint 6 Weekly Review + Roadmap Recalculation
+Date: 2026-05-10
+Status: implemented
+
+Goal:
+- Add a backend Weekly Review flow that compares planned roadmap progress with actual focus/analytics data and safely proposes roadmap adaptations.
+
+What was done:
+- Added `/api/v1/weekly-review` endpoints:
+  - `POST /generate`
+  - `POST /{review_id}/apply`
+  - `GET /history`
+- Added `weekly_reviews` persistence with structured JSONB fields for insights, risks, recommendations, metrics, and proposed changes.
+- Added nullable `start_date` and `end_date` to `plan_stages` for safe rescheduling.
+- Added migration `009_create_weekly_reviews.sql` with stage date backfill and weekly review table/indexes.
+- Added `RoadmapProgressAnalyzer` for deterministic planned vs actual progress calculation.
+- Added `WeeklyReviewAgent` with LLM-assisted narrative/proposals and a no-LLM fallback path.
+- Added `WeeklyReviewService` to orchestrate user-scoped generation, persistence, history, and all-or-nothing safe apply.
+- Apply currently mutates only `reschedule_stage`; `split_stage`, `adjust_stage_focus`, and `mark_stage_at_risk` are stored as suggestions.
+- Added settings:
+  - `WEEKLY_REVIEW_AI_ENABLED`
+  - `WEEKLY_REVIEW_MODEL`
+
+Safety notes:
+- All plan/review queries are scoped by `user_id`.
+- LLM output is validated before persistence.
+- LLM cannot directly update the database.
+- Review storage keeps only final outputs, not chain-of-thought or raw large prompts.
+- A review cannot be applied twice.
+- Invalid apply rolls back the transaction.
+
+Tests:
+- Added analyzer tests for behind/ahead detection, missing planned focus, zero stages, progress percent, and completed-only focus minutes.
+- Added agent tests for LLM fallback, invalid JSON fallback, unsafe change filtering, invalid stage IDs, deterministic metrics, and insufficient-data review.
+- Added service/apply tests for safe reschedule, invalid stage rollback, split-stage non-apply, double-apply conflict, and rollback on failed apply.
+- Added API tests for generate, active-plan fallback behavior, foreign plan/review rejection, apply, conflict handling, invalid timezone, and user-scoped history.
+
+Verification:
+- `python -m pytest tests/test_roadmap_progress_analyzer.py tests/test_weekly_review_agent.py tests/test_weekly_review_service.py tests/test_weekly_review_api.py -q` passed: 25 tests.
+- `python -m pytest tests/test_plan_repository.py tests/test_analytics_metrics_service.py tests/test_analytics_api.py -q` passed: 17 tests.
+- `python -m ruff check app tests/test_roadmap_progress_analyzer.py tests/test_weekly_review_agent.py tests/test_weekly_review_service.py tests/test_weekly_review_api.py` passed.
+- A broader run including `tests/test_plan_persistence.py` hit local PostgreSQL `ConnectionRefusedError` during an existing `/focus/start` path because the local DB was unavailable.
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
