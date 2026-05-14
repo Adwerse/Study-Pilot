@@ -765,6 +765,43 @@ Verification:
 - `python -m ruff check app tests/test_roadmap_progress_analyzer.py tests/test_weekly_review_agent.py tests/test_weekly_review_service.py tests/test_weekly_review_api.py` passed.
 - A broader run including `tests/test_plan_persistence.py` hit local PostgreSQL `ConnectionRefusedError` during an existing `/focus/start` path because the local DB was unavailable.
 
+## Sprint 6 Analytics Screen
+Date: 2026-05-14
+Status: implemented
+
+Goal:
+- Add the frontend Analytics screen for Sprint 6 using the existing StudyPilot Telegram Mini App architecture.
+
+What was done:
+- Integrated the Analytics screen at `/analytics` with the existing bottom navigation tab.
+- Added day/week period switching with today/yesterday, current/previous week shortcuts, arrow navigation, and disabled future navigation.
+- Added API client coverage for:
+  - `GET /api/v1/analytics/daily`
+  - `GET /api/v1/analytics/weekly`
+- Added analytics TypeScript contracts for period, metrics, topic focus, daily breakdown, report responses, params, and data quality.
+- Added `useDailyAnalytics` and `useWeeklyAnalytics` hooks with loading/isLoading, error, refetch, response validation, and stale request cancellation via `AbortController`.
+- Added compact summary cards for focus minutes, sessions, streak, and completion rate.
+- Added lightweight CSS/SVG-free visualizations:
+  - weekly focus bar chart;
+  - weekly sessions bar chart;
+  - 7-day activity heatmap;
+  - topic progress list.
+- Added Best Focus Hours chips and AI report/recommendations with data quality labels.
+- Added empty, loading, and error/retry states without raw backend error output.
+- Added date and formatting helpers, including Monday-based week starts and API `YYYY-MM-DD` formatting.
+
+Quality notes:
+- Charts handle empty and zero-value breakdowns without division by zero.
+- UI uses existing components, CSS variables, and Telegram theme params.
+- No heavy chart dependency was added.
+- No `dangerouslySetInnerHTML` is used.
+- Today, Roadmap, Focus/Pomodoro, and Knowledge Base navigation remained untouched.
+
+Verification:
+- `npm test` passed: 17 test files, 81 tests.
+- `npm run build` passed.
+- Vite dev server started at `http://127.0.0.1:5173/analytics`.
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
