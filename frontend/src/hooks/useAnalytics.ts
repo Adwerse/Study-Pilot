@@ -25,6 +25,7 @@ export interface UseWeeklyAnalyticsParams {
 
 export interface UseAnalyticsReportReturn<TReport> {
 	data: TReport | null
+	isLoading: boolean
 	loading: boolean
 	error: ApiError | null
 	refetch: () => void
@@ -77,7 +78,10 @@ function isAnalyticsMetrics(value: unknown): value is AnalyticsMetrics {
 		isNullableNumber(value.average_session_minutes) &&
 		typeof value.streak_days === 'number' &&
 		isStringArray(value.best_focus_hours) &&
-		Array.isArray(value.most_focused_topics)
+		Array.isArray(value.most_focused_topics) &&
+		value.most_focused_topics.every(
+			(topic) => isRecord(topic) && typeof topic.topic === 'string' && typeof topic.minutes === 'number',
+		)
 	)
 }
 
@@ -184,6 +188,7 @@ export function useDailyAnalytics({
 
 	return {
 		data,
+		isLoading: loading,
 		loading,
 		error,
 		refetch,
@@ -248,6 +253,7 @@ export function useWeeklyAnalytics({
 
 	return {
 		data,
+		isLoading: loading,
 		loading,
 		error,
 		refetch,

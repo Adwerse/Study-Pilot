@@ -70,6 +70,7 @@ describe('analytics hooks', () => {
 
 		await waitFor(() => expect(result.current.loading).toBe(false))
 
+		expect(result.current.isLoading).toBe(false)
 		expect(result.current.data?.metrics.total_focus_minutes).toBe(95)
 		expect(getDailyAnalytics).toHaveBeenCalledWith(
 			{ date: '2026-05-01', timezone: 'Europe/Dublin' },

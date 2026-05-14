@@ -48,6 +48,10 @@ export function toLocalDateString(date: Date): string {
 	return `${year}-${month}-${day}`
 }
 
+export function toApiDate(date: Date): string {
+	return toLocalDateString(date)
+}
+
 export function parseLocalDateString(value: string): Date {
 	const match = DATE_PATTERN.exec(value)
 

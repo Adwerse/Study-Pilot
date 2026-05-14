@@ -2,7 +2,13 @@ import { CSSProperties, ReactNode, useMemo, useState } from 'react'
 import { ActivityHeatmap, TopicProgressList, WeeklyFocusChart, WeeklySessionsChart } from '../components/analytics'
 import { Badge, Body, Button, Caption, Card, Skeleton, Subtitle, Title } from '../components/ui'
 import { useDailyAnalytics, useWeeklyAnalytics } from '../hooks/useAnalytics'
-import type { AnalyticsDataQuality, AnalyticsMetrics, AnalyticsReportResponse, ApiError } from '../types/api'
+import type {
+	AnalyticsDataQuality,
+	AnalyticsMetrics,
+	AnalyticsReportResponse,
+	ApiError,
+	DailyBreakdownItem,
+} from '../types/api'
 import {
 	formatMinutes,
 	formatPercent,
@@ -109,6 +115,17 @@ function getAnalyticsErrorMessage(error: ApiError | null): string {
 
 function isEmptyReport(metrics: AnalyticsMetrics | null | undefined): boolean {
 	return (metrics?.total_focus_minutes ?? 0) === 0 && (metrics?.sessions_count ?? 0) === 0
+}
+
+function buildDailyBreakdown(date: string, metrics: AnalyticsMetrics | null | undefined): DailyBreakdownItem[] {
+	return [
+		{
+			date,
+			focus_minutes: metrics?.total_focus_minutes ?? 0,
+			sessions_count: metrics?.sessions_count ?? 0,
+			completion_rate: metrics?.completion_rate ?? null,
+		},
+	]
 }
 
 function IconButton({
@@ -314,12 +331,15 @@ export function AnalyticsPage() {
 	const [selectedDate, setSelectedDate] = useState(today)
 	const [selectedWeekStart, setSelectedWeekStart] = useState(currentWeekStart)
 
-	const dailyState = useDailyAnalytics({ date: selectedDate, timezone })
-	const weeklyState = useWeeklyAnalytics({ weekStart: selectedWeekStart, timezone })
+	const dailyState = useDailyAnalytics({ date: selectedDate, timezone, enabled: activeTab === 'daily' })
+	const weeklyState = useWeeklyAnalytics({ weekStart: selectedWeekStart, timezone, enabled: activeTab === 'weekly' })
 	const activeState = activeTab === 'daily' ? dailyState : weeklyState
 	const activeReport = activeState.data
 	const activeMetrics = activeReport?.metrics
+	const activeLoading = activeState.isLoading
 	const weeklyBreakdown = weeklyState.data?.daily_breakdown ?? []
+	const heatmapBreakdown =
+		activeTab === 'weekly' ? weeklyBreakdown : buildDailyBreakdown(selectedDate, activeMetrics)
 	const periodLabel =
 		activeTab === 'daily' ? formatDayPeriod(selectedDate, today) : formatWeekPeriod(selectedWeekStart)
 	const nextDate = shiftDate(selectedDate, 1)
@@ -399,15 +419,15 @@ export function AnalyticsPage() {
 				</div>
 			)}
 
-			<SummaryCards metrics={activeMetrics} loading={activeState.loading} />
+			<SummaryCards metrics={activeMetrics} loading={activeLoading} />
 
-			{activeState.loading ? <AnalyticsLoadingState /> : null}
+			{activeLoading ? <AnalyticsLoadingState /> : null}
 
-			{!activeState.loading && activeState.error ? (
+			{!activeLoading && activeState.error ? (
 				<AnalyticsErrorState error={activeState.error} onRetry={activeState.refetch} />
 			) : null}
 
-			{!activeState.loading && !activeState.error ? (
+			{!activeLoading && !activeState.error ? (
 				<>
 					{isEmptyReport(activeMetrics) ? <EmptyState activeTab={activeTab} /> : null}
 
@@ -418,7 +438,7 @@ export function AnalyticsPage() {
 						</section>
 					) : null}
 
-					<ActivityHeatmap dailyBreakdown={weeklyBreakdown} weekStart={selectedWeekStart} />
+					<ActivityHeatmap dailyBreakdown={heatmapBreakdown} weekStart={selectedWeekStart} />
 					<TopicProgressList topics={activeMetrics?.most_focused_topics ?? []} />
 					<BestFocusHours hours={activeMetrics?.best_focus_hours ?? []} />
 					<AiSummary report={activeReport} />

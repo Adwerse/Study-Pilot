@@ -10,6 +10,7 @@ import {
 	isFutureWeek,
 	shiftDate,
 	shiftWeek,
+	toApiDate,
 } from './analyticsFormatters'
 
 describe('analytics formatters', () => {
@@ -38,6 +39,7 @@ describe('analytics date helpers', () => {
 	it('uses local YYYY-MM-DD dates', () => {
 		const now = new Date(2026, 4, 9, 12, 0, 0)
 
+		expect(toApiDate(now)).toBe('2026-05-09')
 		expect(getTodayDateString(now)).toBe('2026-05-09')
 		expect(getYesterdayDateString(now)).toBe('2026-05-08')
 	})

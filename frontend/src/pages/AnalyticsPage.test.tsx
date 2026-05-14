@@ -73,9 +73,11 @@ function makeWeeklyReport(overrides: Partial<WeeklyAnalyticsReportResponse> = {}
 }
 
 function mockDaily(overrides: Partial<UseAnalyticsReportReturn<AnalyticsReportResponse>> = {}) {
+	const isLoading = overrides.isLoading ?? overrides.loading ?? false
 	const value: UseAnalyticsReportReturn<AnalyticsReportResponse> = {
 		data: makeDailyReport(),
-		loading: false,
+		isLoading,
+		loading: isLoading,
 		error: null,
 		refetch: vi.fn(),
 		...overrides,
@@ -86,9 +88,11 @@ function mockDaily(overrides: Partial<UseAnalyticsReportReturn<AnalyticsReportRe
 }
 
 function mockWeekly(overrides: Partial<UseAnalyticsReportReturn<WeeklyAnalyticsReportResponse>> = {}) {
+	const isLoading = overrides.isLoading ?? overrides.loading ?? false
 	const value: UseAnalyticsReportReturn<WeeklyAnalyticsReportResponse> = {
 		data: makeWeeklyReport(),
-		loading: false,
+		isLoading,
+		loading: isLoading,
 		error: null,
 		refetch: vi.fn(),
 		...overrides,
