@@ -11,7 +11,9 @@ class Plan(Base):
     __tablename__ = "plans"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     title = Column(Text, nullable=False)
     status = Column(String(20), nullable=False, default="active")
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -29,7 +31,9 @@ class PlanStage(Base):
     __tablename__ = "plan_stages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"), nullable=False)
+    plan_id = Column(
+        UUID(as_uuid=True), ForeignKey("plans.id", ondelete="CASCADE"), nullable=False
+    )
     week_number = Column(Integer, nullable=False)
     title = Column(Text, nullable=False)
     deliverable = Column(Text, nullable=False)
@@ -37,5 +41,6 @@ class PlanStage(Base):
     order_index = Column(Integer, nullable=False)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
     plan = relationship("Plan", back_populates="stages")

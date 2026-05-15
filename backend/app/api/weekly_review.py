@@ -61,7 +61,7 @@ async def generate_weekly_review(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> WeeklyReviewResponse:
-    user_timezone = resolve_timezone(body.timezone)
+    user_timezone = resolve_timezone(body.timezone or current_user.get("timezone"))
     try:
         user_id = await resolve_user_id(current_user, db)
         return await build_weekly_review_service(db).generate_review(

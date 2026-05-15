@@ -26,7 +26,11 @@ class FakeReviewRepository:
         review_id: UUID,
         user_id: UUID,
     ) -> WeeklyReview | None:
-        if self.review and self.review.id == review_id and self.review.user_id == user_id:
+        if (
+            self.review
+            and self.review.id == review_id
+            and self.review.user_id == user_id
+        ):
             return self.review
         return None
 
@@ -89,6 +93,7 @@ def make_review(
         period_end=datetime(2026, 5, 4, tzinfo=UTC),
         timezone="UTC",
         status=status,
+        roadmap_status="behind",
         summary="Summary",
         insights=[],
         risks=[],
@@ -170,6 +175,7 @@ async def test_invalid_stage_id_causes_rollback() -> None:
         )
 
     assert stage.start_date == date(2026, 4, 27)
+    assert review.status == "draft"
     db.rollback.assert_awaited_once()
     db.commit.assert_not_awaited()
 
@@ -272,3 +278,5 @@ async def test_transaction_rollback_on_failed_apply_after_valid_change() -> None
 
     db.rollback.assert_awaited_once()
     db.commit.assert_not_awaited()
+    assert first_stage.start_date == date(2026, 4, 27)
+    assert review.status == "draft"

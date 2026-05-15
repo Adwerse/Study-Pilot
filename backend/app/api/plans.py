@@ -76,11 +76,16 @@ def build_stage_payload(stage: PlanStageModel) -> PlanStage:
         order_index=stage.order_index,
         start_date=stage.start_date,
         end_date=stage.end_date,
+        completed_at=stage.completed_at,
     )
 
 
-async def generate_daily_plan_for_stage(stage: PlanStage, current_user: dict) -> DailyPlan:
-    completed_today, minutes_today, topics_today = get_today_focus_summary(get_user_key(current_user), date.today())
+async def generate_daily_plan_for_stage(
+    stage: PlanStage, current_user: dict
+) -> DailyPlan:
+    completed_today, minutes_today, topics_today = get_today_focus_summary(
+        get_user_key(current_user), date.today()
+    )
     available_hours = max(0.5, 2.0 - (minutes_today / 60))
 
     return await daily_coach_agent.generate_plan(
@@ -156,13 +161,17 @@ async def get_today(
         if plan:
             stage = await repo.get_current_stage(plan.id)
             if stage:
-                return await generate_daily_plan_for_stage(build_stage_payload(stage), current_user)
+                return await generate_daily_plan_for_stage(
+                    build_stage_payload(stage), current_user
+                )
     except (SQLAlchemyError, OSError):
         pass
 
     runtime_stage = get_runtime_current_stage(user_key)
     if runtime_stage:
-        return await generate_daily_plan_for_stage(PlanStage.model_validate(runtime_stage), current_user)
+        return await generate_daily_plan_for_stage(
+            PlanStage.model_validate(runtime_stage), current_user
+        )
 
     raise HTTPException(status_code=404, detail="Current stage not found")
 
@@ -232,7 +241,9 @@ async def update_stage_status(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    _ = current_user
     repo = PlanRepository(db)
-    await repo.update_stage_status(stage_id, body.status)
+    user_id = await resolve_user_id(db, current_user)
+    stage = await repo.update_stage_status(stage_id, body.status, user_id=user_id)
+    if stage is None:
+        raise HTTPException(status_code=404, detail="Plan stage not found")
     return {"ok": True}

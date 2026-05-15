@@ -78,8 +78,9 @@ class WeeklyReviewService:
             week_start=week_start,
             user_timezone=user_timezone,
         )
-        focus_sessions = await self.focus_repo.list_sessions_between(
+        focus_sessions = await self.focus_repo.list_sessions_for_plan_between(
             user_id=user_id,
+            plan_id=plan.id,
             start_utc=weekly_metrics.period.start,
             end_utc=weekly_metrics.period.end,
             statuses=("completed", "cancelled"),
@@ -116,6 +117,7 @@ class WeeklyReviewService:
                 period_start=period.start,
                 period_end=period.end,
                 timezone_name=period.timezone,
+                roadmap_status=analysis.status,
                 summary=agent_result.summary,
                 insights=agent_result.insights,
                 risks=agent_result.risks,
@@ -195,6 +197,7 @@ class WeeklyReviewService:
                     period_start=item.period_start,
                     period_end=item.period_end,
                     status=item.status,
+                    roadmap_status=item.roadmap_status,
                     summary=item.summary,
                     created_at=item.created_at,
                 )
@@ -224,24 +227,13 @@ class WeeklyReviewService:
         plan: Plan,
     ) -> tuple[int, list[ProposedChange]]:
         stages_by_id = {str(stage.id): stage for stage in self._ordered_stages(plan)}
+        changes, skipped = self._validate_review_changes(
+            raw_changes=review.proposed_changes or [],
+            stages_by_id=stages_by_id,
+        )
+
         applied_count = 0
-        skipped: list[ProposedChange] = []
-
-        for raw_change in review.proposed_changes or []:
-            try:
-                change = ProposedChange.model_validate(raw_change)
-            except Exception as exc:
-                raise WeeklyReviewValidationError("Invalid proposed changes") from exc
-
-            if change.type != "reschedule_stage":
-                skipped.append(change)
-                continue
-
-            stage = stages_by_id.get(str(change.stage_id))
-            if stage is None:
-                raise WeeklyReviewValidationError("Invalid proposed changes")
-            self._validate_reschedule_change(change=change, stage=stage)
-
+        for change, stage in changes:
             stage.start_date = change.new_start_date
             stage.end_date = change.new_end_date
             applied_count += 1
@@ -252,6 +244,60 @@ class WeeklyReviewService:
         if applied_count:
             plan.adapted_at = now
         return applied_count, skipped
+
+    def _validate_review_changes(
+        self,
+        *,
+        raw_changes: list[dict],
+        stages_by_id: dict[str, PlanStage],
+    ) -> tuple[list[tuple[ProposedChange, PlanStage]], list[ProposedChange]]:
+        applied: list[tuple[ProposedChange, PlanStage]] = []
+        skipped: list[ProposedChange] = []
+
+        for raw_change in raw_changes:
+            try:
+                change = ProposedChange.model_validate(raw_change)
+            except Exception as exc:
+                raise WeeklyReviewValidationError("Invalid proposed changes") from exc
+
+            stage = stages_by_id.get(str(change.stage_id))
+            if stage is None:
+                raise WeeklyReviewValidationError("Invalid proposed changes")
+
+            if change.type != "reschedule_stage":
+                self._validate_suggestion_change(change)
+                skipped.append(change)
+                continue
+
+            self._validate_reschedule_change(change=change, stage=stage)
+            applied.append((change, stage))
+
+        return applied, skipped
+
+    @staticmethod
+    def _validate_suggestion_change(change: ProposedChange) -> None:
+        if not change.reason.strip():
+            raise WeeklyReviewValidationError("Invalid proposed changes")
+
+        if change.type == "split_stage":
+            if not change.suggested_new_titles:
+                raise WeeklyReviewValidationError("Invalid proposed changes")
+            return
+
+        if change.type == "adjust_stage_focus":
+            if (
+                change.suggested_focus_minutes_per_day is None
+                or change.suggested_focus_minutes_per_day <= 0
+            ):
+                raise WeeklyReviewValidationError("Invalid proposed changes")
+            return
+
+        if change.type == "mark_stage_at_risk":
+            if change.risk_level not in {"low", "medium", "high"}:
+                raise WeeklyReviewValidationError("Invalid proposed changes")
+            return
+
+        raise WeeklyReviewValidationError("Invalid proposed changes")
 
     @staticmethod
     def _validate_reschedule_change(
@@ -271,13 +317,19 @@ class WeeklyReviewService:
             raise WeeklyReviewValidationError("Invalid proposed changes")
 
         if stage.start_date is not None and stage.start_date != change.old_start_date:
-            raise WeeklyReviewValidationError("Roadmap has changed since review generation")
+            raise WeeklyReviewValidationError(
+                "Roadmap has changed since review generation"
+            )
         if stage.end_date is not None and stage.end_date != change.old_end_date:
-            raise WeeklyReviewValidationError("Roadmap has changed since review generation")
+            raise WeeklyReviewValidationError(
+                "Roadmap has changed since review generation"
+            )
 
     @staticmethod
     def _ordered_stages(plan: Plan) -> list[PlanStage]:
-        return sorted(list(getattr(plan, "stages", []) or []), key=lambda stage: stage.order_index)
+        return sorted(
+            list(getattr(plan, "stages", []) or []), key=lambda stage: stage.order_index
+        )
 
     @staticmethod
     def build_response(review: WeeklyReview) -> WeeklyReviewResponse:
@@ -290,6 +342,7 @@ class WeeklyReviewService:
                 timezone=review.timezone,
             ),
             status=review.status,
+            roadmap_status=review.roadmap_status,
             summary=review.summary,
             insights=list(review.insights or []),
             risks=list(review.risks or []),

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -14,6 +14,7 @@ class PlanStageBase(BaseModel):
     order_index: int
     start_date: date | None = None
     end_date: date | None = None
+    completed_at: datetime | None = None
 
 
 class PlanStageCreate(PlanStageBase):

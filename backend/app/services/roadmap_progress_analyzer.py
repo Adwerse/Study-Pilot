@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Literal
 
 from app.models.focus_log import FocusLog
@@ -29,6 +29,7 @@ class ActualProgress:
     actual_focus_minutes: int
     completion_rate: int | None
     completed_stages_count: int
+    total_stages_count: int
     roadmap_progress_percent: int
 
 
@@ -57,12 +58,15 @@ class RoadmapProgressAnalyzer:
         focus_minutes = self._planned_minutes_from_focus(focus_sessions or [])
         return PlannedProgress(
             planned_stages_count=len(planned_stages),
-            planned_focus_minutes=stage_minutes if stage_minutes is not None else focus_minutes,
+            planned_focus_minutes=stage_minutes
+            if stage_minutes is not None
+            else focus_minutes,
         )
 
     def calculate_actual_progress(
         self,
         stages: list[PlanStage],
+        period: ReviewPeriod,
         focus_sessions: list[FocusLog],
         weekly_metrics: AnalyticsMetrics | None,
     ) -> ActualProgress:
@@ -71,27 +75,35 @@ class RoadmapProgressAnalyzer:
             for session in focus_sessions
             if session.status == "completed"
         )
-        completed_stages_count = sum(1 for stage in stages if stage.status == "done")
+        completed_stages_count = sum(
+            1
+            for stage in stages
+            if self._stage_completed_by_period_end(stage=stage, period=period)
+        )
+        total_stages_count = len(stages)
         roadmap_progress_percent = (
-            round((completed_stages_count / len(stages)) * 100) if stages else 0
+            round((completed_stages_count / total_stages_count) * 100)
+            if total_stages_count
+            else 0
         )
 
-        if weekly_metrics is not None:
-            completion_rate = weekly_metrics.completion_rate
-        else:
-            completed_sessions = sum(
-                1 for session in focus_sessions if session.status == "completed"
-            )
-            cancelled_sessions = sum(
-                1 for session in focus_sessions if session.status == "cancelled"
-            )
-            denominator = completed_sessions + cancelled_sessions
-            completion_rate = round((completed_sessions / denominator) * 100) if denominator else None
+        _ = weekly_metrics
+        completed_sessions = sum(
+            1 for session in focus_sessions if session.status == "completed"
+        )
+        cancelled_sessions = sum(
+            1 for session in focus_sessions if session.status == "cancelled"
+        )
+        denominator = completed_sessions + cancelled_sessions
+        completion_rate = (
+            round((completed_sessions / denominator) * 100) if denominator else None
+        )
 
         return ActualProgress(
             actual_focus_minutes=actual_focus_minutes,
             completion_rate=completion_rate,
             completed_stages_count=completed_stages_count,
+            total_stages_count=total_stages_count,
             roadmap_progress_percent=roadmap_progress_percent,
         )
 
@@ -105,7 +117,7 @@ class RoadmapProgressAnalyzer:
         return [
             stage
             for stage in stages
-            if stage.status != "done"
+            if not self._stage_completed_by_period_end(stage=stage, period=period)
             and self._stage_end_date(plan, stage) < period_end_date
         ]
 
@@ -149,6 +161,7 @@ class RoadmapProgressAnalyzer:
         )
         actual = self.calculate_actual_progress(
             stages=ordered_stages,
+            period=period,
             focus_sessions=focus_sessions,
             weekly_metrics=weekly_metrics,
         )
@@ -173,6 +186,7 @@ class RoadmapProgressAnalyzer:
                 completion_rate=actual.completion_rate,
                 completed_stages_count=actual.completed_stages_count,
                 planned_stages_count=planned.planned_stages_count,
+                total_stages_count=actual.total_stages_count,
                 roadmap_progress_percent=actual.roadmap_progress_percent,
             ),
             delayed_stage_ids=[str(stage.id) for stage in delayed_stages],
@@ -187,7 +201,7 @@ class RoadmapProgressAnalyzer:
         stages: list[PlanStage],
         focus_sessions: list[FocusLog],
     ) -> RoadmapReviewStatus:
-        if not focus_sessions and actual.completed_stages_count == 0:
+        if not stages and not focus_sessions:
             return "insufficient_data"
 
         if planned.planned_stages_count > actual.completed_stages_count:
@@ -225,6 +239,25 @@ class RoadmapProgressAnalyzer:
         if stage.end_date is not None:
             return stage.end_date
         return self._stage_start_date(plan, stage) + timedelta(days=6)
+
+    def _stage_completed_by_period_end(
+        self,
+        *,
+        stage: PlanStage,
+        period: ReviewPeriod,
+    ) -> bool:
+        if stage.status != "done":
+            return False
+
+        completed_at = getattr(stage, "completed_at", None)
+        period_end = self._as_aware_utc(period.end)
+        if completed_at is not None:
+            return self._as_aware_utc(completed_at) <= period_end
+
+        # Legacy rows have no completion timestamp. Count them only for the
+        # current/future review window, where the current status is still a
+        # reasonable approximation.
+        return period_end > datetime.now(timezone.utc)
 
     @staticmethod
     def _derived_stage_start_date(plan: Plan, stage: PlanStage) -> date:
@@ -269,3 +302,9 @@ class RoadmapProgressAnalyzer:
     @staticmethod
     def _focus_minutes(session: FocusLog) -> int:
         return max(0, int(session.actual_duration_seconds or 0)) // 60
+
+    @staticmethod
+    def _as_aware_utc(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)

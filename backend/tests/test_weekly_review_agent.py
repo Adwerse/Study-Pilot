@@ -24,6 +24,8 @@ def make_plan() -> Plan:
         deliverable="Working API",
         status="in_progress",
         order_index=0,
+        start_date=datetime(2026, 4, 27, tzinfo=UTC).date(),
+        end_date=datetime(2026, 5, 3, tzinfo=UTC).date(),
     )
     plan = Plan(
         id=stage.plan_id,
@@ -98,6 +100,7 @@ async def test_invalid_llm_json_uses_fallback(monkeypatch) -> None:
         AsyncMock(return_value="not-json"),
     )
     plan = make_plan()
+    plan.stages = []
     period = make_period()
 
     result = await WeeklyReviewAgent().generate_review(
@@ -112,6 +115,7 @@ async def test_invalid_llm_json_uses_fallback(monkeypatch) -> None:
 
     assert result.analysis_status == "insufficient_data"
     assert result.recommendations
+    assert "data" in result.summary.lower()
 
 
 def test_validates_llm_proposed_changes_stage_id() -> None:
@@ -162,6 +166,27 @@ def test_drops_unsafe_change_types() -> None:
     assert changes == []
 
 
+def test_drops_invalid_date_ranges() -> None:
+    plan = make_plan()
+
+    changes = WeeklyReviewAgent().validate_proposed_changes(
+        [
+            {
+                "type": "reschedule_stage",
+                "stage_id": str(plan.stages[0].id),
+                "reason": "Bad dates",
+                "old_start_date": "2026-05-03",
+                "old_end_date": "2026-04-27",
+                "new_start_date": "2026-05-04",
+                "new_end_date": "2026-05-10",
+            }
+        ],
+        stages=plan.stages,
+    )
+
+    assert changes == []
+
+
 @pytest.mark.asyncio
 async def test_llm_cannot_invent_metrics(monkeypatch) -> None:
     monkeypatch.setattr(settings, "WEEKLY_REVIEW_AI_ENABLED", True)
@@ -197,6 +222,7 @@ async def test_llm_cannot_invent_metrics(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_insufficient_data_status_and_recommendation() -> None:
     plan = make_plan()
+    plan.stages = []
     result = await WeeklyReviewAgent().generate_review(
         user_id=plan.user_id,
         plan=plan,

@@ -67,6 +67,7 @@ def make_review_response(status: str = "draft") -> WeeklyReviewResponse:
             "timezone": "UTC",
         },
         status=status,
+        roadmap_status="on_track",
         summary="Summary",
         insights=[],
         risks=[],
@@ -77,6 +78,7 @@ def make_review_response(status: str = "draft") -> WeeklyReviewResponse:
             "completion_rate": None,
             "completed_stages_count": 0,
             "planned_stages_count": 1,
+            "total_stages_count": 1,
             "roadmap_progress_percent": 0,
         },
         proposed_changes=[],
@@ -84,9 +86,10 @@ def make_review_response(status: str = "draft") -> WeeklyReviewResponse:
 
 
 class FakeWeeklyReviewService:
-    def __init__(self, response=None, error=None):
+    def __init__(self, response=None, error=None, history_response=None):
         self.response = response
         self.error = error
+        self.history_response = history_response
         self.calls: list[dict] = []
 
     async def generate_review(self, **kwargs):
@@ -109,6 +112,8 @@ class FakeWeeklyReviewService:
         self.calls.append(kwargs)
         if self.error:
             raise self.error
+        if self.history_response is not None:
+            return self.history_response
         return WeeklyReviewHistoryResponse(items=[], total=0, limit=10, offset=0)
 
 
@@ -125,6 +130,7 @@ async def test_generate_weekly_review_success(client, weekly_review_api_override
 
     assert response.status_code == 200
     assert response.json()["status"] == "draft"
+    assert response.json()["roadmap_status"] == "on_track"
     assert service.calls[0]["plan_id"] is None
     assert service.calls[0]["apply_changes"] is False
 
@@ -147,7 +153,9 @@ async def test_generate_uses_active_plan_if_plan_id_missing(
 @pytest.mark.asyncio
 async def test_generate_rejects_foreign_plan_id(client, weekly_review_api_overrides):
     _user_id, set_service = weekly_review_api_overrides
-    set_service(FakeWeeklyReviewService(error=WeeklyReviewNotFoundError("Plan not found")))
+    set_service(
+        FakeWeeklyReviewService(error=WeeklyReviewNotFoundError("Plan not found"))
+    )
 
     response = await client.post(
         "/api/v1/weekly-review/generate",
@@ -192,7 +200,11 @@ async def test_apply_weekly_review_endpoint_applies_draft(
 @pytest.mark.asyncio
 async def test_cannot_apply_same_review_twice(client, weekly_review_api_overrides):
     _user_id, set_service = weekly_review_api_overrides
-    set_service(FakeWeeklyReviewService(error=WeeklyReviewConflictError("Review is already applied")))
+    set_service(
+        FakeWeeklyReviewService(
+            error=WeeklyReviewConflictError("Review is already applied")
+        )
+    )
 
     response = await client.post(f"/api/v1/weekly-review/{uuid4()}/apply")
 
@@ -202,7 +214,9 @@ async def test_cannot_apply_same_review_twice(client, weekly_review_api_override
 @pytest.mark.asyncio
 async def test_cannot_apply_foreign_review(client, weekly_review_api_overrides):
     _user_id, set_service = weekly_review_api_overrides
-    set_service(FakeWeeklyReviewService(error=WeeklyReviewNotFoundError("Review not found")))
+    set_service(
+        FakeWeeklyReviewService(error=WeeklyReviewNotFoundError("Review not found"))
+    )
 
     response = await client.post(f"/api/v1/weekly-review/{uuid4()}/apply")
 
@@ -223,3 +237,35 @@ async def test_history_returns_current_users_reviews_only(
     assert response.status_code == 200
     assert response.json()["total"] == 0
     assert service.calls[0]["user_id"] == user_id
+
+
+@pytest.mark.asyncio
+async def test_history_includes_roadmap_status(client, weekly_review_api_overrides):
+    _user_id, set_service = weekly_review_api_overrides
+    review_id = uuid4()
+    plan_id = uuid4()
+    service = FakeWeeklyReviewService(
+        history_response=WeeklyReviewHistoryResponse(
+            items=[
+                {
+                    "review_id": review_id,
+                    "plan_id": plan_id,
+                    "period_start": datetime(2026, 4, 27, tzinfo=timezone.utc),
+                    "period_end": datetime(2026, 5, 4, tzinfo=timezone.utc),
+                    "status": "draft",
+                    "roadmap_status": "behind",
+                    "summary": "Summary",
+                    "created_at": datetime(2026, 5, 4, tzinfo=timezone.utc),
+                }
+            ],
+            total=1,
+            limit=10,
+            offset=0,
+        )
+    )
+    set_service(service)
+
+    response = await client.get("/api/v1/weekly-review/history")
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["roadmap_status"] == "behind"

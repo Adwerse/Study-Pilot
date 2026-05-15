@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 
 WeeklyReviewStatus = Literal["draft", "applied", "dismissed"]
+RoadmapStatus = Literal["on_track", "behind", "ahead", "insufficient_data"]
 ProposedChangeType = Literal[
     "reschedule_stage",
     "split_stage",
@@ -33,6 +34,7 @@ class WeeklyReviewMetrics(BaseModel):
     completion_rate: int | None = None
     completed_stages_count: int = 0
     planned_stages_count: int = 0
+    total_stages_count: int = 0
     roadmap_progress_percent: int = 0
 
 
@@ -55,6 +57,7 @@ class WeeklyReviewResponse(BaseModel):
     plan_id: UUID
     period: WeeklyReviewPeriod
     status: WeeklyReviewStatus
+    roadmap_status: RoadmapStatus
     summary: str
     insights: list[str] = Field(default_factory=list)
     risks: list[str] = Field(default_factory=list)
@@ -76,6 +79,7 @@ class WeeklyReviewHistoryItem(BaseModel):
     period_start: datetime
     period_end: datetime
     status: WeeklyReviewStatus
+    roadmap_status: RoadmapStatus
     summary: str
     created_at: datetime
 

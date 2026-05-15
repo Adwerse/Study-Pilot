@@ -36,6 +36,7 @@ class PlanStage(BaseModel):
     order_index: int
     start_date: date | None = None
     end_date: date | None = None
+    completed_at: datetime | None = None
     topics: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
@@ -48,6 +49,7 @@ class PlanStageRead(PlanStageBase):
     order_index: int
     start_date: date | None = None
     end_date: date | None = None
+    completed_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

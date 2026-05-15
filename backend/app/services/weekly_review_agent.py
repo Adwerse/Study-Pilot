@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 WEEKLY_REVIEW_SYSTEM_PROMPT = (
-    "Ты Weekly Review Agent приложения StudyPilot. Твоя задача - сравнить "
-    "учебный план пользователя с фактическим прогрессом за неделю и предложить "
-    "безопасные улучшения roadmap. Отвечай только на основе переданных данных. "
-    "Не выдумывай факты, completed stages, даты или минуты фокуса. Если данных "
-    "мало, скажи это явно. Верни только JSON."
+    "You are the Weekly Review Agent for StudyPilot. Your job is to compare "
+    "the user's learning roadmap with actual weekly progress and suggest safe "
+    "roadmap improvements. Use only the provided data. Do not invent completed "
+    "stages, dates, focus minutes, or progress. If data is insufficient, say "
+    "that clearly. Return only valid JSON."
 )
 
 ALLOWED_CHANGE_TYPES = {
@@ -67,10 +67,14 @@ class WeeklyReviewAgent:
         deterministic_analysis: RoadmapProgressAnalysis | None = None,
         daily_breakdown: list[DailyBreakdownItem] | None = None,
     ) -> WeeklyReviewAgentResult:
-        timezone_name = timezone.key if isinstance(timezone, ZoneInfo) else str(timezone)
+        timezone_name = (
+            timezone.key if isinstance(timezone, ZoneInfo) else str(timezone)
+        )
         period = period or self._period_from_metrics(weekly_metrics, timezone_name)
         analytics_metrics = self._metrics_from_weekly_metrics(weekly_metrics)
-        daily_breakdown = daily_breakdown or self._daily_breakdown_from_metrics(weekly_metrics)
+        daily_breakdown = daily_breakdown or self._daily_breakdown_from_metrics(
+            weekly_metrics
+        )
 
         analysis = deterministic_analysis or self.analyzer.analyze(
             plan=plan,
@@ -106,7 +110,11 @@ class WeeklyReviewAgent:
                         ),
                     },
                 ],
-                model=settings.WEEKLY_REVIEW_MODEL or settings.ANALYTICS_MODEL or settings.TENSORIX_MODEL,
+                model=(
+                    settings.WEEKLY_REVIEW_MODEL
+                    or settings.ANALYTICS_MODEL
+                    or settings.TENSORIX_MODEL
+                ),
                 temperature=0.3,
                 max_tokens=1200,
                 response_format={"type": "json_object"},
@@ -118,10 +126,13 @@ class WeeklyReviewAgent:
             )
             return WeeklyReviewAgentResult(
                 summary=self._clean_text(parsed.get("summary")) or fallback.summary,
-                insights=self._clean_text_list(parsed.get("insights")) or fallback.insights,
-                risks=self._clean_text_list(parsed.get("risks")) or fallback.risks,
+                insights=(
+                    self._clean_text_list(parsed.get("insights"))[:5]
+                    or fallback.insights
+                ),
+                risks=self._clean_text_list(parsed.get("risks"))[:5] or fallback.risks,
                 recommendations=(
-                    self._clean_text_list(parsed.get("recommendations"))
+                    self._clean_text_list(parsed.get("recommendations"))[:5]
                     or fallback.recommendations
                 ),
                 metrics=analysis.metrics,
@@ -145,73 +156,47 @@ class WeeklyReviewAgent:
         metrics = analysis.metrics
         if analysis.status == "insufficient_data":
             summary = (
-                "Данных за неделю пока мало: нет завершенных focus-сессий и "
-                "нет подтвержденного прогресса по этапам."
+                "There is not enough roadmap or focus data for a confident weekly "
+                "review yet."
             )
         elif analysis.status == "behind":
             summary = (
-                "Roadmap отстает от плана: завершенных этапов меньше, чем "
-                "ожидалось к концу недели."
+                "The roadmap is behind the expected pace for this week based on "
+                "stage completion and focus activity."
             )
         elif analysis.status == "ahead":
-            summary = "Roadmap идет быстрее плана: завершено больше этапов, чем ожидалось."
+            summary = (
+                "The roadmap is ahead of the expected pace for this week based on "
+                "completed stages or focus activity."
+            )
         else:
-            summary = "Roadmap идет по плану: фактический прогресс совпадает с ожиданиями."
-
-        insights = [
-            f"Фокус за неделю: {metrics.actual_focus_minutes} мин.",
-            (
-                f"Этапы: завершено {metrics.completed_stages_count} "
-                f"из {len(stages)}, прогресс roadmap {metrics.roadmap_progress_percent}%."
-            ),
-        ]
-        if metrics.planned_focus_minutes is not None:
-            insights.insert(
-                0,
-                (
-                    f"Ты выполнил {metrics.actual_focus_minutes} минут фокуса "
-                    f"из ожидаемых {metrics.planned_focus_minutes}."
-                ),
+            summary = (
+                "The roadmap is broadly on track for this week based on the "
+                "available progress and focus data."
             )
-        if weekly_metrics and weekly_metrics.best_focus_hours:
-            insights.append(
-                "Лучшие часы фокуса: " + ", ".join(weekly_metrics.best_focus_hours) + "."
-            )
-        if weekly_metrics and weekly_metrics.most_focused_topics:
-            topic = weekly_metrics.most_focused_topics[0]
-            insights.append(f"Самая заметная тема: {topic.topic}, {topic.minutes} мин.")
 
-        risks: list[str] = []
-        if analysis.status == "behind":
-            risks.append("Есть риск сдвига следующих этапов без корректировки дат.")
-        if weekly_metrics and weekly_metrics.completion_rate < 70 and focus_sessions:
-            risks.append("Completion rate ниже 70%, часть focus-сессий отменяется.")
-
-        recommendations: list[str] = []
-        if analysis.status == "insufficient_data":
-            recommendations.append(
-                "Запланируй 1-2 короткие focus-сессии и вернись к review после фактических данных."
-            )
-        elif analysis.status == "behind":
-            recommendations.append("Сдвинь незавершенные этапы и уменьши объем ближайшей недели.")
-            recommendations.append("Разбей самый сложный этап на меньшие проверяемые блоки.")
-        elif analysis.status == "ahead":
-            recommendations.append("Можно ускорить следующий этап или добавить углубляющую практику.")
-        else:
-            recommendations.append("Сохрани текущий ритм и планируй сложные блоки на лучшие часы фокуса.")
-
-        if weekly_metrics and weekly_metrics.best_focus_hours:
-            recommendations.append(
-                f"Ставь сложные блоки на {weekly_metrics.best_focus_hours[0]}."
-            )
+        insights = self._fallback_insights(
+            metrics=metrics,
+            stages=stages,
+            weekly_metrics=weekly_metrics,
+        )
+        risks = self._fallback_risks(
+            analysis=analysis,
+            metrics=metrics,
+            focus_sessions=focus_sessions,
+        )
+        recommendations = self._fallback_recommendations(
+            analysis=analysis,
+            weekly_metrics=weekly_metrics,
+        )
 
         return WeeklyReviewAgentResult(
             summary=summary,
             insights=insights[:5],
-            risks=risks[:4],
+            risks=risks[:5],
             recommendations=recommendations[:5],
             metrics=metrics,
-            proposed_changes=analysis.proposed_changes,
+            proposed_changes=analysis.proposed_changes[:5],
             analysis_status=analysis.status,
         )
 
@@ -227,6 +212,8 @@ class WeeklyReviewAgent:
         stage_ids = {str(stage.id) for stage in stages}
         validated: list[ProposedChange] = []
         for raw_change in raw_changes:
+            if len(validated) >= 5:
+                break
             if not isinstance(raw_change, dict):
                 continue
             if raw_change.get("type") not in ALLOWED_CHANGE_TYPES:
@@ -256,7 +243,10 @@ class WeeklyReviewAgent:
                 or change.new_end_date is None
             ):
                 return False
-            return change.old_end_date >= change.old_start_date and change.new_end_date >= change.new_start_date
+            return (
+                change.old_end_date >= change.old_start_date
+                and change.new_end_date >= change.new_start_date
+            )
 
         if change.type == "split_stage":
             return bool(change.suggested_new_titles)
@@ -287,7 +277,9 @@ class WeeklyReviewAgent:
                 "id": str(plan.id),
                 "title": plan.title,
                 "status": plan.status,
-                "generated_at": plan.generated_at.isoformat() if plan.generated_at else None,
+                "generated_at": plan.generated_at.isoformat()
+                if plan.generated_at
+                else None,
                 "adapted_at": plan.adapted_at.isoformat() if plan.adapted_at else None,
             },
             "stages": [
@@ -298,12 +290,21 @@ class WeeklyReviewAgent:
                     "status": stage.status,
                     "week_number": stage.week_number,
                     "order_index": stage.order_index,
-                    "start_date": stage.start_date.isoformat() if stage.start_date else None,
+                    "start_date": stage.start_date.isoformat()
+                    if stage.start_date
+                    else None,
                     "end_date": stage.end_date.isoformat() if stage.end_date else None,
+                    "completed_at": stage.completed_at.isoformat()
+                    if getattr(stage, "completed_at", None)
+                    else None,
                 }
                 for stage in sorted(stages, key=lambda item: item.order_index)
             ],
-            "weekly_metrics": metrics.model_dump(mode="json") if metrics else None,
+            "weekly_metrics": (
+                metrics.model_dump(mode="json", exclude={"plan_progress"})
+                if metrics
+                else None
+            ),
             "focus_summary": self._focus_summary(focus_sessions),
             "daily_breakdown": (
                 [item.model_dump(mode="json") for item in daily_breakdown]
@@ -315,17 +316,141 @@ class WeeklyReviewAgent:
                 "metrics": analysis.metrics.model_dump(mode="json"),
                 "delayed_stage_ids": analysis.delayed_stage_ids,
                 "proposed_changes": [
-                    change.model_dump(mode="json") for change in analysis.proposed_changes
+                    change.model_dump(mode="json")
+                    for change in analysis.proposed_changes[:5]
                 ],
             },
             "allowed_change_types": sorted(ALLOWED_CHANGE_TYPES),
+            "expected_json": {
+                "summary": "string",
+                "insights": ["string"],
+                "risks": ["string"],
+                "recommendations": ["string"],
+                "proposed_changes": [],
+            },
+            "rules": [
+                "Use English.",
+                "Do not include chain-of-thought.",
+                "Do not create unsupported fields.",
+                "Return at most 5 insights.",
+                "Return at most 5 recommendations.",
+                "Return at most 5 proposed changes.",
+            ],
         }
         return json.dumps(payload, ensure_ascii=False)
 
     @staticmethod
+    def _fallback_insights(
+        *,
+        metrics: WeeklyReviewMetrics,
+        stages: list[PlanStage],
+        weekly_metrics: AnalyticsMetrics | None,
+    ) -> list[str]:
+        insights: list[str] = []
+        if metrics.planned_focus_minutes is not None:
+            insights.append(
+                "You completed "
+                f"{metrics.actual_focus_minutes} of "
+                f"{metrics.planned_focus_minutes} planned focus minutes."
+            )
+        else:
+            insights.append(
+                f"You completed {metrics.actual_focus_minutes} focus minutes this week."
+            )
+
+        insights.append(
+            "Roadmap progress is "
+            f"{metrics.roadmap_progress_percent}% "
+            f"({metrics.completed_stages_count} of {metrics.total_stages_count} "
+            "stages completed)."
+        )
+        if metrics.completion_rate is not None:
+            insights.append(
+                f"Focus session completion rate was {metrics.completion_rate}%."
+            )
+        if weekly_metrics and weekly_metrics.streak_days:
+            insights.append(
+                f"Current focus streak is {weekly_metrics.streak_days} days."
+            )
+        if weekly_metrics and weekly_metrics.best_focus_hours:
+            insights.append(
+                "Best focus hours were "
+                + ", ".join(weekly_metrics.best_focus_hours[:3])
+                + "."
+            )
+        if weekly_metrics and weekly_metrics.most_focused_topics:
+            topic = weekly_metrics.most_focused_topics[0]
+            insights.append(
+                f"Most attention went to {topic.topic} with {topic.minutes} minutes."
+            )
+
+        _ = stages
+        return insights
+
+    @staticmethod
+    def _fallback_risks(
+        *,
+        analysis: RoadmapProgressAnalysis,
+        metrics: WeeklyReviewMetrics,
+        focus_sessions: list[FocusLog],
+    ) -> list[str]:
+        risks: list[str] = []
+        if analysis.status == "behind":
+            risks.append(
+                "Unfinished planned stages may push next week's roadmap forward."
+            )
+        if (
+            metrics.planned_focus_minutes is not None
+            and metrics.actual_focus_minutes < metrics.planned_focus_minutes * 0.7
+        ):
+            risks.append("Actual focus time was below 70% of the planned target.")
+        if metrics.completion_rate is not None and metrics.completion_rate < 70:
+            risks.append("Focus session completion rate was below 70%.")
+        if analysis.status == "insufficient_data" and not focus_sessions:
+            risks.append("There are no plan-linked focus sessions for this period.")
+        return risks
+
+    @staticmethod
+    def _fallback_recommendations(
+        *,
+        analysis: RoadmapProgressAnalysis,
+        weekly_metrics: AnalyticsMetrics | None,
+    ) -> list[str]:
+        recommendations: list[str] = []
+        if analysis.status == "insufficient_data":
+            recommendations.append(
+                "Log a few plan-linked focus sessions before relying on roadmap changes."
+            )
+        elif analysis.status == "behind":
+            recommendations.append(
+                "Reschedule unfinished planned stages before adding new scope."
+            )
+            recommendations.append(
+                "Split the hardest delayed stage into smaller deliverables."
+            )
+        elif analysis.status == "ahead":
+            recommendations.append(
+                "Consider pulling the next stage forward or adding deeper practice."
+            )
+        else:
+            recommendations.append(
+                "Keep the current roadmap pace and protect the same focus rhythm."
+            )
+
+        if weekly_metrics and weekly_metrics.best_focus_hours:
+            recommendations.append(
+                f"Place complex work around {weekly_metrics.best_focus_hours[0]}."
+            )
+        return recommendations
+
+    @staticmethod
     def _focus_summary(focus_sessions: list[FocusLog]) -> dict[str, object]:
-        completed = [session for session in focus_sessions if session.status == "completed"]
-        cancelled = [session for session in focus_sessions if session.status == "cancelled"]
+        completed = [
+            session for session in focus_sessions if session.status == "completed"
+        ]
+        cancelled = [
+            session for session in focus_sessions if session.status == "cancelled"
+        ]
         return {
             "completed_sessions_count": len(completed),
             "cancelled_sessions_count": len(cancelled),
@@ -357,7 +482,11 @@ class WeeklyReviewAgent:
         now = datetime.now(timezone.utc)
         start = now - timedelta(days=now.weekday())
         start = start.replace(hour=0, minute=0, second=0, microsecond=0)
-        return ReviewPeriod(start=start, end=start + timedelta(days=7), timezone=timezone_name)
+        return ReviewPeriod(
+            start=start,
+            end=start + timedelta(days=7),
+            timezone=timezone_name,
+        )
 
     @staticmethod
     def _metrics_from_weekly_metrics(

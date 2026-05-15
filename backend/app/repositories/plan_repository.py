@@ -87,13 +87,37 @@ class PlanRepository:
 
         return stage
 
-    async def update_stage_status(self, stage_id: UUID, status: str) -> None:
-        await self.db.execute(update(PlanStage).where(PlanStage.id == stage_id).values(status=status))
+    async def update_stage_status(
+        self,
+        stage_id: UUID,
+        status: str,
+        user_id: UUID | None = None,
+    ) -> PlanStage | None:
+        query = select(PlanStage).where(PlanStage.id == stage_id)
+        if user_id is not None:
+            query = query.join(Plan, PlanStage.plan_id == Plan.id).where(
+                Plan.user_id == user_id
+            )
+
+        result = await self.db.execute(query)
+        stage = result.scalar_one_or_none()
+        if stage is None:
+            return None
+
+        stage.status = status
+        if status == "done" and stage.completed_at is None:
+            stage.completed_at = datetime.now(timezone.utc)
+        elif status != "done":
+            stage.completed_at = None
         await self.db.commit()
+        await self.db.refresh(stage)
+        return stage
 
     async def mark_adapted(self, plan_id: UUID) -> None:
         await self.db.execute(
-            update(Plan).where(Plan.id == plan_id).values(adapted_at=datetime.now(timezone.utc))
+            update(Plan)
+            .where(Plan.id == plan_id)
+            .values(adapted_at=datetime.now(timezone.utc))
         )
         await self.db.commit()
 
