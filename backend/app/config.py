@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     ANALYTICS_MODEL: str = ""
     WEEKLY_REVIEW_AI_ENABLED: bool = True
     WEEKLY_REVIEW_MODEL: str = ""
+    WEEKLY_DIGEST_ENABLED: bool = True
+    WEEKLY_DIGEST_DAY: int = 6
+    WEEKLY_DIGEST_HOUR: int = 18
+    WEEKLY_DIGEST_POLL_INTERVAL_SECONDS: int = 900
+    WEEKLY_DIGEST_BATCH_LIMIT: int = 100
 
     @property
     def telegram_bot_token(self) -> str:
@@ -62,6 +67,30 @@ class Settings(BaseSettings):
             }:
                 return False
 
+        return value
+
+    @field_validator("WEEKLY_DIGEST_DAY", mode="before")
+    @classmethod
+    def normalize_weekly_digest_day(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            days = {
+                "monday": 0,
+                "mon": 0,
+                "tuesday": 1,
+                "tue": 1,
+                "wednesday": 2,
+                "wed": 2,
+                "thursday": 3,
+                "thu": 3,
+                "friday": 4,
+                "fri": 4,
+                "saturday": 5,
+                "sat": 5,
+                "sunday": 6,
+                "sun": 6,
+            }
+            return days.get(normalized, value)
         return value
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

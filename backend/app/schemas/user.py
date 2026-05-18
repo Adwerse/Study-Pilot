@@ -12,6 +12,9 @@ class UserBase(BaseModel):
     deadline: Optional[date] = None
     level: Optional[str] = None
     weekly_hours: Optional[int] = None
+    timezone: str = "UTC"
+    notifications_enabled: bool = True
+    weekly_digest_enabled: bool = True
 
 
 class UserCreate(UserBase):
@@ -25,6 +28,9 @@ class UserUpdate(UserBase):
     deadline: Optional[date] = None
     level: Optional[str] = None
     weekly_hours: Optional[int] = None
+    timezone: Optional[str] = None
+    notifications_enabled: Optional[bool] = None
+    weekly_digest_enabled: Optional[bool] = None
 
 
 class UserRead(UserBase):

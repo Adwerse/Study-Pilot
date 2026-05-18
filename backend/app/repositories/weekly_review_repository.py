@@ -60,6 +60,27 @@ class WeeklyReviewRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_for_user_plan_period(
+        self,
+        *,
+        user_id: UUID,
+        plan_id: UUID,
+        period_start: datetime,
+        period_end: datetime,
+    ) -> WeeklyReview | None:
+        result = await self.db.execute(
+            select(WeeklyReview)
+            .where(
+                WeeklyReview.user_id == user_id,
+                WeeklyReview.plan_id == plan_id,
+                WeeklyReview.period_start == period_start,
+                WeeklyReview.period_end == period_end,
+            )
+            .order_by(WeeklyReview.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_history(
         self,
         *,

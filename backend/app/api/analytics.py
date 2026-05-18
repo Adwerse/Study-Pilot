@@ -39,6 +39,11 @@ async def resolve_user_id(current_user: dict, db: AsyncSession) -> UUID:
         username=current_user.get("username"),
         first_name=current_user.get("first_name"),
     )
+    resolved_timezone = current_user.get("_resolved_timezone") or current_user.get(
+        "timezone"
+    )
+    if isinstance(resolved_timezone, str) and resolved_timezone.strip():
+        await user_repo.update_timezone(user.id, resolved_timezone.strip())
     return user.id
 
 
@@ -87,6 +92,7 @@ async def get_daily_report(
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsReportResponse:
     user_timezone = resolve_timezone(timezone_name)
+    current_user["_resolved_timezone"] = user_timezone.key
     try:
         user_id = await resolve_user_id(current_user, db)
         result = await build_metrics_service(db).build_daily_report(
@@ -118,6 +124,7 @@ async def get_weekly_report(
     db: AsyncSession = Depends(get_db),
 ) -> AnalyticsReportResponse:
     user_timezone = resolve_timezone(timezone_name)
+    current_user["_resolved_timezone"] = user_timezone.key
     try:
         user_id = await resolve_user_id(current_user, db)
         result = await build_metrics_service(db).build_weekly_report(
@@ -149,6 +156,7 @@ async def get_today_report(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     user_timezone = resolve_timezone(timezone_name)
+    current_user["_resolved_timezone"] = user_timezone.key
     local_date = report_date or datetime.now(user_timezone).date()
     try:
         user_id = await resolve_user_id(current_user, db)
@@ -182,6 +190,7 @@ async def get_week_report(
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, object]]:
     user_timezone = resolve_timezone(timezone_name)
+    current_user["_resolved_timezone"] = user_timezone.key
     try:
         user_id = await resolve_user_id(current_user, db)
         result = await build_metrics_service(db).build_weekly_report(
@@ -216,6 +225,7 @@ async def get_streak(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, int]:
     user_timezone = resolve_timezone(timezone_name)
+    current_user["_resolved_timezone"] = user_timezone.key
     try:
         user_id = await resolve_user_id(current_user, db)
         result = await build_metrics_service(db).build_daily_report(

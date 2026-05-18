@@ -3,6 +3,7 @@ from .focus_log import FocusLog
 from .notification_job import NotificationJob
 from .plan import Plan, PlanStage
 from .user import User
+from .weekly_digest import WeeklyDigestDelivery
 from .weekly_review import WeeklyReview
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "Plan",
     "PlanStage",
     "User",
+    "WeeklyDigestDelivery",
     "WeeklyReview",
 ]

@@ -40,6 +40,11 @@ async def resolve_user_id(current_user: dict, db: AsyncSession) -> UUID:
         username=current_user.get("username"),
         first_name=current_user.get("first_name"),
     )
+    resolved_timezone = current_user.get("_resolved_timezone") or current_user.get(
+        "timezone"
+    )
+    if isinstance(resolved_timezone, str) and resolved_timezone.strip():
+        await user_repo.update_timezone(user.id, resolved_timezone.strip())
     return user.id
 
 
@@ -62,6 +67,7 @@ async def generate_weekly_review(
     db: AsyncSession = Depends(get_db),
 ) -> WeeklyReviewResponse:
     user_timezone = resolve_timezone(body.timezone or current_user.get("timezone"))
+    current_user["_resolved_timezone"] = user_timezone.key
     try:
         user_id = await resolve_user_id(current_user, db)
         return await build_weekly_review_service(db).generate_review(

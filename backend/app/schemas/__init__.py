@@ -30,6 +30,12 @@ from .plan import PlanCreate, PlanRead
 from .plan_stage import PlanStageCreate, PlanStageRead
 from .rag import AskRequest, AskResponse, RAGAnswer, RAGQuestionRequest, RAGSource
 from .user import UserCreate, UserRead
+from .weekly_digest import (
+    DigestPeriod,
+    WeeklyDigestDeliveryResult,
+    WeeklyDigestProcessResult,
+    WeeklyDigestReport,
+)
 
 __all__ = [
     "UserCreate",
@@ -67,4 +73,8 @@ __all__ = [
     "DailyBreakdownItem",
     "AnalyticsNarrative",
     "AnalyticsReportResponse",
+    "DigestPeriod",
+    "WeeklyDigestDeliveryResult",
+    "WeeklyDigestProcessResult",
+    "WeeklyDigestReport",
 ]
