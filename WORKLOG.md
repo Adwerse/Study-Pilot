@@ -802,6 +802,63 @@ Verification:
 - `npm run build` passed.
 - Vite dev server started at `http://127.0.0.1:5173/analytics`.
 
+## Sprint 6 Weekly Telegram Digest
+Date: 2026-05-18
+Status: implemented
+
+Goal:
+- Add an automatic weekly Telegram digest that sends StudyPilot users a concise weekly learning report every Sunday.
+
+What was done:
+- Added migration `011_create_weekly_digest_deliveries.sql`:
+  - `users.timezone`;
+  - `users.notifications_enabled`;
+  - `users.weekly_digest_enabled`;
+  - `weekly_digest_deliveries` with delivery status, Telegram metadata, safe error storage, timestamps, and unique `(user_id, week_start, week_end)` duplicate prevention.
+- Added `WeeklyDigestDelivery` SQLAlchemy model and exported it through the models package.
+- Added weekly digest schemas/dataclasses for digest period, report, process result, and per-user delivery result.
+- Added `WeeklyDigestRepository` with candidate listing, delivery lookup, pending creation, row-lock claiming, failed retry support, and sent/failed/skipped status transitions.
+- Added `WeeklyDigestService` using the existing backend service architecture:
+  - calculates real weekly metrics via `AnalyticsMetricsService`;
+  - generates narrative via `AnalyticsAgent`;
+  - uses existing Weekly Review data where available;
+  - generates draft Weekly Review only with `apply_changes=False`;
+  - never auto-applies roadmap changes;
+  - skips active-plan users with zero completed focus sessions for the week;
+  - continues processing after per-user failures.
+- Added `WeeklyDigestFormatter` for concise plain-text Telegram messages in Russian, with optional sections, low-data-quality note, and message length cap.
+- Sends through the existing `TelegramService.send_message` method with no Markdown parse mode.
+- Adds a WebApp inline keyboard button to `${MINI_APP_URL}/analytics` when `MINI_APP_URL` is configured.
+- Added `weekly_digest_worker_loop` and wired it into FastAPI lifespan next to the existing notification worker.
+- Added settings and env examples:
+  - `WEEKLY_DIGEST_ENABLED`;
+  - `WEEKLY_DIGEST_DAY`;
+  - `WEEKLY_DIGEST_HOUR`;
+  - `WEEKLY_DIGEST_POLL_INTERVAL_SECONDS`;
+  - `WEEKLY_DIGEST_BATCH_LIMIT`.
+- Updated analytics and weekly-review routes to persist validated user timezone opportunistically.
+- Updated production Docker env wiring for weekly digest and weekly review settings.
+
+Safety notes:
+- Telegram sends are mocked in tests; no real Telegram messages are sent.
+- Telegram bot token and Mini App URL are never hardcoded.
+- Duplicate delivery prevention uses both a database unique constraint and row-lock claiming.
+- Failed deliveries are not retried automatically unless `retry_failed=True` is passed.
+- Delivery errors are truncated and safe; stack traces and secrets are not stored.
+
+Tests:
+- Added formatter tests for required metrics, optional sections, low data quality, raw JSON avoidance, and length cap.
+- Added service tests for due-period calculation, UTC fallback, Sunday/hour scheduling, eligibility skips, successful send, failed send, duplicate prevention, failed retry behavior, per-user failure isolation, Weekly Review draft generation, and WebApp reply markup.
+
+Verification:
+- `pytest backend/tests/test_weekly_digest_formatter.py backend/tests/test_weekly_digest_service.py -q` passed: 15 tests.
+- `pytest backend/tests/test_analytics_api.py backend/tests/test_weekly_review_api.py backend/tests/test_notifications.py backend/tests/test_weekly_digest_formatter.py backend/tests/test_weekly_digest_service.py -q` passed: 39 tests.
+- `pytest backend/tests/test_analytics_api.py backend/tests/test_analytics_metrics_service.py backend/tests/test_analytics_agent.py backend/tests/test_weekly_review_api.py backend/tests/test_weekly_review_service.py backend/tests/test_weekly_review_agent.py backend/tests/test_notifications.py backend/tests/test_weekly_digest_formatter.py backend/tests/test_weekly_digest_service.py -q` passed: 63 tests.
+- `ruff check backend/app backend/tests/test_weekly_digest_formatter.py backend/tests/test_weekly_digest_service.py` passed.
+- `ruff format --check` passed for changed digest files.
+- `git diff --check` passed.
+- Full backend suite result: 153 passed, 2 skipped, 1 failed because `test_plan_persistence.py::test_daily_plan_uses_current_stage_and_focus_history` could not connect to local PostgreSQL (`ConnectionRefusedError`), outside the digest path.
+
 ## Backlog (Alpha)
 Date: 2026-04-18
 Status: in progress
