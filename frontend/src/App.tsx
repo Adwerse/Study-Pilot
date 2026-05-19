@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useTelegramTheme } from './hooks/useTelegramTheme'
-import { expand, ready } from './lib/telegram'
+import { expand, ready, subscribeViewportChanges, syncViewportCssVars } from './lib/telegram'
 import { AppRouter } from './router'
 
 export default function App() {
@@ -9,7 +10,13 @@ export default function App() {
 	useEffect(() => {
 		ready()
 		expand()
+		syncViewportCssVars()
+		return subscribeViewportChanges(syncViewportCssVars)
 	}, [])
 
-	return <AppRouter />
+	return (
+		<ErrorBoundary>
+			<AppRouter />
+		</ErrorBoundary>
+	)
 }

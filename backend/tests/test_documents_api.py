@@ -7,6 +7,7 @@ from app.api import documents as documents_api
 from app.api.dependencies import get_current_user
 from app.database import get_db
 from app.models.document import Document, DocumentChunk
+from app.schemas.document import DocumentListItem
 from app.services.vector_index_service import VectorStoreUnavailableError
 
 
@@ -120,6 +121,27 @@ class FakeDocumentIngestService:
         document.status = "ready"
         document.chunks_count = 1
         return document
+
+
+def test_document_error_message_does_not_expose_secrets():
+    document = Document(
+        id=uuid4(),
+        user_id=uuid4(),
+        title="Broken",
+        filename="broken.txt",
+        content_type="text/plain",
+        size_bytes=10,
+        source_type="upload",
+        status="failed",
+        chunks_count=0,
+        error_message="Traceback with API key sk-secret",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    )
+
+    payload = DocumentListItem.model_validate(document)
+
+    assert payload.error_message == "Document processing failed"
 
 
 @pytest.fixture(autouse=True)

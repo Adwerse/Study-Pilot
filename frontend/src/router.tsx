@@ -1,4 +1,5 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { RouteErrorFallback } from './components/ErrorBoundary'
 import { Layout } from './components/layout'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { FocusHistoryPage } from './pages/FocusHistoryPage'
@@ -10,6 +11,7 @@ const router = createBrowserRouter([
 	{
 		path: '/',
 		element: <Layout />,
+		errorElement: <RouteErrorFallback />,
 		children: [
 			{
 				index: true,

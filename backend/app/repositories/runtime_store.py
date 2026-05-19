@@ -39,7 +39,9 @@ def save_plan(user_key: str, roadmap_result: dict[str, Any]) -> dict[str, Any]:
     now_iso = datetime.now(timezone.utc).isoformat()
 
     stages: list[dict[str, Any]] = []
-    for index, stage_raw in enumerate(stages_raw if isinstance(stages_raw, list) else []):
+    for index, stage_raw in enumerate(
+        stages_raw if isinstance(stages_raw, list) else []
+    ):
         if not isinstance(stage_raw, dict):
             continue
 
@@ -117,7 +119,9 @@ def get_current_stage(user_key: str) -> dict[str, Any] | None:
     return deepcopy(stages[0]) if stages else None
 
 
-def start_focus_session(user_key: str, topic: str, stage_id: str | None) -> FocusSession:
+def start_focus_session(
+    user_key: str, topic: str, stage_id: str | None
+) -> FocusSession:
     active = _user_active_focus.get(user_key)
     if active and active.ended_at is None:
         return active.model_copy(deep=True)
@@ -137,11 +141,15 @@ def start_focus_session(user_key: str, topic: str, stage_id: str | None) -> Focu
     return session.model_copy(deep=True)
 
 
-def end_focus_session(user_key: str, session_id: str, difficulty: int) -> FocusSession | None:
+def end_focus_session(
+    user_key: str, session_id: str, difficulty: int
+) -> FocusSession | None:
     active = _user_active_focus.get(user_key)
     if active and active.id == session_id and active.ended_at is None:
         ended_at = datetime.now(timezone.utc)
-        duration_minutes = max(1, int((ended_at - active.started_at).total_seconds() // 60))
+        duration_minutes = max(
+            1, int((ended_at - active.started_at).total_seconds() // 60)
+        )
 
         active.ended_at = ended_at
         active.duration_minutes = duration_minutes
@@ -157,7 +165,9 @@ def end_focus_session(user_key: str, session_id: str, difficulty: int) -> FocusS
 
         if session.ended_at is None:
             ended_at = datetime.now(timezone.utc)
-            duration_minutes = max(1, int((ended_at - session.started_at).total_seconds() // 60))
+            duration_minutes = max(
+                1, int((ended_at - session.started_at).total_seconds() // 60)
+            )
             session.ended_at = ended_at
             session.duration_minutes = duration_minutes
             session.difficulty = difficulty
@@ -175,7 +185,9 @@ def get_focus_history(user_key: str) -> list[FocusSession]:
     return [item.model_copy(deep=True) for item in ordered]
 
 
-def get_today_focus_summary(user_key: str, today_utc: date) -> tuple[int, int, list[str]]:
+def get_today_focus_summary(
+    user_key: str, today_utc: date
+) -> tuple[int, int, list[str]]:
     history = _user_focus_history.get(user_key, [])
     completed_today: list[FocusSession] = []
 
@@ -189,6 +201,8 @@ def get_today_focus_summary(user_key: str, today_utc: date) -> tuple[int, int, l
 
     completed_count = len(completed_today)
     minutes_total = sum(session.duration_minutes or 0 for session in completed_today)
-    topics_today = sorted({session.topic for session in completed_today if session.topic})
+    topics_today = sorted(
+        {session.topic for session in completed_today if session.topic}
+    )
 
     return completed_count, minutes_total, topics_today

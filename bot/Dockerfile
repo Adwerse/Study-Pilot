@@ -7,8 +7,10 @@ WORKDIR /app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && adduser --disabled-password --gecos "" appuser
 
 COPY . .
+USER appuser
 
 CMD ["python", "main.py"]

@@ -17,3 +17,16 @@ export function ready() {
 export function expand() {
   WebApp.expand()
 }
+
+export function syncViewportCssVars() {
+  const viewportHeight = WebApp.viewportStableHeight || WebApp.viewportHeight || window.innerHeight
+  document.documentElement.style.setProperty('--tg-viewport-height', `${viewportHeight}px`)
+}
+
+export function subscribeViewportChanges(handler: () => void) {
+  WebApp.onEvent?.('viewportChanged', handler)
+
+  return () => {
+    WebApp.offEvent?.('viewportChanged', handler)
+  }
+}

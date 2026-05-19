@@ -39,16 +39,24 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
+      APP_ENV: production
+      TESTING: "false"
+      TEST_AUTH_ENABLED: "false"
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-learning_os}
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?set OPENAI_API_KEY}
-      TENSORIX_API_KEY: ${TENSORIX_API_KEY:?set TENSORIX_API_KEY}
+      LLM_PROVIDER: ${LLM_PROVIDER:-tensorix}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai}
+      TENSORIX_API_KEY: ${TENSORIX_API_KEY:-}
       TENSORIX_BASE_URL: ${TENSORIX_BASE_URL:-https://api.tensorix.ai/v1}
       TENSORIX_MODEL: ${TENSORIX_MODEL:-deepseek/deepseek-chat-v3.1}
       BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       TELEGRAM_BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       MINI_APP_URL: https://${APP_DOMAIN:?set APP_DOMAIN}
       ALLOWED_ORIGINS: '["https://${APP_DOMAIN:?set APP_DOMAIN}"]'
+      INTERNAL_JOBS_SECRET: ${INTERNAL_JOBS_SECRET:?set INTERNAL_JOBS_SECRET}
       DEBUG: ${APP_DEBUG:-false}
       NOTIFICATIONS_ENABLED: ${NOTIFICATIONS_ENABLED:-true}
       NOTIFICATIONS_POLL_INTERVAL_SECONDS: ${NOTIFICATIONS_POLL_INTERVAL_SECONDS:-30}
@@ -83,7 +91,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()\"",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5).read()\"",
         ]
       interval: 30s
       timeout: 10s
@@ -96,7 +104,7 @@ services:
     restart: unless-stopped
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     environment:
       BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       MINI_APP_URL: https://${APP_DOMAIN:?set APP_DOMAIN}
@@ -113,15 +121,21 @@ services:
       PORT: 4173
     expose:
       - "4173"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4173/health >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       frontend:
-        condition: service_started
+        condition: service_healthy
     environment:
       APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN}
       API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}

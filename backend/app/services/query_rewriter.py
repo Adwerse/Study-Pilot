@@ -19,6 +19,9 @@ class QueryRewriter:
         self.model = model or settings.RAG_REWRITE_MODEL
 
     async def rewrite(self, question: str) -> str:
+        if settings.LLM_PROVIDER == "fake":
+            return question
+
         try:
             rewritten = await complete(
                 messages=[

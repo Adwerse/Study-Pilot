@@ -41,6 +41,8 @@ class EmbeddingService:
     async def embed_texts(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
+        if settings.EMBEDDING_PROVIDER == "fake":
+            return [self._fake_embedding() for _ in texts]
 
         client = self.client or get_embedding_client()
         request_kwargs: dict[str, object] = {
@@ -72,3 +74,7 @@ class EmbeddingService:
                 )
 
         return embeddings
+
+    def _fake_embedding(self) -> list[float]:
+        dimensions = max(1, int(self.dimensions))
+        return [1.0] + [0.0] * (dimensions - 1)

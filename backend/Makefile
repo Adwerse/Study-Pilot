@@ -23,3 +23,6 @@ lint:
 
 health:
 	curl -s http://localhost:8000/health | python3 -m json.tool
+
+ready:
+	curl -s http://localhost:8000/health/ready | python3 -m json.tool

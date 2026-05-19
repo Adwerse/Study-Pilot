@@ -58,6 +58,13 @@ class AnswerGenerator:
                 used_source_numbers=[],
                 context_source_count=0,
             )
+        if settings.LLM_PROVIDER == "fake":
+            return GeneratedAnswer(
+                answer="Based on your uploaded material, focus loops connect goals, sessions, notes, and review [1].",
+                confidence="high",
+                used_source_numbers=[1],
+                context_source_count=1,
+            )
 
         prompt = self._build_user_prompt(question, context_chunks)
         try:

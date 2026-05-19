@@ -9,10 +9,13 @@ _client: AsyncOpenAI | None = None
 def get_llm_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(
-            api_key=settings.TENSORIX_API_KEY,
-            base_url=settings.TENSORIX_BASE_URL,
-        )
+        if settings.LLM_PROVIDER == "openai":
+            _client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        else:
+            _client = AsyncOpenAI(
+                api_key=settings.TENSORIX_API_KEY,
+                base_url=settings.TENSORIX_BASE_URL,
+            )
     return _client
 
 

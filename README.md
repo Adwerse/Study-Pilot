@@ -40,3 +40,41 @@ Analytics
 Weekly review
   ↓
 Updated roadmap
+```
+
+---
+
+## Production Readiness
+
+Deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Monitoring and post-deploy checks live in [docs/MONITORING.md](docs/MONITORING.md).
+
+Core release checks:
+
+```sh
+cd backend
+pytest
+uvicorn app.main:app --reload
+```
+
+```sh
+cd frontend
+npx playwright install chromium
+npm run typecheck
+npm run test
+npm run build
+npm run test:e2e
+```
+
+```sh
+docker compose -f docker-compose.prod.yml --env-file .env.production up --build
+docker compose -f docker-compose.prod.yml down
+```
+
+The Playwright e2e suite requires a local backend in test mode, a migrated test PostgreSQL database with pgvector, and fake AI providers. It must not use real OpenAI, Tensorix, or Telegram calls.
+
+Backend health endpoints:
+
+- `GET /health`
+- `GET /health/ready`
+
+Production must run with `APP_ENV=production`, `TESTING=false`, restricted `ALLOWED_ORIGINS`, valid Telegram Mini App settings, and real provider keys.

@@ -1,0 +1,102 @@
+name: E2E Checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/e2e.yml'
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: studypilot_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d studypilot_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      TESTING: "true"
+      TEST_AUTH_ENABLED: "true"
+      TEST_AUTH_SECRET: studypilot-test-secret
+      E2E_TEST_SECRET: studypilot-e2e-secret
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/studypilot_e2e
+      DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/studypilot_e2e
+      SECRET_KEY: ci-secret-key
+      BOT_TOKEN: 123456:TEST_TOKEN
+      TELEGRAM_BOT_TOKEN: 123456:TEST_TOKEN
+      MINI_APP_URL: http://localhost:5173
+      ALLOWED_ORIGINS: '["http://localhost:5173"]'
+      OPENAI_API_KEY: ci-openai-key
+      TENSORIX_API_KEY: ""
+      LLM_PROVIDER: fake
+      EMBEDDING_PROVIDER: fake
+      ANALYTICS_AI_ENABLED: "false"
+      WEEKLY_REVIEW_AI_ENABLED: "false"
+      NOTIFICATIONS_ENABLED: "false"
+      WEEKLY_DIGEST_ENABLED: "false"
+      INTERNAL_JOBS_SECRET: ci-internal-secret
+      E2E_API_BASE_URL: http://127.0.0.1:8000
+      E2E_BASE_URL: http://127.0.0.1:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Install backend dependencies
+        working-directory: backend
+        run: python -m venv .venv && .venv/bin/pip install -r requirements.txt
+      - name: Run SQL migrations
+        working-directory: backend
+        run: for f in migrations/*.sql; do psql "$DATABASE_URL_SYNC" -v ON_ERROR_STOP=1 -f "$f"; done
+      - name: Start backend
+        working-directory: backend
+        run: |
+          .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 > backend.log 2>&1 &
+          echo $! > backend.pid
+      - name: Wait for backend readiness
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/health/ready; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat backend/backend.log
+          exit 1
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: ignore

@@ -22,5 +22,7 @@ test-all:
 check:
 	@echo "--- Health check ---"
 	@curl -s http://localhost:8000/health | python3 -m json.tool
+	@echo "--- Readiness check ---"
+	@curl -s http://localhost:8000/health/ready | python3 -m json.tool
 	@echo "--- DB check ---"
 	@docker-compose exec postgres pg_isready -U postgres

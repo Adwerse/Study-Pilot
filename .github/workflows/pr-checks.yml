@@ -18,33 +18,63 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
+      - run: npm run test
       - run: npm run build
       - name: Check dist exists
         run: test -d dist && echo "dist OK"
 
   backend-check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
     env:
+      APP_ENV: test
+      TESTING: "true"
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+      DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/postgres
       SECRET_KEY: ci-secret-key
       OPENAI_API_KEY: ci-openai-key
+      LLM_PROVIDER: fake
+      EMBEDDING_PROVIDER: fake
       BOT_TOKEN: 123456:TEST_TOKEN
       MINI_APP_URL: https://example.com
+      INTERNAL_JOBS_SECRET: ci-internal-secret
+      ANALYTICS_AI_ENABLED: "false"
+      WEEKLY_REVIEW_AI_ENABLED: "false"
+      NOTIFICATIONS_ENABLED: "false"
+      WEEKLY_DIGEST_ENABLED: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        working-directory: .
       - name: Cache venv
         uses: actions/cache@v4
         with:
           path: backend/.venv
           key: venv-${{ hashFiles('backend/requirements.txt') }}
       - run: python -m venv .venv && .venv/bin/pip install -r requirements.txt
+      - name: Run SQL migrations
+        run: for f in migrations/*.sql; do psql "$DATABASE_URL_SYNC" -v ON_ERROR_STOP=1 -f "$f"; done
       - run: .venv/bin/ruff check app/
       - run: .venv/bin/ruff format --check app/
       - run: .venv/bin/pytest tests/ -v

@@ -50,11 +50,16 @@ These variables are required by the services running on Railway, not by GitHub A
 
 ### backend service
 - `DATABASE_URL`
+- `APP_ENV=production`
 - `SECRET_KEY`
 - `OPENAI_API_KEY`
+- `LLM_PROVIDER`
+- `EMBEDDING_PROVIDER`
+- `TENSORIX_API_KEY`, when using Tensorix chat models
 - `BOT_TOKEN`
 - `MINI_APP_URL`
-- `ALLOWED_ORIGINS`, optional but recommended for production
+- `ALLOWED_ORIGINS`
+- `INTERNAL_JOBS_SECRET`
 - `DEBUG`, optional
 
 ### frontend service

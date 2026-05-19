@@ -31,7 +31,9 @@ class FocusAgent:
             f"Take a {break_type} - {break_time} minutes."
         )
 
-    def should_send_reminder(self, started_at: datetime, threshold_minutes: int = 50) -> bool:
+    def should_send_reminder(
+        self, started_at: datetime, threshold_minutes: int = 50
+    ) -> bool:
         elapsed = (datetime.now(timezone.utc) - started_at).total_seconds() / 60
         return elapsed >= threshold_minutes
 
