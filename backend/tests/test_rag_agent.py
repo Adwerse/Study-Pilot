@@ -56,8 +56,8 @@ async def test_post_ask_success(client, monkeypatch):
     chunk_id = uuid4()
     agent = FakeAPIAgent(
         RAGAnswer(
-            answer="Дедлайн указан как пятница [1].",
-            rewritten_query="дедлайн сроки",
+            answer="The deadline is Friday [1].",
+            rewritten_query="deadline due dates",
             confidence="high",
             sources=[
                 RAGSource(
@@ -83,13 +83,13 @@ async def test_post_ask_success(client, monkeypatch):
 
     response = await client.post(
         "/api/v1/ask",
-        json={"question": "Что про дедлайны?", "top_k": 8, "rerank_top_k": 4},
+        json={"question": "What about deadlines?", "top_k": 8, "rerank_top_k": 4},
     )
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["answer"] == "Дедлайн указан как пятница [1]."
-    assert payload["rewritten_query"] == "дедлайн сроки"
+    assert payload["answer"] == "The deadline is Friday [1]."
+    assert payload["rewritten_query"] == "deadline due dates"
     assert payload["confidence"] == "high"
     assert payload["sources"][0]["page_number"] == 3
     assert agent.calls[0]["user_id"] == user_id
@@ -199,8 +199,8 @@ async def test_post_ask_no_chunks_returns_honest_low_confidence(client, monkeypa
 
     agent = FakeAPIAgent(
         RAGAnswer(
-            answer="Я не нашёл релевантной информации в загруженных материалах.",
-            rewritten_query="а что про экзамен",
+            answer="I couldn't find relevant information in the uploaded materials.",
+            rewritten_query="what about the exam",
             confidence="low",
             sources=[],
         )
@@ -210,29 +210,29 @@ async def test_post_ask_no_chunks_returns_honest_low_confidence(client, monkeypa
 
     response = await client.post(
         "/api/v1/ask",
-        json={"question": "а что про экзамен?"},
+        json={"question": "what about the exam?"},
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["confidence"] == "low"
     assert payload["sources"] == []
-    assert "не нашёл" in payload["answer"]
+    assert "couldn't find" in payload["answer"]
 
 
 @pytest.mark.asyncio
 async def test_query_rewrite_success(monkeypatch):
     async def fake_complete(**kwargs):
         assert kwargs["temperature"] == 0.0
-        return " дедлайны, сроки выполнения, due dates "
+        return " deadlines, due dates, timelines "
 
     monkeypatch.setattr("app.services.query_rewriter.complete", fake_complete)
 
     rewritten = await QueryRewriter(model="rewrite-model").rewrite(
-        "а что там про дедлайны?"
+        "what does it say about deadlines?"
     )
 
-    assert rewritten == "дедлайны, сроки выполнения, due dates"
+    assert rewritten == "deadlines, due dates, timelines"
 
 
 @pytest.mark.asyncio
@@ -243,9 +243,9 @@ async def test_query_rewrite_failure_falls_back_to_original(monkeypatch):
 
     monkeypatch.setattr("app.services.query_rewriter.complete", fake_complete)
 
-    rewritten = await QueryRewriter().rewrite("а что там про дедлайны?")
+    rewritten = await QueryRewriter().rewrite("what does it say about deadlines?")
 
-    assert rewritten == "а что там про дедлайны?"
+    assert rewritten == "what does it say about deadlines?"
 
 
 def make_retrieved_chunk(
@@ -311,7 +311,7 @@ async def test_answer_generation_uses_sources_and_keeps_language(monkeypatch):
         assert "Sources:" in kwargs["messages"][1]["content"]
         return json.dumps(
             {
-                "answer": "Срок сдачи - пятница [1].",
+                "answer": "The due date is Friday [1].",
                 "confidence": "high",
                 "used_source_numbers": [1],
             }
@@ -320,18 +320,18 @@ async def test_answer_generation_uses_sources_and_keeps_language(monkeypatch):
     monkeypatch.setattr("app.services.answer_generator.complete", fake_complete)
 
     generated = await AnswerGenerator(model="answer-model").generate_answer(
-        question="Когда дедлайн?",
+        question="When is the deadline?",
         chunks=[
             RerankedChunk(
                 **make_retrieved_chunk(
-                    "Срок сдачи проекта - пятница.",
+                    "The project due date is Friday.",
                     score=0.9,
                 ).__dict__
             )
         ],
     )
 
-    assert generated.answer == "Срок сдачи - пятница [1]."
+    assert generated.answer == "The due date is Friday [1]."
     assert generated.confidence == "medium"
     assert generated.used_source_numbers == [1]
 
@@ -342,7 +342,7 @@ async def test_answer_generation_insufficient_context_returns_low(monkeypatch):
         _ = kwargs
         return json.dumps(
             {
-                "answer": "В источниках недостаточно информации для ответа.",
+                "answer": "The sources do not contain enough information to answer.",
                 "confidence": "medium",
                 "used_source_numbers": [],
             }
@@ -351,13 +351,13 @@ async def test_answer_generation_insufficient_context_returns_low(monkeypatch):
     monkeypatch.setattr("app.services.answer_generator.complete", fake_complete)
 
     generated = await AnswerGenerator().generate_answer(
-        question="Когда экзамен?",
+        question="When is the exam?",
         chunks=[RerankedChunk(**make_retrieved_chunk("Only homework notes.").__dict__)],
     )
 
     assert generated.confidence == "low"
     assert generated.used_source_numbers == []
-    assert "недостаточно" in generated.answer
+    assert "not contain enough information" in generated.answer
 
 
 @pytest.mark.asyncio
@@ -428,7 +428,7 @@ class FakeAnswerGenerator:
         from app.services.rag_types import GeneratedAnswer
 
         return GeneratedAnswer(
-            answer="Ответ из второго источника [2].",
+            answer="Answer from second source [2].",
             confidence="high",
             used_source_numbers=[2],
             context_source_count=len(chunks),
@@ -484,7 +484,9 @@ async def test_rag_agent_no_ready_documents_skips_external_calls():
         query_rewriter=FakeQueryRewriter(),
     )
 
-    answer = await agent.answer_question(user_id=user_id, question="Что про сроки?")
+    answer = await agent.answer_question(
+        user_id=user_id, question="What about deadlines?"
+    )
 
     assert answer.confidence == "low"
     assert answer.sources == []
@@ -502,12 +504,14 @@ async def test_rag_agent_returns_honest_answer_when_vector_search_has_no_chunks(
         query_rewriter=FakeQueryRewriter(),
     )
 
-    answer = await agent.answer_question(user_id=user_id, question="Что про сроки?")
+    answer = await agent.answer_question(
+        user_id=user_id, question="What about deadlines?"
+    )
 
     assert answer.confidence == "low"
     assert answer.sources == []
     assert answer.rewritten_query == "rewritten query"
-    assert "не нашёл" in answer.answer
+    assert "couldn't find" in answer.answer
 
 
 @pytest.mark.asyncio
@@ -556,7 +560,7 @@ async def test_rag_agent_snippets_truncated_and_citations_aligned(monkeypatch):
         rerank_top_k=2,
     )
 
-    assert answer.answer == "Ответ из второго источника [1]."
+    assert answer.answer == "Answer from second source [1]."
     assert len(answer.sources) == 1
     assert answer.sources[0].chunk_id == second.chunk_id
     assert len(answer.sources[0].snippet) <= 40

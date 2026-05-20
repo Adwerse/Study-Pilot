@@ -3,21 +3,21 @@ import { formatConfidence, formatDocumentStatus, formatFileSize, sanitizeDisplay
 
 describe('knowledgeFormatters', () => {
 	it('formats file sizes', () => {
-		expect(formatFileSize(12_345)).toBe('12 КБ')
-		expect(formatFileSize(1_048_576)).toBe('1 МБ')
-		expect(formatFileSize(0)).toBe('0 Б')
+		expect(formatFileSize(12_345)).toBe('12 KB')
+		expect(formatFileSize(1_048_576)).toBe('1 MB')
+		expect(formatFileSize(0)).toBe('0 B')
 	})
 
 	it('formats document statuses', () => {
-		expect(formatDocumentStatus('processing')).toBe('Обработка')
-		expect(formatDocumentStatus('ready')).toBe('Готов')
-		expect(formatDocumentStatus('failed')).toBe('Ошибка')
+		expect(formatDocumentStatus('processing')).toBe('Processing')
+		expect(formatDocumentStatus('ready')).toBe('Ready')
+		expect(formatDocumentStatus('failed')).toBe('Error')
 	})
 
 	it('formats confidence levels', () => {
-		expect(formatConfidence('low')).toBe('Низкая уверенность')
-		expect(formatConfidence('medium')).toBe('Средняя уверенность')
-		expect(formatConfidence('high')).toBe('Высокая уверенность')
+		expect(formatConfidence('low')).toBe('Low confidence')
+		expect(formatConfidence('medium')).toBe('Medium confidence')
+		expect(formatConfidence('high')).toBe('High confidence')
 	})
 
 	it('strips unsafe control characters from displayed text', () => {

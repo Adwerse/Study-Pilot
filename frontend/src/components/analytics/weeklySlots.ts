@@ -9,7 +9,7 @@ export interface WeeklyBreakdownSlot {
 	completionRate: number | null
 }
 
-const WEEKDAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function normalizeItem(item: DailyBreakdownItem | undefined, date: string, index: number): WeeklyBreakdownSlot {
 	return {

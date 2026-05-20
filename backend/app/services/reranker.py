@@ -7,7 +7,7 @@ from app.services.rag_types import RerankedChunk, RetrievedChunk
 
 logger = logging.getLogger(__name__)
 
-TOKEN_PATTERN = re.compile(r"[A-Za-zА-Яа-яЁё0-9]+")
+TOKEN_PATTERN = re.compile(r"[^\W_]+", re.UNICODE)
 
 
 class RerankProviderProtocol(Protocol):

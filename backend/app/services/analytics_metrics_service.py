@@ -18,7 +18,7 @@ from app.schemas.analytics import (
 )
 
 
-UNTITLED_TOPIC = "Без темы"
+UNTITLED_TOPIC = "Untitled topic"
 
 
 @dataclass(frozen=True)

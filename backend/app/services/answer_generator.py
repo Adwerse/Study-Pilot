@@ -11,18 +11,14 @@ from app.services.rag_types import GeneratedAnswer, RAGConfidence, RerankedChunk
 logger = logging.getLogger(__name__)
 
 ANSWER_SYSTEM_PROMPT = (
-    "Ты RAG-ассистент StudyPilot. Отвечай только на основе предоставленных "
-    "источников. Если информации недостаточно, скажи это прямо. Не выдумывай. "
-    "Сохраняй язык вопроса пользователя. В ответе используй ссылки на источники "
-    "в формате [1], [2], где номер соответствует порядку источников."
+    "You are the StudyPilot RAG assistant. Answer only from the provided "
+    "sources. If there is not enough information, say that directly. Do not "
+    "make things up. Answer in English. Use source citations in the format "
+    "[1], [2], where the number matches the source order."
 )
 
 CITATION_PATTERN = re.compile(r"\[(\d+)\]")
 INSUFFICIENT_MARKERS = (
-    "недостаточно",
-    "не наш",
-    "нет информации",
-    "не содержит",
     "not enough",
     "not sufficient",
     "couldn't find",
@@ -243,6 +239,5 @@ class AnswerGenerator:
 
     @staticmethod
     def _no_context_answer(question: str) -> str:
-        if re.search(r"[А-Яа-яЁё]", question):
-            return "Я не нашёл релевантной информации в загруженных материалах."
+        _ = question
         return "I couldn't find relevant information in the uploaded materials."

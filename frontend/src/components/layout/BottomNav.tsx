@@ -42,7 +42,7 @@ const tabs: TabConfig[] = [
 	},
 	{
 		to: '/knowledge',
-		label: 'База знаний',
+		label: 'Knowledge',
 		icon: (
 			<IconWrapper>
 				<svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" strokeWidth="1.5">
@@ -56,7 +56,7 @@ const tabs: TabConfig[] = [
 	},
 	{
 		to: '/analytics',
-		label: 'Аналитика',
+		label: 'Analytics',
 		icon: (
 			<IconWrapper>
 				<svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" strokeWidth="1.5">

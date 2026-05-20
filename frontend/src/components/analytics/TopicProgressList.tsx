@@ -7,7 +7,7 @@ export interface TopicProgressListProps {
 }
 
 function getTopicName(metric: TopicFocusMetric): string {
-	return typeof metric.topic === 'string' && metric.topic.trim() ? metric.topic.trim() : 'Без темы'
+	return typeof metric.topic === 'string' && metric.topic.trim() ? metric.topic.trim() : 'Untitled topic'
 }
 
 function getTopicMinutes(metric: TopicFocusMetric): number {
@@ -25,11 +25,11 @@ export function TopicProgressList({ topics }: TopicProgressListProps) {
 
 	return (
 		<Card>
-			<section className="analytics-section" aria-label="Прогресс по темам">
-				<Subtitle>Темы</Subtitle>
+			<section className="analytics-section" aria-label="Topic progress">
+				<Subtitle>Topics</Subtitle>
 
 				{normalizedTopics.length === 0 ? (
-					<Caption>Пока нет данных по темам</Caption>
+					<Caption>No topic data yet</Caption>
 				) : (
 					<div className="analytics-topic-list">
 						{normalizedTopics.map((topic) => {

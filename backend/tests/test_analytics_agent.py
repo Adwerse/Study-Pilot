@@ -30,7 +30,7 @@ async def test_generate_report_maps_valid_llm_json(monkeypatch) -> None:
     monkeypatch.setattr(
         "app.services.analytics_agent.complete",
         AsyncMock(
-            return_value='{"summary":"Короткий честный отчёт.","recommendations":["Сделай один блок."]}'
+            return_value='{"summary":"A short honest report.","recommendations":["Do one focus block."]}'
         ),
     )
 
@@ -40,8 +40,8 @@ async def test_generate_report_maps_valid_llm_json(monkeypatch) -> None:
         data_quality=AnalyticsDataQuality.low,
     )
 
-    assert narrative.summary == "Короткий честный отчёт."
-    assert narrative.recommendations == ["Сделай один блок."]
+    assert narrative.summary == "A short honest report."
+    assert narrative.recommendations == ["Do one focus block."]
 
 
 @pytest.mark.asyncio
@@ -59,7 +59,7 @@ async def test_llm_failure_uses_fallback_summary(monkeypatch) -> None:
         data_quality=AnalyticsDataQuality.low,
     )
 
-    assert "нет завершённых" in narrative.summary
+    assert "no completed focus sessions" in narrative.summary
     assert narrative.recommendations
 
 
@@ -74,7 +74,7 @@ def test_low_data_quality_fallback_is_cautious() -> None:
         data_quality=AnalyticsDataQuality.low,
     )
 
-    assert "Данных пока мало" in narrative.summary
+    assert "Data is still limited" in narrative.summary
     assert "100%" not in narrative.summary
 
 
@@ -85,8 +85,6 @@ def test_no_data_fallback_does_not_invent_activity() -> None:
         data_quality=AnalyticsDataQuality.low,
     )
 
-    assert "нет завершённых" in narrative.summary
+    assert "no completed focus sessions" in narrative.summary
     assert "95" not in narrative.summary
-    assert narrative.recommendations == [
-        "Начни с одного короткого блока на 15-25 минут."
-    ]
+    assert narrative.recommendations == ["Start with one short 15-25 minute block."]

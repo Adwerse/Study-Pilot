@@ -31,8 +31,8 @@ function makeDailyReport(overrides: Partial<AnalyticsReportResponse> = {}): Anal
 			best_focus_hours: ['10:00', '14:00'],
 			most_focused_topics: [{ topic: 'FastAPI', minutes: 50 }],
 		},
-		summary: 'Сегодня ты сфокусировался на 95 минут.',
-		recommendations: ['Завтра начни с FastAPI.'],
+		summary: 'Today you focused for 95 minutes.',
+		recommendations: ['Start with FastAPI tomorrow.'],
 		data_quality: 'high',
 		...overrides,
 	}
@@ -65,8 +65,8 @@ function makeWeeklyReport(overrides: Partial<WeeklyAnalyticsReportResponse> = {}
 			{ date: '2026-05-05', focus_minutes: 0, sessions_count: 0, completion_rate: null },
 			{ date: '2026-05-06', focus_minutes: 120, sessions_count: 4, completion_rate: 75 },
 		],
-		summary: 'На этой неделе ты набрал 420 минут фокуса.',
-		recommendations: ['Твои лучшие часы — утро.'],
+		summary: 'This week you logged 420 focus minutes.',
+		recommendations: ['Your best hours are in the morning.'],
 		data_quality: 'medium',
 		...overrides,
 	}
@@ -120,29 +120,29 @@ describe('AnalyticsPage', () => {
 	it('renders daily summary cards and analytics sections', () => {
 		render(<AnalyticsPage />)
 
-		expect(screen.getByText('Аналитика')).toBeInTheDocument()
-		expect(screen.getByText('1ч 35м')).toBeInTheDocument()
+		expect(screen.getByText('Analytics')).toBeInTheDocument()
+		expect(screen.getByText('1h 35m')).toBeInTheDocument()
 		expect(screen.getByText('4')).toBeInTheDocument()
-		expect(screen.getByText('5 дней')).toBeInTheDocument()
+		expect(screen.getByText('5 days')).toBeInTheDocument()
 		expect(screen.getByText('80%')).toBeInTheDocument()
 		expect(screen.getByText('FastAPI')).toBeInTheDocument()
 		expect(screen.getByText('10:00')).toBeInTheDocument()
-		expect(screen.getByText('Сегодня ты сфокусировался на 95 минут.')).toBeInTheDocument()
-		expect(screen.getByText('Завтра начни с FastAPI.')).toBeInTheDocument()
-		expect(screen.getByLabelText('Тепловая карта активности')).toBeInTheDocument()
+		expect(screen.getByText('Today you focused for 95 minutes.')).toBeInTheDocument()
+		expect(screen.getByText('Start with FastAPI tomorrow.')).toBeInTheDocument()
+		expect(screen.getByLabelText('Activity heatmap')).toBeInTheDocument()
 	})
 
 	it('switches to weekly charts, heatmap, topics, hours and summary', () => {
 		render(<AnalyticsPage />)
 
-		fireEvent.click(screen.getByRole('tab', { name: 'Неделя' }))
+		fireEvent.click(screen.getByRole('tab', { name: 'Week' }))
 
-		expect(screen.getByText('Фокус по дням')).toBeInTheDocument()
-		expect(screen.getByText('Сессии по дням')).toBeInTheDocument()
+		expect(screen.getByText('Focus by day')).toBeInTheDocument()
+		expect(screen.getByText('Sessions by day')).toBeInTheDocument()
 		expect(screen.getByText('RAG')).toBeInTheDocument()
 		expect(screen.getByText('09:00')).toBeInTheDocument()
-		expect(screen.getByText('На этой неделе ты набрал 420 минут фокуса.')).toBeInTheDocument()
-		expect(screen.getByText('Данных достаточно')).toBeInTheDocument()
+		expect(screen.getByText('This week you logged 420 focus minutes.')).toBeInTheDocument()
+		expect(screen.getByText('Enough data')).toBeInTheDocument()
 	})
 
 	it('renders loading state', () => {
@@ -150,7 +150,7 @@ describe('AnalyticsPage', () => {
 
 		render(<AnalyticsPage />)
 
-		expect(screen.getByLabelText('Загрузка аналитики')).toBeInTheDocument()
+		expect(screen.getByLabelText('Loading analytics')).toBeInTheDocument()
 	})
 
 	it('renders an error state and retries', () => {
@@ -164,8 +164,8 @@ describe('AnalyticsPage', () => {
 
 		render(<AnalyticsPage />)
 
-		expect(screen.getByText('Не удалось загрузить аналитику')).toBeInTheDocument()
-		fireEvent.click(screen.getByText('Повторить'))
+		expect(screen.getByText('Unable to load analytics')).toBeInTheDocument()
+		fireEvent.click(screen.getByText('Retry'))
 		expect(refetch).toHaveBeenCalledTimes(1)
 	})
 
@@ -190,17 +190,17 @@ describe('AnalyticsPage', () => {
 
 		render(<AnalyticsPage />)
 
-		expect(screen.getByText('Сегодня пока нет фокус-сессий. Запусти один короткий блок — и графики оживут.')).toBeInTheDocument()
-		expect(screen.getByText('Пока недостаточно данных для отчёта.')).toBeInTheDocument()
-		expect(screen.getByText('Пока нет данных по темам')).toBeInTheDocument()
-		expect(screen.getByText('Пока недостаточно данных')).toBeInTheDocument()
+		expect(screen.getByText('No focus sessions today yet. Start one short block and the charts will wake up.')).toBeInTheDocument()
+		expect(screen.getByText('Not enough data for a report yet.')).toBeInTheDocument()
+		expect(screen.getByText('No topic data yet')).toBeInTheDocument()
+		expect(screen.getByText('Not enough data yet')).toBeInTheDocument()
 	})
 
 	it('moves between daily periods and disables future day navigation', () => {
 		render(<AnalyticsPage />)
 
-		expect(screen.getByLabelText('Следующий день')).toBeDisabled()
-		fireEvent.click(screen.getByLabelText('Предыдущий день'))
+		expect(screen.getByLabelText('Next day')).toBeDisabled()
+		fireEvent.click(screen.getByLabelText('Previous day'))
 
 		expect(useDailyAnalyticsMock).toHaveBeenLastCalledWith(
 			expect.objectContaining({
@@ -212,9 +212,9 @@ describe('AnalyticsPage', () => {
 	it('moves between weekly periods and disables future week navigation', () => {
 		render(<AnalyticsPage />)
 
-		fireEvent.click(screen.getByRole('tab', { name: 'Неделя' }))
-		expect(screen.getByLabelText('Следующая неделя')).toBeDisabled()
-		fireEvent.click(screen.getByLabelText('Предыдущая неделя'))
+		fireEvent.click(screen.getByRole('tab', { name: 'Week' }))
+		expect(screen.getByLabelText('Next week')).toBeDisabled()
+		fireEvent.click(screen.getByLabelText('Previous week'))
 
 		expect(useWeeklyAnalyticsMock).toHaveBeenLastCalledWith(
 			expect.objectContaining({

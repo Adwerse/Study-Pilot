@@ -117,7 +117,7 @@ function mockDelete() {
 
 function mockAsk(overrides: Partial<UseAskQuestionReturn> = {}) {
 	const answer: AskResponse = {
-		answer: 'Ответ из roadmap [1].',
+		answer: 'Answer from roadmap [1].',
 		confidence: 'high',
 		rewritten_query: 'roadmap',
 		sources: [
@@ -165,8 +165,8 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		expect(screen.getByText('Пока нет материалов')).toBeInTheDocument()
-		expect(screen.getByText('Загрузи PDF, TXT или MD — и StudyPilot сможет отвечать по ним.')).toBeInTheDocument()
+		expect(screen.getByText('No materials yet')).toBeInTheDocument()
+		expect(screen.getByText('Upload a PDF, TXT, or MD file so StudyPilot can answer from it.')).toBeInTheDocument()
 	})
 
 	it('renders documents list with processing, ready and failed badges', () => {
@@ -189,9 +189,9 @@ describe('KnowledgeBaseScreen', () => {
 		render(<KnowledgeBaseScreen />)
 
 		expect(screen.getByText('Roadmap')).toBeInTheDocument()
-		expect(screen.getAllByText('Обработка').length).toBeGreaterThan(0)
-		expect(screen.getAllByText('Готов').length).toBeGreaterThan(0)
-		expect(screen.getAllByText('Ошибка').length).toBeGreaterThan(0)
+		expect(screen.getAllByText('Processing').length).toBeGreaterThan(0)
+		expect(screen.getAllByText('Ready').length).toBeGreaterThan(0)
+		expect(screen.getAllByText('Error').length).toBeGreaterThan(0)
 		expect(screen.getByText('Document processing failed')).toBeInTheDocument()
 	})
 
@@ -204,12 +204,12 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.upload(screen.getByLabelText('Файл материала'), new File(['hello'], 'notes.txt', { type: 'text/plain' }))
-		await user.click(screen.getByRole('button', { name: 'Загрузить' }))
+		await user.upload(screen.getByLabelText('Material file'), new File(['hello'], 'notes.txt', { type: 'text/plain' }))
+		await user.click(screen.getByRole('button', { name: 'Upload' }))
 
 		await waitFor(() => expect(upload).toHaveBeenCalledTimes(1))
 		expect(documents.refetch).toHaveBeenCalledTimes(1)
-		expect(screen.getByText('Материал готов к чату')).toBeInTheDocument()
+		expect(screen.getByText('The material is ready for chat')).toBeInTheDocument()
 	})
 
 	it('asks for confirmation before deleting a document', async () => {
@@ -222,9 +222,9 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.click(screen.getByRole('button', { name: 'Удалить' }))
+		await user.click(screen.getByRole('button', { name: 'Delete' }))
 
-		expect(confirm).toHaveBeenCalledWith('Удалить материал? Ответы по нему больше не будут доступны.')
+		expect(confirm).toHaveBeenCalledWith('Delete this material? Answers from it will no longer be available.')
 		expect(deleteDocument).toHaveBeenCalledWith('doc-ready')
 	})
 
@@ -234,11 +234,11 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.click(screen.getByRole('tab', { name: 'Чат' }))
+		await user.click(screen.getByRole('tab', { name: 'Chat' }))
 
-		expect(screen.getByText('Сначала загрузи материал, потом можно будет задавать вопросы.')).toBeInTheDocument()
-		expect(screen.getByLabelText('Вопрос')).toBeDisabled()
-		expect(screen.getByRole('button', { name: 'Отправить' })).toBeDisabled()
+		expect(screen.getByText('Upload a material first, then you can ask questions.')).toBeInTheDocument()
+		expect(screen.getByLabelText('Question')).toBeDisabled()
+		expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
 	})
 
 	it('sends a question and renders assistant answer with sources', async () => {
@@ -250,15 +250,15 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.click(screen.getByRole('tab', { name: 'Чат' }))
-		await user.type(screen.getByLabelText('Вопрос'), 'Когда дедлайн?')
-		await user.click(screen.getByRole('button', { name: 'Отправить' }))
+		await user.click(screen.getByRole('tab', { name: 'Chat' }))
+		await user.type(screen.getByLabelText('Question'), 'When is the deadline?')
+		await user.click(screen.getByRole('button', { name: 'Send' }))
 
-		expect(ask.ask).toHaveBeenCalledWith('Когда дедлайн?', { document_ids: undefined })
-		expect(await screen.findByText('Когда дедлайн?')).toBeInTheDocument()
-		expect(await screen.findByText('Ответ из roadmap [1].')).toBeInTheDocument()
-		expect(screen.getByText('Источники')).toBeInTheDocument()
-		expect(screen.getByText(/\[1\] Roadmap · стр\. 3/)).toBeInTheDocument()
+		expect(ask.ask).toHaveBeenCalledWith('When is the deadline?', { document_ids: undefined })
+		expect(await screen.findByText('When is the deadline?')).toBeInTheDocument()
+		expect(await screen.findByText('Answer from roadmap [1].')).toBeInTheDocument()
+		expect(screen.getByText('Sources')).toBeInTheDocument()
+		expect(screen.getByText(/\[1\] Roadmap · p\. 3/)).toBeInTheDocument()
 		expect(screen.getByText('"Submit the project by Friday."')).toBeInTheDocument()
 	})
 
@@ -275,11 +275,11 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.click(screen.getByRole('tab', { name: 'Чат' }))
-		await user.type(screen.getByLabelText('Вопрос'), 'Что внутри?')
-		await user.click(screen.getByRole('button', { name: 'Отправить' }))
+		await user.click(screen.getByRole('tab', { name: 'Chat' }))
+		await user.type(screen.getByLabelText('Question'), 'What is inside?')
+		await user.click(screen.getByRole('button', { name: 'Send' }))
 
-		expect(await screen.findByText('RAG-сервис временно недоступен. Попробуй позже.')).toBeInTheDocument()
+		expect(await screen.findByText('The RAG service is temporarily unavailable. Try again later.')).toBeInTheDocument()
 	})
 
 	it('calls load more from the documents list', async () => {
@@ -292,7 +292,7 @@ describe('KnowledgeBaseScreen', () => {
 
 		render(<KnowledgeBaseScreen />)
 
-		await user.click(screen.getByRole('button', { name: 'Загрузить ещё' }))
+		await user.click(screen.getByRole('button', { name: 'Load more' }))
 
 		expect(documents.loadMore).toHaveBeenCalledTimes(1)
 	})

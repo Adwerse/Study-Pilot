@@ -63,35 +63,35 @@ function humanizeApiError(error: unknown, fallback: string): string {
 	const detail = error.detail.toLowerCase()
 
 	if (error.status === 401) {
-		return 'Нужно открыть Mini App через Telegram и авторизоваться.'
+		return 'Open the Mini App through Telegram and sign in.'
 	}
 
 	if (error.status === 413) {
-		return 'Файл слишком большой. Максимум 10 МБ.'
+		return 'The file is too large. Maximum size is 10 MB.'
 	}
 
 	if (error.status === 415 || detail.includes('unsupported')) {
-		return 'Поддерживаются только PDF, TXT и MD.'
+		return 'Only PDF, TXT, and MD files are supported.'
 	}
 
 	if (error.status === 422) {
-		return 'Проверь файл или текст вопроса и попробуй ещё раз.'
+		return 'Check the file or question text and try again.'
 	}
 
 	if (detail.includes('database unavailable')) {
-		return 'База данных временно недоступна. Проверь, что PostgreSQL запущен.'
+		return 'The database is temporarily unavailable. Check that PostgreSQL is running.'
 	}
 
 	if (error.status === 503) {
 		if (detail.includes('rag')) {
-			return 'RAG-сервис временно недоступен. Попробуй позже.'
+			return 'The RAG service is temporarily unavailable. Try again later.'
 		}
 
-		return 'Сервис временно недоступен. Попробуй ещё раз через минуту.'
+		return 'The service is temporarily unavailable. Try again in a minute.'
 	}
 
 	if (detail.includes('network')) {
-		return 'Проверь соединение и попробуй снова.'
+		return 'Check your connection and try again.'
 	}
 
 	return fallback
@@ -139,10 +139,10 @@ function UploadBlock({
 	const uploadState = useUploadDocument((document) => {
 		setSuccessMessage(
 			document.status === 'processing'
-				? 'Файл обрабатывается — скоро появится в чате'
+				? 'The file is processing and will appear in chat soon'
 				: document.status === 'ready'
-					? 'Материал готов к чату'
-					: 'Файл загружен, но обработка завершилась с ошибкой',
+					? 'The material is ready for chat'
+					: 'The file uploaded, but processing failed',
 		)
 		onUploaded()
 	})
@@ -160,14 +160,14 @@ function UploadBlock({
 
 		if (!hasSupportedExtension(file)) {
 			setSelectedFile(null)
-			setLocalError('Поддерживаются только PDF, TXT и MD.')
+			setLocalError('Only PDF, TXT, and MD files are supported.')
 			event.target.value = ''
 			return
 		}
 
 		if (file.size > MAX_FILE_SIZE_BYTES) {
 			setSelectedFile(null)
-			setLocalError('Файл слишком большой. Максимум 10 МБ.')
+			setLocalError('The file is too large. Maximum size is 10 MB.')
 			event.target.value = ''
 			return
 		}
@@ -180,7 +180,7 @@ function UploadBlock({
 
 	const handleUpload = () => {
 		if (!selectedFile) {
-			setLocalError('Выбери файл для загрузки.')
+			setLocalError('Choose a file to upload.')
 			return
 		}
 
@@ -198,23 +198,23 @@ function UploadBlock({
 				setFileInputKey((previous) => previous + 1)
 			})
 			.catch((error) => {
-				setLocalError(humanizeApiError(error, 'Не удалось загрузить файл'))
+				setLocalError(humanizeApiError(error, 'Unable to upload file'))
 			})
 	}
 
-	const uploadError = localError ?? (uploadState.error ? humanizeApiError(uploadState.error, 'Не удалось загрузить файл') : null)
+	const uploadError = localError ?? (uploadState.error ? humanizeApiError(uploadState.error, 'Unable to upload file') : null)
 
 	return (
 		<Card>
 			<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 				<div style={{ display: 'grid', gap: '4px' }}>
-					<Subtitle>Загрузить материал</Subtitle>
-					<Caption>PDF, TXT или MD до 10 МБ</Caption>
+					<Subtitle>Upload material</Subtitle>
+					<Caption>PDF, TXT, or MD up to 10 MB</Caption>
 				</div>
 
 				<input
 					key={fileInputKey}
-					aria-label="Файл материала"
+					aria-label="Material file"
 					type="file"
 					accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown,text/x-markdown"
 					onChange={handleFileChange}
@@ -226,10 +226,10 @@ function UploadBlock({
 				/>
 
 				<input
-					aria-label="Название материала"
+					aria-label="Material title"
 					value={title}
 					onChange={(event) => setTitle(event.target.value)}
-					placeholder="Название, если нужно"
+					placeholder="Title, if needed"
 					style={inputStyle}
 				/>
 
@@ -241,12 +241,12 @@ function UploadBlock({
 					disabled={!selectedFile}
 					onClick={handleUpload}
 				>
-					Загрузить
+					Upload
 				</Button>
 
 				{uploadState.uploading && uploadState.progress !== null ? (
 					<div style={{ display: 'grid', gap: '4px' }}>
-						<progress aria-label="Прогресс загрузки" value={uploadState.progress} max={100} style={{ width: '100%' }} />
+						<progress aria-label="Upload progress" value={uploadState.progress} max={100} style={{ width: '100%' }} />
 						<Caption>{uploadState.progress}%</Caption>
 					</div>
 				) : null}
@@ -272,14 +272,14 @@ function SegmentTabs({
 	onChange: (tab: KnowledgeTab) => void
 }) {
 	const tabs: Array<{ id: KnowledgeTab; label: string }> = [
-		{ id: 'materials', label: 'Материалы' },
-		{ id: 'chat', label: 'Чат' },
+		{ id: 'materials', label: 'Materials' },
+		{ id: 'chat', label: 'Chat' },
 	]
 
 	return (
 		<div
 			role="tablist"
-			aria-label="Разделы базы знаний"
+			aria-label="Knowledge base sections"
 			style={{
 				display: 'grid',
 				gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -332,14 +332,14 @@ function DocumentsFilters({
 	return (
 		<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
 			<input
-				aria-label="Поиск материалов"
+				aria-label="Search materials"
 				value={query}
 				onChange={(event) => onQueryChange(event.target.value)}
-				placeholder="Поиск материалов"
+				placeholder="Search materials"
 				style={inputStyle}
 			/>
 			<select
-				aria-label="Фильтр статуса"
+				aria-label="Status filter"
 				value={status}
 				onChange={(event) => onStatusChange(event.target.value as StatusFilter)}
 				style={{
@@ -347,10 +347,10 @@ function DocumentsFilters({
 					appearance: 'none',
 				}}
 			>
-				<option value="all">Все статусы</option>
-				<option value="ready">Готов</option>
-				<option value="processing">Обработка</option>
-				<option value="failed">Ошибка</option>
+				<option value="all">All statuses</option>
+				<option value="ready">Ready</option>
+				<option value="processing">Processing</option>
+				<option value="failed">Error</option>
 			</select>
 		</div>
 	)
@@ -391,7 +391,7 @@ function DocumentCard({
 				</div>
 
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px' }}>
-					<Caption>{document.chunks_count} фрагм.</Caption>
+					<Caption>{document.chunks_count} chunks</Caption>
 					<Caption>{formatFileSize(document.size_bytes)}</Caption>
 					<Caption>{formatDateTime(document.created_at)}</Caption>
 				</div>
@@ -420,11 +420,11 @@ function DocumentCard({
 							onChange={() => onToggleSelected(document.id)}
 							style={{ width: '18px', height: '18px' }}
 						/>
-						Искать
+						Search
 					</label>
 
 					<Button variant="ghost" size="sm" loading={deleting} onClick={() => onDelete(document)}>
-						Удалить
+						Delete
 					</Button>
 				</div>
 			</div>
@@ -463,7 +463,7 @@ function DocumentsList({
 }) {
 	if (loading) {
 		return (
-			<div aria-label="Загрузка материалов" style={{ display: 'grid', gap: 'var(--space-3)' }}>
+			<div aria-label="Loading materials" style={{ display: 'grid', gap: 'var(--space-3)' }}>
 				<Skeleton height={86} borderRadius="12px" />
 				<Skeleton height={86} borderRadius="12px" />
 				<Skeleton height={86} borderRadius="12px" />
@@ -476,10 +476,10 @@ function DocumentsList({
 			<Card>
 				<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 					<Body style={{ color: 'var(--tg-destructive)' }}>
-						{humanizeApiError(error, 'Не удалось загрузить список материалов')}
+						{humanizeApiError(error, 'Unable to load materials list')}
 					</Body>
 					<Button variant="secondary" size="md" onClick={onRetry}>
-						Повторить
+						Retry
 					</Button>
 				</div>
 			</Card>
@@ -490,8 +490,8 @@ function DocumentsList({
 		return (
 			<Card>
 				<div style={{ display: 'grid', gap: '4px', textAlign: 'center', padding: 'var(--space-3) 0' }}>
-					<Subtitle>Пока нет материалов</Subtitle>
-					<Caption>Загрузи PDF, TXT или MD — и StudyPilot сможет отвечать по ним.</Caption>
+					<Subtitle>No materials yet</Subtitle>
+					<Caption>Upload a PDF, TXT, or MD file so StudyPilot can answer from it.</Caption>
 				</div>
 			</Card>
 		)
@@ -501,14 +501,14 @@ function DocumentsList({
 		<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 			<div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-2)', alignItems: 'center' }}>
 				<Caption>
-					{documents.length} из {total}
+					{documents.length} of {total}
 				</Caption>
-				<Caption>Искать только в выбранных</Caption>
+				<Caption>Search selected materials only</Caption>
 			</div>
 
 			{deleteError ? (
 				<Caption style={{ ...panelErrorStyle, display: 'block' }}>
-					{humanizeApiError(deleteError, 'Не удалось удалить материал')}
+					{humanizeApiError(deleteError, 'Unable to delete material')}
 				</Caption>
 			) : null}
 
@@ -525,7 +525,7 @@ function DocumentsList({
 
 			{hasMore ? (
 				<Button variant="secondary" size="md" fullWidth loading={loadingMore} onClick={onLoadMore}>
-					Загрузить ещё
+					Load more
 				</Button>
 			) : null}
 		</div>
@@ -570,7 +570,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
 function SourcesList({ sources }: { sources: RAGSource[] }) {
 	if (sources.length === 0) {
-		return <Caption>Ответ без источников: данных недостаточно.</Caption>
+		return <Caption>Answer without sources: not enough data.</Caption>
 	}
 
 	return (
@@ -584,7 +584,7 @@ function SourcesList({ sources }: { sources: RAGSource[] }) {
 					cursor: 'pointer',
 				}}
 			>
-				Источники
+				Sources
 			</summary>
 			<div style={{ display: 'grid', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
 				{sources.map((source, index) => (
@@ -600,7 +600,7 @@ function SourcesList({ sources }: { sources: RAGSource[] }) {
 					>
 						<Caption style={{ color: 'var(--tg-text)', fontWeight: 600 }}>
 							[{index + 1}] {sanitizeDisplayedText(source.document_title) || source.filename}
-							{source.page_number ? ` · стр. ${source.page_number}` : ''}
+							{source.page_number ? ` · p. ${source.page_number}` : ''}
 						</Caption>
 						<Caption
 							style={{
@@ -639,12 +639,12 @@ function RagChat({
 		const normalizedQuestion = question.trim()
 
 		if (!normalizedQuestion) {
-			setLocalError('Напиши вопрос по материалам.')
+			setLocalError('Write a question about your materials.')
 			return
 		}
 
 		if (!hasReadyDocuments) {
-			setLocalError('Сначала загрузи материал, потом можно будет задавать вопросы.')
+			setLocalError('Upload a material first, then you can ask questions.')
 			return
 		}
 
@@ -676,7 +676,7 @@ function RagChat({
 				])
 			})
 			.catch((error) => {
-				setLocalError(humanizeApiError(error, 'Не удалось получить ответ'))
+				setLocalError(humanizeApiError(error, 'Unable to get an answer'))
 			})
 	}, [askState, hasReadyDocuments, question, selectedDocumentIds])
 
@@ -687,32 +687,32 @@ function RagChat({
 		}
 	}
 
-	const chatError = localError ?? (askState.error ? humanizeApiError(askState.error, 'Не удалось получить ответ') : null)
+	const chatError = localError ?? (askState.error ? humanizeApiError(askState.error, 'Unable to get an answer') : null)
 
 	return (
 		<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 			{!hasReadyDocuments ? (
 				<Card>
-					<Caption>Сначала загрузи материал, потом можно будет задавать вопросы.</Caption>
+					<Caption>Upload a material first, then you can ask questions.</Caption>
 				</Card>
 			) : null}
 
 			{processingDocumentsCount > 0 ? (
 				<Card padding="sm">
-					<Caption>Некоторые материалы ещё обрабатываются.</Caption>
+					<Caption>Some materials are still processing.</Caption>
 				</Card>
 			) : null}
 
 			{selectedDocumentIds.length > 0 ? (
-				<Caption>Поиск ограничен выбранными материалами: {selectedDocumentIds.length}</Caption>
+				<Caption>Search is limited to selected materials: {selectedDocumentIds.length}</Caption>
 			) : (
-				<Caption>Если ничего не выбрано, поиск идёт по всем готовым материалам.</Caption>
+				<Caption>If nothing is selected, search uses all ready materials.</Caption>
 			)}
 
 			<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 				{messages.length === 0 ? (
 					<Card>
-						<Caption>Задай вопрос по загруженным материалам — ответ появится вместе с источниками.</Caption>
+						<Caption>Ask a question about uploaded materials. The answer will appear with sources.</Caption>
 					</Card>
 				) : (
 					messages.map((message) => <MessageBubble key={message.id} message={message} />)
@@ -727,7 +727,7 @@ function RagChat({
 								background: 'var(--tg-secondary-bg)',
 							}}
 						>
-							<Caption>Ищу в материалах…</Caption>
+							<Caption>Searching materials...</Caption>
 						</div>
 					</div>
 				) : null}
@@ -744,11 +744,11 @@ function RagChat({
 				}}
 			>
 				<textarea
-					aria-label="Вопрос"
+					aria-label="Question"
 					value={question}
 					onChange={(event) => setQuestion(event.target.value)}
 					onKeyDown={handleQuestionKeyDown}
-					placeholder="Спроси по материалам"
+					placeholder="Ask about your materials"
 					disabled={!hasReadyDocuments || askState.loading}
 					rows={3}
 					style={{
@@ -767,7 +767,7 @@ function RagChat({
 					disabled={!hasReadyDocuments || !question.trim()}
 					onClick={handleSend}
 				>
-					Отправить
+					Send
 				</Button>
 				{chatError ? <Caption style={{ color: 'var(--tg-destructive)' }}>{chatError}</Caption> : null}
 			</div>
@@ -837,7 +837,7 @@ export function KnowledgeBaseScreen() {
 	}
 
 	const handleDelete = (document: KnowledgeDocument) => {
-		const confirmed = window.confirm('Удалить материал? Ответы по нему больше не будут доступны.')
+		const confirmed = window.confirm('Delete this material? Answers from it will no longer be available.')
 
 		if (!confirmed) {
 			return
@@ -849,8 +849,8 @@ export function KnowledgeBaseScreen() {
 	return (
 		<div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
 			<header style={{ display: 'grid', gap: '4px' }}>
-				<Title>База знаний</Title>
-				<Caption>Материалы для RAG-ассистента StudyPilot</Caption>
+				<Title>Knowledge Base</Title>
+				<Caption>Materials for the StudyPilot RAG assistant</Caption>
 			</header>
 
 			<UploadBlock onUploaded={handleUploaded} />

@@ -27,7 +27,7 @@ function getHeatClass(minutes: number): string {
 
 function getSlotDetails(slot: WeeklyBreakdownSlot): string {
 	const date = slot.date || slot.label
-	return `${date}: ${formatMinutes(slot.focusMinutes)}, ${slot.sessionsCount} сесс.`
+	return `${date}: ${formatMinutes(slot.focusMinutes)}, ${slot.sessionsCount} sessions`
 }
 
 export function ActivityHeatmap({ dailyBreakdown, weekStart }: ActivityHeatmapProps) {
@@ -37,10 +37,10 @@ export function ActivityHeatmap({ dailyBreakdown, weekStart }: ActivityHeatmapPr
 
 	return (
 		<Card>
-			<section className="analytics-section" aria-label="Тепловая карта активности">
+			<section className="analytics-section" aria-label="Activity heatmap">
 				<div style={{ display: 'grid', gap: '4px' }}>
-					<Subtitle>Активность</Subtitle>
-					<Caption>7 дней текущего периода</Caption>
+					<Subtitle>Activity</Subtitle>
+					<Caption>7 days in the current period</Caption>
 				</div>
 
 				<div className="analytics-heatmap-grid">
@@ -60,7 +60,7 @@ export function ActivityHeatmap({ dailyBreakdown, weekStart }: ActivityHeatmapPr
 
 				{detailsSlot ? (
 					<Body style={{ fontSize: 'var(--text-sm)' }}>
-						{detailsSlot.date || detailsSlot.label}: {formatMinutes(detailsSlot.focusMinutes)}, {detailsSlot.sessionsCount} сесс.
+						{detailsSlot.date || detailsSlot.label}: {formatMinutes(detailsSlot.focusMinutes)}, {detailsSlot.sessionsCount} sessions
 					</Body>
 				) : null}
 			</section>

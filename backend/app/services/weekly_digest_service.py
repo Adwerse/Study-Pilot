@@ -496,7 +496,7 @@ class WeeklyDigestService:
             "inline_keyboard": [
                 [
                     {
-                        "text": "Открыть аналитику",
+                        "text": "Open analytics",
                         "web_app": {"url": analytics_url},
                     }
                 ]

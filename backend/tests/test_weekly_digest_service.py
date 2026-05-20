@@ -202,8 +202,8 @@ class FakeAgent:
     async def generate_report(self, **kwargs):
         _ = kwargs
         return AnalyticsNarrative(
-            summary="Аналитический итог недели.",
-            recommendations=["Запланируй сложные темы утром."],
+            summary="Weekly analytics summary.",
+            recommendations=["Plan difficult topics in the morning."],
         )
 
 
@@ -347,7 +347,7 @@ async def test_completed_activity_sends_digest_and_marks_sent(monkeypatch) -> No
         "inline_keyboard": [
             [
                 {
-                    "text": "Открыть аналитику",
+                    "text": "Open analytics",
                     "web_app": {"url": "https://app.example.com/analytics"},
                 }
             ]
@@ -475,8 +475,8 @@ async def test_weekly_review_generation_is_draft_only(monkeypatch) -> None:
     generated_review = SimpleNamespace(review_id=review_id)
     stored_review = SimpleNamespace(
         id=review_id,
-        summary="Итог из weekly review.",
-        recommendations=["Рекомендация из weekly review."],
+        summary="Summary from weekly review.",
+        recommendations=["Recommendation from weekly review."],
     )
     calls: list[dict[str, object]] = []
 
@@ -514,4 +514,4 @@ async def test_weekly_review_generation_is_draft_only(monkeypatch) -> None:
 
     assert result.status == "sent"
     assert calls[0]["apply_changes"] is False
-    assert "Итог из weekly review." in str(telegram.messages[0]["text"])
+    assert "Summary from weekly review." in str(telegram.messages[0]["text"])

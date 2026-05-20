@@ -25,12 +25,12 @@ import '../styles/analytics.css'
 
 type AnalyticsTab = 'daily' | 'weekly'
 
-const periodDateFormatter = new Intl.DateTimeFormat('ru-RU', {
+const periodDateFormatter = new Intl.DateTimeFormat('en-US', {
 	day: 'numeric',
 	month: 'short',
 })
 
-const fullDateFormatter = new Intl.DateTimeFormat('ru-RU', {
+const fullDateFormatter = new Intl.DateTimeFormat('en-US', {
 	weekday: 'long',
 	day: 'numeric',
 	month: 'long',
@@ -56,11 +56,11 @@ function parseLocalDate(date: string): Date {
 
 function formatDayPeriod(date: string, today: string): string {
 	if (date === today) {
-		return `Сегодня, ${periodDateFormatter.format(parseLocalDate(date))}`
+		return `Today, ${periodDateFormatter.format(parseLocalDate(date))}`
 	}
 
 	if (date === getYesterdayDateString(parseLocalDate(today))) {
-		return `Вчера, ${periodDateFormatter.format(parseLocalDate(date))}`
+		return `Yesterday, ${periodDateFormatter.format(parseLocalDate(date))}`
 	}
 
 	return fullDateFormatter.format(parseLocalDate(date))
@@ -73,9 +73,9 @@ function formatWeekPeriod(weekStart: string): string {
 
 function getDataQualityLabel(quality: AnalyticsDataQuality): string {
 	const labels: Record<AnalyticsDataQuality, string> = {
-		low: 'Мало данных',
-		medium: 'Данных достаточно',
-		high: 'Хорошая статистика',
+		low: 'Limited data',
+		medium: 'Enough data',
+		high: 'Strong history',
 	}
 
 	return labels[quality]
@@ -95,22 +95,22 @@ function getDataQualityVariant(quality: AnalyticsDataQuality): 'success' | 'warn
 
 function getAnalyticsErrorMessage(error: ApiError | null): string {
 	if (!error) {
-		return 'Не удалось загрузить аналитику'
+		return 'Unable to load analytics'
 	}
 
 	if (error.status === 401) {
-		return 'Открой Mini App через Telegram и попробуй ещё раз.'
+		return 'Open the Mini App through Telegram and try again.'
 	}
 
 	if (error.status === 503 || error.status === 500) {
-		return 'Сервис аналитики временно недоступен.'
+		return 'The analytics service is temporarily unavailable.'
 	}
 
 	if (error.detail.toLowerCase().includes('network')) {
-		return 'Проверь соединение и повтори попытку.'
+		return 'Check your connection and try again.'
 	}
 
-	return 'Попробуй повторить запрос чуть позже.'
+	return 'Try the request again in a moment.'
 }
 
 function isEmptyReport(metrics: AnalyticsMetrics | null | undefined): boolean {
@@ -161,12 +161,12 @@ function PeriodSwitch({
 	onChange: (tab: AnalyticsTab) => void
 }) {
 	const tabs: Array<{ id: AnalyticsTab; label: string }> = [
-		{ id: 'daily', label: 'День' },
-		{ id: 'weekly', label: 'Неделя' },
+		{ id: 'daily', label: 'Day' },
+		{ id: 'weekly', label: 'Week' },
 	]
 
 	return (
-		<div className="analytics-segment" role="tablist" aria-label="Период аналитики">
+		<div className="analytics-segment" role="tablist" aria-label="Analytics period">
 			{tabs.map((tab) => {
 				const active = activeTab === tab.id
 
@@ -214,14 +214,14 @@ function SummaryCards({
 	loading: boolean
 }) {
 	const cards = [
-		{ label: 'Фокус', value: formatMinutes(metrics?.total_focus_minutes ?? 0) },
-		{ label: 'Сессии', value: String(metrics?.sessions_count ?? 0) },
+		{ label: 'Focus', value: formatMinutes(metrics?.total_focus_minutes ?? 0) },
+		{ label: 'Sessions', value: String(metrics?.sessions_count ?? 0) },
 		{ label: 'Streak', value: formatStreak(metrics?.streak_days ?? 0) },
 		{ label: 'Completion', value: formatPercent(metrics?.completion_rate ?? null) },
 	]
 
 	return (
-		<section className="analytics-summary-grid" aria-label="Ключевые метрики">
+		<section className="analytics-summary-grid" aria-label="Key metrics">
 			{cards.map((card) => (
 				<SummaryCard key={card.label} label={card.label} value={card.value} loading={loading} />
 			))}
@@ -232,8 +232,8 @@ function SummaryCards({
 function BestFocusHours({ hours }: { hours: string[] }) {
 	return (
 		<Card>
-			<section className="analytics-section" aria-label="Лучшие часы">
-				<Subtitle>Лучшие часы</Subtitle>
+			<section className="analytics-section" aria-label="Best hours">
+				<Subtitle>Best hours</Subtitle>
 				{hours.length > 0 ? (
 					<div className="analytics-chip-row">
 						{hours.map((hour) => (
@@ -243,7 +243,7 @@ function BestFocusHours({ hours }: { hours: string[] }) {
 						))}
 					</div>
 				) : (
-					<Caption>Пока недостаточно данных</Caption>
+					<Caption>Not enough data yet</Caption>
 				)}
 			</section>
 		</Card>
@@ -251,15 +251,15 @@ function BestFocusHours({ hours }: { hours: string[] }) {
 }
 
 function AiSummary({ report }: { report: AnalyticsReportResponse | null }) {
-	const summary = report?.summary.trim() || 'Пока недостаточно данных для отчёта.'
+	const summary = report?.summary.trim() || 'Not enough data for a report yet.'
 	const recommendations = report?.recommendations.filter((item) => item.trim().length > 0) ?? []
 	const quality = report?.data_quality ?? 'low'
 
 	return (
 		<Card>
-			<section className="analytics-section" aria-label="AI отчёт и рекомендации">
+			<section className="analytics-section" aria-label="AI report and recommendations">
 				<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-					<Subtitle>Отчёт</Subtitle>
+					<Subtitle>Report</Subtitle>
 					<Badge variant={getDataQualityVariant(quality)}>{getDataQualityLabel(quality)}</Badge>
 				</div>
 
@@ -267,7 +267,7 @@ function AiSummary({ report }: { report: AnalyticsReportResponse | null }) {
 
 				{recommendations.length > 0 ? (
 					<div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-						<Caption style={{ color: 'var(--tg-text)', fontWeight: 700 }}>Рекомендации</Caption>
+						<Caption style={{ color: 'var(--tg-text)', fontWeight: 700 }}>Recommendations</Caption>
 						<ul style={{ display: 'grid', gap: 'var(--space-2)', paddingLeft: '18px' }}>
 							{recommendations.map((recommendation) => (
 								<li key={recommendation}>
@@ -284,7 +284,7 @@ function AiSummary({ report }: { report: AnalyticsReportResponse | null }) {
 
 function AnalyticsLoadingState() {
 	return (
-		<div aria-label="Загрузка аналитики" className="analytics-section">
+		<div aria-label="Loading analytics" className="analytics-section">
 			<Skeleton height={140} borderRadius="12px" />
 			<Skeleton height={140} borderRadius="12px" />
 			<Skeleton height={104} borderRadius="12px" />
@@ -297,11 +297,11 @@ function AnalyticsErrorState({ error, onRetry }: { error: ApiError | null; onRet
 		<Card>
 			<div style={{ display: 'grid', gap: 'var(--space-3)' }}>
 				<div style={{ display: 'grid', gap: '4px' }}>
-					<Subtitle>Не удалось загрузить аналитику</Subtitle>
+					<Subtitle>Unable to load analytics</Subtitle>
 					<Caption>{getAnalyticsErrorMessage(error)}</Caption>
 				</div>
 				<Button variant="secondary" size="md" onClick={onRetry}>
-					Повторить
+					Retry
 				</Button>
 			</div>
 		</Card>
@@ -314,8 +314,8 @@ function EmptyState({ activeTab }: { activeTab: AnalyticsTab }) {
 			<div className="analytics-empty-card">
 				<Body style={{ fontWeight: 600 }}>
 					{activeTab === 'daily'
-						? 'Сегодня пока нет фокус-сессий. Запусти один короткий блок — и графики оживут.'
-						: 'На этой неделе пока нет данных. Начни с 25 минут фокуса.'}
+						? 'No focus sessions today yet. Start one short block and the charts will wake up.'
+						: 'No data this week yet. Start with 25 minutes of focus.'}
 				</Body>
 			</div>
 		</Card>
@@ -368,7 +368,7 @@ export function AnalyticsPage() {
 		<div className="analytics-screen">
 			<header className="analytics-header">
 				<div style={{ display: 'grid', gap: '4px', minWidth: 0 }}>
-					<Title>Аналитика</Title>
+					<Title>Analytics</Title>
 					<Caption style={{ textTransform: 'capitalize' }}>{periodLabel}</Caption>
 				</div>
 			</header>
@@ -376,27 +376,27 @@ export function AnalyticsPage() {
 			<PeriodSwitch activeTab={activeTab} onChange={setActiveTab} />
 
 			{activeTab === 'daily' ? (
-				<div className="analytics-period-nav" aria-label="Навигация по дням">
-					<IconButton label="Предыдущий день" onClick={() => selectDate(shiftDate(selectedDate, -1))}>
+				<div className="analytics-period-nav" aria-label="Day navigation">
+					<IconButton label="Previous day" onClick={() => selectDate(shiftDate(selectedDate, -1))}>
 						‹
 					</IconButton>
 					<Button variant={selectedDate === today ? 'primary' : 'secondary'} size="md" onClick={() => selectDate(today)}>
-						Сегодня
+						Today
 					</Button>
 					<Button
 						variant={selectedDate === yesterday ? 'primary' : 'secondary'}
 						size="md"
 						onClick={() => selectDate(yesterday)}
 					>
-						Вчера
+						Yesterday
 					</Button>
-					<IconButton label="Следующий день" disabled={!canMoveNextDay} onClick={() => selectDate(nextDate)}>
+					<IconButton label="Next day" disabled={!canMoveNextDay} onClick={() => selectDate(nextDate)}>
 						›
 					</IconButton>
 				</div>
 			) : (
-				<div className="analytics-period-nav" aria-label="Навигация по неделям">
-					<IconButton label="Предыдущая неделя" onClick={() => selectWeek(shiftWeek(selectedWeekStart, -1))}>
+				<div className="analytics-period-nav" aria-label="Week navigation">
+					<IconButton label="Previous week" onClick={() => selectWeek(shiftWeek(selectedWeekStart, -1))}>
 						‹
 					</IconButton>
 					<Button
@@ -404,16 +404,16 @@ export function AnalyticsPage() {
 						size="md"
 						onClick={() => selectWeek(currentWeekStart)}
 					>
-						Текущая неделя
+						Current week
 					</Button>
 					<Button
 						variant={selectedWeekStart === shiftWeek(currentWeekStart, -1) ? 'primary' : 'secondary'}
 						size="md"
 						onClick={() => selectWeek(shiftWeek(currentWeekStart, -1))}
 					>
-						Прошлая неделя
+						Previous week
 					</Button>
-					<IconButton label="Следующая неделя" disabled={!canMoveNextWeek} onClick={() => selectWeek(nextWeekStart)}>
+					<IconButton label="Next week" disabled={!canMoveNextWeek} onClick={() => selectWeek(nextWeekStart)}>
 						›
 					</IconButton>
 				</div>
@@ -432,7 +432,7 @@ export function AnalyticsPage() {
 					{isEmptyReport(activeMetrics) ? <EmptyState activeTab={activeTab} /> : null}
 
 					{activeTab === 'weekly' ? (
-						<section className="analytics-section" aria-label="Недельные графики">
+						<section className="analytics-section" aria-label="Weekly charts">
 							<WeeklyFocusChart dailyBreakdown={weeklyBreakdown} weekStart={selectedWeekStart} />
 							<WeeklySessionsChart dailyBreakdown={weeklyBreakdown} weekStart={selectedWeekStart} />
 						</section>

@@ -14,10 +14,10 @@ class WeeklyDigestFormatter:
     ) -> str:
         metrics = report.metrics
         lines = [
-            "📊 Недельный отчёт StudyPilot",
+            "StudyPilot weekly report",
             "",
-            f"Фокус: {self._format_minutes(metrics.total_focus_minutes)}",
-            f"Сессии: {metrics.sessions_count}",
+            f"Focus: {self._format_minutes(metrics.total_focus_minutes)}",
+            f"Sessions: {metrics.sessions_count}",
             f"Completion rate: {metrics.completion_rate}%",
             f"Streak: {metrics.streak_days} {self._plural_days(metrics.streak_days)}",
         ]
@@ -26,35 +26,35 @@ class WeeklyDigestFormatter:
             lines.extend(
                 [
                     "",
-                    "Данных пока мало, поэтому выводы предварительные.",
+                    "Data is still limited, so these conclusions are preliminary.",
                 ]
             )
 
         if metrics.best_focus_hours:
-            lines.extend(["", f"Лучшие часы: {', '.join(metrics.best_focus_hours)}"])
+            lines.extend(["", f"Best hours: {', '.join(metrics.best_focus_hours)}"])
 
         if metrics.most_focused_topics:
-            lines.extend(["", "Темы недели:"])
+            lines.extend(["", "Topics this week:"])
             lines.extend(
-                f"• {topic.topic} — {self._format_minutes(topic.minutes)}"
+                f"- {topic.topic}: {self._format_minutes(topic.minutes)}"
                 for topic in self._top_topics(metrics.most_focused_topics)
             )
 
         if report.summary.strip():
-            lines.extend(["", "Итог:", report.summary.strip()])
+            lines.extend(["", "Summary:", report.summary.strip()])
 
         recommendations = [
             item.strip() for item in report.recommendations[:4] if item.strip()
         ]
         if recommendations:
-            lines.extend(["", "Рекомендации:"])
+            lines.extend(["", "Recommendations:"])
             lines.extend(
                 f"{index}. {recommendation}"
                 for index, recommendation in enumerate(recommendations, start=1)
             )
 
         if include_analytics_link:
-            lines.extend(["", "Открыть аналитику 👇"])
+            lines.extend(["", "Open analytics:"])
         return self._trim("\n".join(lines).strip())
 
     @staticmethod
@@ -62,20 +62,12 @@ class WeeklyDigestFormatter:
         safe_minutes = max(0, int(minutes))
         hours, remainder = divmod(safe_minutes, 60)
         if hours:
-            return f"{hours}ч {remainder:02d}м"
-        return f"{remainder}м"
+            return f"{hours}h {remainder:02d}m"
+        return f"{remainder}m"
 
     @staticmethod
     def _plural_days(days: int) -> str:
-        value = abs(days) % 100
-        last_digit = value % 10
-        if 11 <= value <= 14:
-            return "дней"
-        if last_digit == 1:
-            return "день"
-        if 2 <= last_digit <= 4:
-            return "дня"
-        return "дней"
+        return "day" if abs(days) == 1 else "days"
 
     @staticmethod
     def _top_topics(topics: list[TopicFocusMetric]) -> list[TopicFocusMetric]:

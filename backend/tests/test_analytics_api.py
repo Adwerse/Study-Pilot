@@ -94,8 +94,8 @@ def analytics_overrides(app, monkeypatch):
     async def fake_generate_report(**kwargs):
         _ = kwargs
         return AnalyticsNarrative(
-            summary="Тестовый отчёт.",
-            recommendations=["Сделай один блок."],
+            summary="Test report.",
+            recommendations=["Do one focus block."],
         )
 
     from app.api import analytics as analytics_api
@@ -127,7 +127,7 @@ async def test_daily_report_endpoint_returns_full_report(client, analytics_overr
     payload = response.json()
     assert payload["period"]["type"] == "daily"
     assert payload["metrics"]["total_focus_minutes"] == 25
-    assert payload["summary"] == "Тестовый отчёт."
+    assert payload["summary"] == "Test report."
     assert payload["data_quality"] == "low"
 
 
@@ -200,8 +200,8 @@ async def test_no_data_returns_valid_empty_report(app, client, monkeypatch):
     async def fake_generate_report(**kwargs):
         _ = kwargs
         return AnalyticsNarrative(
-            summary="Данных пока мало.",
-            recommendations=["Начни с одного короткого блока на 15-25 минут."],
+            summary="Data is still limited.",
+            recommendations=["Start with one short 15-25 minute block."],
         )
 
     from app.api import analytics as analytics_api

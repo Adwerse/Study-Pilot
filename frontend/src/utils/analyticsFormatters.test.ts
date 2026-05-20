@@ -15,10 +15,10 @@ import {
 
 describe('analytics formatters', () => {
 	it('formats focus minutes', () => {
-		expect(formatMinutes(95)).toBe('1ч 35м')
-		expect(formatMinutes(25)).toBe('25м')
-		expect(formatMinutes(0)).toBe('0м')
-		expect(formatMinutes(null)).toBe('0м')
+		expect(formatMinutes(95)).toBe('1h 35m')
+		expect(formatMinutes(25)).toBe('25m')
+		expect(formatMinutes(0)).toBe('0m')
+		expect(formatMinutes(null)).toBe('0m')
 	})
 
 	it('formats percent values', () => {
@@ -27,11 +27,11 @@ describe('analytics formatters', () => {
 		expect(formatPercent(undefined)).toBe('—')
 	})
 
-	it('formats streak with Russian plural forms', () => {
-		expect(formatStreak(1)).toBe('1 день')
-		expect(formatStreak(2)).toBe('2 дня')
-		expect(formatStreak(5)).toBe('5 дней')
-		expect(formatStreak(21)).toBe('21 день')
+	it('formats streak with English plural forms', () => {
+		expect(formatStreak(1)).toBe('1 day')
+		expect(formatStreak(2)).toBe('2 days')
+		expect(formatStreak(5)).toBe('5 days')
+		expect(formatStreak(21)).toBe('21 days')
 	})
 })
 

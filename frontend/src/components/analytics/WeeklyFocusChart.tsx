@@ -76,11 +76,11 @@ function WeeklyBarChart({
 export function WeeklyFocusChart({ dailyBreakdown, weekStart }: WeeklyChartProps) {
 	return (
 		<WeeklyBarChart
-			title="Фокус по дням"
+			title="Focus by day"
 			dailyBreakdown={dailyBreakdown}
 			weekStart={weekStart}
 			valueKey="focusMinutes"
-			ariaLabel="График минут фокуса по дням"
+			ariaLabel="Focus minutes chart by day"
 			formatValue={formatMinutes}
 		/>
 	)
@@ -89,11 +89,11 @@ export function WeeklyFocusChart({ dailyBreakdown, weekStart }: WeeklyChartProps
 export function WeeklySessionsChart({ dailyBreakdown, weekStart }: WeeklyChartProps) {
 	return (
 		<WeeklyBarChart
-			title="Сессии по дням"
+			title="Sessions by day"
 			dailyBreakdown={dailyBreakdown}
 			weekStart={weekStart}
 			valueKey="sessionsCount"
-			ariaLabel="График количества сессий по дням"
+			ariaLabel="Session count chart by day"
 			formatValue={(value) => String(value)}
 		/>
 	)

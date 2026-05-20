@@ -1,6 +1,6 @@
 # Learning OS Work Log
 
-Last updated: 2026-05-09
+Last updated: 2026-05-19
 
 ## Repository Context
 
@@ -142,37 +142,37 @@ What was done:
 - `tests/test_daily_coach.py` with 4 unit tests using a mocked LLM
 - `tests/test_daily_coach_integration.py` as an integration test
 
-## [Спринт 3] Экран "Сегодня"
-Дата: 2026-04-20
-Статус: ✅ завершено
+## [Sprint 3] Today Screen
+Date: 2026-04-20
+Status: completed
 
-Что сделано:
-- `src/hooks/useTodayPlan.ts` — параллельные запросы + sessionStorage прогресс
-- `src/components/today/StageProgress.tsx` — прогресс-бар этапа (4 теста ✅)
-- `src/components/today/FocusBlockCard.tsx` — карточка блока, 4 состояния (5 тестов ✅)
-- `src/components/today/DailyNote.tsx` — заметка дня
-- `src/pages/TodayPage.tsx` — полный экран, 4 состояния
-- `npx tsc --noEmit` — OK
-- `npm run build` — OK
-- `npm run test` — все тесты зелёные ✅
+What was done:
+- `src/hooks/useTodayPlan.ts` with parallel requests plus sessionStorage progress.
+- `src/components/today/StageProgress.tsx` with the stage progress bar and 4 tests.
+- `src/components/today/FocusBlockCard.tsx` with the block card, 4 states, and 5 tests.
+- `src/components/today/DailyNote.tsx` with the daily note.
+- `src/pages/TodayPage.tsx` with the full screen and 4 states.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test` passed.
 
-## [Спринт 3] Связка Roadmap ↔ Daily Coach
-Дата: 2026-04-20
-Статус: ✅ завершено
+## [Sprint 3] Roadmap To Daily Coach Link
+Date: 2026-04-20
+Status: completed
 
-Что сделано:
-- `backend/app/api/plans.py` — `POST /plans` сохраняет roadmap в runtime-хранилище
-- `backend/app/api/plans.py` — `GET /plans/current` возвращает текущий сохранённый план
-- `backend/app/api/plans.py` — `GET /plans/current/today` генерирует Daily Coach из реального текущего этапа
-- `backend/app/api/focus.py` — реализованы `POST /focus/start`, `POST /focus/end`, `GET /focus/history`
-- `backend/app/repositories/runtime_store.py` — добавлено user-scoped in-memory состояние: plan/stages/focus history
-- `backend/app/schemas/focus_session.py` — добавлена схема `FocusSession`
-- `backend/tests/test_plan_persistence.py` — добавлены тесты на сохранение roadmap и использование истории focus в today-plan
-- `pytest tests/test_plan_persistence.py tests/test_daily_coach.py -v` — 6 passed ✅
+What was done:
+- `backend/app/api/plans.py` saves roadmap output in the runtime store via `POST /plans`.
+- `backend/app/api/plans.py` returns the current saved plan via `GET /plans/current`.
+- `backend/app/api/plans.py` generates Daily Coach output from the real current stage via `GET /plans/current/today`.
+- `backend/app/api/focus.py` implements `POST /focus/start`, `POST /focus/end`, and `GET /focus/history`.
+- `backend/app/repositories/runtime_store.py` adds user-scoped in-memory state for plans, stages, and focus history.
+- `backend/app/schemas/focus_session.py` adds the `FocusSession` schema.
+- `backend/tests/test_plan_persistence.py` adds tests for roadmap persistence and focus-history use in today-plan generation.
+- `pytest tests/test_plan_persistence.py tests/test_daily_coach.py -v` passed with 6 tests.
 
-Текущий лимит реализации:
-- Сохранение roadmap/focus реализовано в памяти процесса (runtime store).
-- После рестарта backend состояние сбрасывается; постоянное хранение в PostgreSQL остаётся следующим шагом.
+Current implementation limit:
+- Roadmap/focus persistence is implemented in process memory through the runtime store.
+- Backend restarts clear the state; durable PostgreSQL persistence remains the next step.
 
 ## [Sprint 3] Plan API
 Date: 2026-04-21
@@ -194,45 +194,45 @@ Checks:
 - `pytest tests/test_plan_repository.py -v` passed with `4 passed`
 - OpenAPI contains `/api/v1/plans`
 
-## [Спринт 4] Focus Agent
-Дата: 2026-04-23
-Статус: ✅ завершено
+## [Sprint 4] Focus Agent
+Date: 2026-04-23
+Status: completed
 
-Что сделано:
-- `app/models/focus_log.py` — ORM FocusLog
-- `app/schemas/focus_log.py` — FocusSessionStart, FocusSessionEnd, FocusSessionRead
-- `app/repositories/user_repository.py` — get_or_create_by_telegram_id
-- `app/repositories/focus_repository.py` — start, end, active, history, today
-- `app/agents/focus.py` — FocusAgent: сообщения, логика перерывов, reminder
-- `app/api/focus.py` — 4 эндпоинта: start, end, active, history
-- `app/api/focus.py` — `user_id` резолвится через UserRepository, не через `UUID(int=telegram_id)`
-- `tests/test_focus_agent.py` — 5 unit-тестов ✅
-- `tests/test_focus_repository.py` — 3 unit-теста ✅
-- `8` тестов — все зелёные ✅
+What was done:
+- `app/models/focus_log.py` with ORM `FocusLog`.
+- `app/schemas/focus_log.py` with `FocusSessionStart`, `FocusSessionEnd`, and `FocusSessionRead`.
+- `app/repositories/user_repository.py` with `get_or_create_by_telegram_id`.
+- `app/repositories/focus_repository.py` with start, end, active, history, and today helpers.
+- `app/agents/focus.py` with `FocusAgent` messages, break logic, and reminders.
+- `app/api/focus.py` with 4 endpoints: start, end, active, and history.
+- `app/api/focus.py` resolves `user_id` through `UserRepository`, not through `UUID(int=telegram_id)`.
+- `tests/test_focus_agent.py` with 5 unit tests.
+- `tests/test_focus_repository.py` with 3 unit tests.
+- 8 tests passed.
 
-Известные ограничения:
-- Пауза не реализована (out of scope спринта 4)
-- Уведомления бота — TODO, подключить после интеграции бота с бэком
+Known limitations:
+- Pause is not implemented because it was out of scope for Sprint 4.
+- Bot notifications remain TODO and should be connected after bot/backend integration.
 
-## [Спринт 4] Pomodoro-таймер
-Дата: 2026-04-25
-Статус: ✅ завершено
+## [Sprint 4] Pomodoro Timer
+Date: 2026-04-25
+Status: completed
 
-Что сделано:
-- `src/hooks/usePomodoro.ts` — polling 5s + локальный тик каждую секунду
-- `src/lib/api.ts` — добавлен `apiClient.getActiveSession`
-- `src/components/timer/CircularTimer.tsx` — SVG таймер (4 теста ✅)
-- `src/components/timer/DifficultyPicker.tsx` — bottom sheet оценки (3 теста ✅)
-- `src/components/timer/StartForm.tsx` — форма темы (3 теста ✅)
-- `src/components/timer/PomodoroScreen.tsx` — оркестратор состояний
-- `src/pages/TodayPage.tsx` — интеграция, fullscreen оверлей при активной сессии
-- `npx tsc --noEmit` — OK
-- `npm run build` — OK
-- `npm run test` — 10 новых тестов, общий прогон 27 тестов, все зелёные ✅
+What was done:
+- `src/hooks/usePomodoro.ts` with 5s polling plus a local tick every second.
+- `src/lib/api.ts` adds `apiClient.getActiveSession`.
+- `src/components/timer/CircularTimer.tsx` with the SVG timer and 4 tests.
+- `src/components/timer/DifficultyPicker.tsx` with the rating bottom sheet and 3 tests.
+- `src/components/timer/StartForm.tsx` with the topic form and 3 tests.
+- `src/components/timer/PomodoroScreen.tsx` with the state orchestrator.
+- `src/pages/TodayPage.tsx` integrates the fullscreen overlay for active sessions.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `npm run test` passed with 10 new tests and 27 total tests.
 
-Архитектурное решение:
-  Polling вместо WebSocket — проще деплой, достаточно для Pomodoro UX.
-  Таймер считается на фронте по `started_at` из БД.
+Architecture decision:
+  Polling was chosen instead of WebSocket because it is simpler to deploy and sufficient for the Pomodoro UX.
+  The timer is calculated on the frontend from the database-backed `started_at` value.
 
 ## [Sprint 4] Focus API Backend
 Date: 2026-04-29
@@ -493,7 +493,7 @@ What was done:
   - `useDeleteDocument`
   - `useAskQuestion`
 - Added `frontend/src/utils/knowledgeFormatters.ts` for file size, status, date/time, confidence, and safe displayed text formatting.
-- Updated the bottom tab label from `Knowledge` to `База знаний` and guarded tab text against overflow.
+- Updated the bottom tab label from `Knowledge` to `Knowledge Base` and guarded tab text against overflow.
 - Added frontend tests for API methods, hooks, formatters, and the main Knowledge Base UI flows.
 
 Checks:
@@ -506,7 +506,7 @@ Date: 2026-05-05
 Status: completed
 
 What was done:
-- Investigated the Mini App failure where document upload showed `Не удалось загрузить файл` and the materials list also failed to load.
+- Investigated the Mini App failure where document upload showed `Unable to upload file` and the materials list also failed to load.
 - Confirmed the root cause was environment/database availability, not the selected `.md` file:
   - local PostgreSQL was not listening on `127.0.0.1:5432`
   - Docker Desktop was initially not running
@@ -826,7 +826,7 @@ What was done:
   - never auto-applies roadmap changes;
   - skips active-plan users with zero completed focus sessions for the week;
   - continues processing after per-user failures.
-- Added `WeeklyDigestFormatter` for concise plain-text Telegram messages in Russian, with optional sections, low-data-quality note, and message length cap.
+- Added `WeeklyDigestFormatter` for concise plain-text Telegram messages, with optional sections, low-data-quality note, and message length cap.
 - Sends through the existing `TelegramService.send_message` method with no Markdown parse mode.
 - Adds a WebApp inline keyboard button to `${MINI_APP_URL}/analytics` when `MINI_APP_URL` is configured.
 - Added `weekly_digest_worker_loop` and wired it into FastAPI lifespan next to the existing notification worker.
@@ -858,6 +858,131 @@ Verification:
 - `ruff format --check` passed for changed digest files.
 - `git diff --check` passed.
 - Full backend suite result: 153 passed, 2 skipped, 1 failed because `test_plan_persistence.py::test_daily_plan_uses_current_stage_and_focus_history` could not connect to local PostgreSQL (`ConnectionRefusedError`), outside the digest path.
+
+## Sprint 6 Production-MVP Readiness
+Date: 2026-05-19
+Status: implemented
+
+Goal:
+- Prepare StudyPilot for a production-ready MVP release with focused infrastructure, deployment, monitoring, smoke, and e2e confidence work.
+
+What was done:
+- Added production/runtime settings:
+  - `APP_ENV`;
+  - `TESTING`;
+  - `APP_VERSION`;
+  - `LOG_LEVEL`;
+  - `LLM_PROVIDER`;
+  - `EMBEDDING_PROVIDER`;
+  - test-only auth and e2e secret settings.
+- Added fail-fast production validation for critical env vars and unsafe production settings:
+  - database URL;
+  - Telegram bot token;
+  - Mini App URL;
+  - restricted HTTPS CORS origins;
+  - provider keys;
+  - vector/embedding config;
+  - internal jobs secret;
+  - disabled test auth/fake providers/debug mode.
+- Added test-only auth support guarded by `APP_ENV=test`, `TESTING=true`, and `TEST_AUTH_ENABLED=true`.
+- Added health endpoints:
+  - `GET /health` returns status, service, version, and environment;
+  - `GET /health/ready` checks database and pgvector readiness and returns `503` when not ready.
+- Added hidden test-support endpoints:
+  - `POST /api/v1/test/reset`;
+  - `POST /api/v1/test/seed`;
+  - both require test env and `X-Test-Secret`.
+- Added deterministic seed data for e2e:
+  - user;
+  - plan and stages;
+  - focus sessions;
+  - documents and chunks;
+  - analytics-producing focus data;
+  - weekly reviews.
+- Added fake deterministic providers for e2e/test mode:
+  - roadmap generation;
+  - daily plan generation;
+  - embeddings;
+  - query rewriting;
+  - RAG answer generation.
+- Added request/error logging middleware with request id, duration, method, path, status code, and env-controlled log level.
+- Added Playwright e2e setup under `frontend/e2e`:
+  - `npm run test:e2e`;
+  - `npm run test:e2e:ui`;
+  - Telegram WebApp mock;
+  - signed deterministic Telegram `initData`;
+  - API reset/seed helpers.
+- Added e2e coverage for:
+  - app load and visible navigation;
+  - auth bootstrap with protected API access;
+  - goal to roadmap;
+  - Today empty and seeded states;
+  - focus start/end/history;
+  - Knowledge Base upload/list;
+  - RAG answer with sources and no-source disabled state;
+  - Analytics empty and seeded states;
+  - Weekly Review generate/apply/history through API.
+- Added backend tests for:
+  - readiness DB failure;
+  - test auth enabled/disabled guard;
+  - production config validation;
+  - sanitized document error output.
+- Added frontend resilience polish:
+  - global error boundary;
+  - route error fallback;
+  - Telegram viewport CSS sync;
+  - Vitest exclusion for e2e specs.
+- Polished Docker setup:
+  - backend healthcheck uses `/health`;
+  - Railway backend healthcheck uses `/health/ready`;
+  - backend and bot run as non-root where feasible;
+  - frontend Dockerfile now builds static assets and serves through nginx;
+  - frontend nginx `/health` endpoint;
+  - `.env` remains excluded from Docker build contexts.
+- Updated `docker-compose.prod.yml`:
+  - pgvector Postgres;
+  - migration ordering;
+  - backend readiness healthcheck;
+  - frontend healthcheck;
+  - bot waits for healthy backend;
+  - Caddy waits for healthy backend/frontend.
+- Updated GitHub Actions:
+  - PR checks include backend ruff/pytest, migration check against pgvector Postgres, frontend typecheck/test/build, and bot import check;
+  - added E2E workflow on `workflow_dispatch` and `main` only.
+- Updated env/docs:
+  - `.env.example`;
+  - `.env.production.example`;
+  - `.github/SECRETS.md`;
+  - `README.md` production, smoke, and e2e sections.
+- Added practical docs:
+  - `docs/DEPLOYMENT.md`;
+  - `docs/MONITORING.md`.
+
+Safety notes:
+- No production test-auth bypass is allowed.
+- Fake AI/embedding providers are allowed only in test mode.
+- E2E setup does not call real OpenAI, Tensorix, or Telegram APIs.
+- Health/readiness responses do not expose secrets.
+- Request logging avoids request bodies, uploaded document content, and full LLM prompts.
+- Frontend secrets remain out of the Vite bundle.
+- Weekly Review remains API-only for this sprint; no new Weekly Review UI was added.
+- Focus remains the existing Today -> session -> History flow; no standalone Focus tab was added.
+
+Verification:
+- `python -m pip install -r backend/requirements.txt` refreshed the local backend venv and installed missing `tzdata`.
+- `backend`: `python -m pytest tests -q` passed with `162 passed`, `2 skipped`.
+- `backend`: `python -m ruff check app tests` passed.
+- `backend`: `python -m ruff format --check app` passed.
+- `frontend`: `npm run typecheck` passed.
+- `frontend`: `npm run test` passed with `81 passed`.
+- `frontend`: `npm run build` passed.
+- `frontend`: `npx playwright test --list` found 9 e2e tests.
+- `docker compose -f docker-compose.prod.yml config --quiet` passed with dummy production env values.
+- `git diff --check` passed.
+
+Known local verification limits:
+- Full local Playwright execution was not completed because Chromium was not installed locally and Docker Desktop was not running, so an isolated pgvector e2e database could not be started.
+- The GitHub E2E workflow installs Chromium, starts a migrated pgvector-backed test backend with fake providers, and runs `npm run test:e2e`.
 
 ## Backlog (Alpha)
 Date: 2026-04-18

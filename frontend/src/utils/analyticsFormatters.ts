@@ -6,14 +6,14 @@ export function formatMinutes(minutes: number | null | undefined): string {
 	const remainingMinutes = safeMinutes % 60
 
 	if (hours === 0) {
-		return `${remainingMinutes}м`
+		return `${remainingMinutes}m`
 	}
 
 	if (remainingMinutes === 0) {
-		return `${hours}ч`
+		return `${hours}h`
 	}
 
-	return `${hours}ч ${remainingMinutes}м`
+	return `${hours}h ${remainingMinutes}m`
 }
 
 export function formatPercent(value: number | null | undefined): string {
@@ -26,18 +26,8 @@ export function formatPercent(value: number | null | undefined): string {
 
 export function formatStreak(days: number | null | undefined): string {
 	const safeDays = Number.isFinite(days) ? Math.max(0, Math.round(days ?? 0)) : 0
-	const mod10 = safeDays % 10
-	const mod100 = safeDays % 100
 
-	if (mod10 === 1 && mod100 !== 11) {
-		return `${safeDays} день`
-	}
-
-	if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-		return `${safeDays} дня`
-	}
-
-	return `${safeDays} дней`
+	return `${safeDays} ${safeDays === 1 ? 'day' : 'days'}`
 }
 
 export function toLocalDateString(date: Date): string {

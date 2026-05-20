@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 ANALYTICS_SYSTEM_PROMPT = (
-    "Ты Analytics Agent приложения StudyPilot. Сгенерируй краткий отчёт по "
-    "учебной активности пользователя только на основе переданных метрик. "
-    "Не выдумывай данные. Если данных мало, явно скажи, что выводы "
-    "предварительные. Верни JSON: "
+    "You are the Analytics Agent for StudyPilot. Generate a concise report "
+    "about the user's learning activity using only the supplied metrics. "
+    "Do not invent data. If data is limited, explicitly say the conclusions "
+    "are preliminary. Return JSON: "
     '{"summary": "...", "recommendations": ["...", "..."]}'
 )
 
@@ -85,31 +85,31 @@ class AnalyticsAgent:
         data_quality: AnalyticsDataQuality = AnalyticsDataQuality.medium,
     ) -> AnalyticsNarrative:
         _ = daily_breakdown
-        period_label = "сегодня" if period.type.value == "daily" else "за неделю"
+        period_label = "today" if period.type.value == "daily" else "this week"
         cautious_prefix = (
-            "Данных пока мало, выводы предварительные. "
+            "Data is still limited, so these conclusions are preliminary. "
             if data_quality == AnalyticsDataQuality.low
             else ""
         )
 
         if metrics.total_focus_minutes == 0:
             summary = (
-                f"{cautious_prefix}За выбранный период нет завершённых "
-                "фокус-сессий с продуктивным временем. Я не буду делать выводы "
-                "о лучших часах или темах без данных."
+                f"{cautious_prefix}There are no completed focus sessions with "
+                "productive time in the selected period. I will not draw "
+                "conclusions about best hours or topics without data."
             )
         else:
             summary_parts = [
-                f"{cautious_prefix}Ты набрал {metrics.total_focus_minutes} минут фокуса {period_label}.",
-                f"Завершённых сессий: {metrics.sessions_count}, отменённых: {metrics.cancelled_sessions_count}.",
-                f"Текущий streak: {metrics.streak_days} дн.",
+                f"{cautious_prefix}You logged {metrics.total_focus_minutes} focus minutes {period_label}.",
+                f"Completed sessions: {metrics.sessions_count}, cancelled: {metrics.cancelled_sessions_count}.",
+                f"Current streak: {metrics.streak_days} days.",
             ]
             if metrics.completion_rate and data_quality != AnalyticsDataQuality.low:
                 summary_parts.append(f"Completion rate: {metrics.completion_rate}%.")
             if metrics.most_focused_topics:
                 top_topic = metrics.most_focused_topics[0]
                 summary_parts.append(
-                    f"Больше всего времени ушло на тему «{top_topic.topic}»: {top_topic.minutes} мин."
+                    f"Most time went to {top_topic.topic}: {top_topic.minutes} minutes."
                 )
             summary = " ".join(summary_parts)
 
@@ -124,7 +124,7 @@ class AnalyticsAgent:
     ) -> str:
         return "\n".join(
             [
-                "Метрики:",
+                "Metrics:",
                 metrics.model_dump_json(),
                 "",
                 "Daily breakdown:",
@@ -135,26 +135,26 @@ class AnalyticsAgent:
                     ensure_ascii=False,
                 ),
                 "",
-                "Период:",
+                "Period:",
                 period.model_dump_json(),
                 "",
-                "Правила:",
-                "- не добавляй метрики, которых нет во входных данных;",
-                "- не обещай гарантированный результат;",
-                "- рекомендации должны быть конкретными;",
-                "- язык ответа - русский;",
-                "- максимум 4 рекомендации.",
+                "Rules:",
+                "- do not add metrics that are not present in the input data;",
+                "- do not promise guaranteed outcomes;",
+                "- recommendations must be concrete;",
+                "- answer in English;",
+                "- maximum 4 recommendations.",
             ]
         )
 
     def _fallback_recommendations(self, metrics: AnalyticsMetrics) -> list[str]:
         recommendations: list[str] = []
         if metrics.total_focus_minutes == 0:
-            recommendations.append("Начни с одного короткого блока на 15-25 минут.")
+            recommendations.append("Start with one short 15-25 minute block.")
 
         if metrics.best_focus_hours:
             recommendations.append(
-                f"Планируй сложные задачи на {metrics.best_focus_hours[0]}."
+                f"Plan difficult tasks around {metrics.best_focus_hours[0]}."
             )
 
         if (
@@ -162,16 +162,18 @@ class AnalyticsAgent:
             and (metrics.sessions_count + metrics.cancelled_sessions_count) > 0
         ):
             recommendations.append(
-                "Снизь размер фокус-блока или ставь меньше сессий за раз."
+                "Shorten focus blocks or schedule fewer sessions at once."
             )
 
         if metrics.most_focused_topics:
             top_topic = metrics.most_focused_topics[0].topic
-            recommendations.append(f"Продолжи с темы «{top_topic}», пока есть инерция.")
+            recommendations.append(
+                f"Continue with {top_topic} while momentum is there."
+            )
 
         if not recommendations:
             recommendations.append(
-                "Запланируй следующий фокус-блок заранее и оставь одну понятную цель."
+                "Plan the next focus block in advance and keep one clear goal."
             )
 
         return recommendations[:4]

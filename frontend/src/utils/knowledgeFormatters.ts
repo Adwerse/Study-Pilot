@@ -1,6 +1,6 @@
 import type { DocumentStatus, RAGConfidence } from '../types/api'
 
-const fileSizeFormatter = new Intl.NumberFormat('ru-RU', {
+const fileSizeFormatter = new Intl.NumberFormat('en-US', {
 	maximumFractionDigits: 1,
 })
 
@@ -13,10 +13,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
 
 export function formatFileSize(sizeBytes: number): string {
 	if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
-		return '0 Б'
+		return '0 B'
 	}
 
-	const units = ['Б', 'КБ', 'МБ', 'ГБ']
+	const units = ['B', 'KB', 'MB', 'GB']
 	let size = sizeBytes
 	let unitIndex = 0
 
@@ -31,9 +31,9 @@ export function formatFileSize(sizeBytes: number): string {
 
 export function formatDocumentStatus(status: DocumentStatus): string {
 	const labels: Record<DocumentStatus, string> = {
-		processing: 'Обработка',
-		ready: 'Готов',
-		failed: 'Ошибка',
+		processing: 'Processing',
+		ready: 'Ready',
+		failed: 'Error',
 	}
 
 	return labels[status]
@@ -43,7 +43,7 @@ export function formatDateTime(value: string): string {
 	const date = new Date(value)
 
 	if (Number.isNaN(date.getTime())) {
-		return 'Дата неизвестна'
+		return 'Date unknown'
 	}
 
 	return dateTimeFormatter.format(date).replace(/\.$/, '')
@@ -51,9 +51,9 @@ export function formatDateTime(value: string): string {
 
 export function formatConfidence(confidence: RAGConfidence): string {
 	const labels: Record<RAGConfidence, string> = {
-		low: 'Низкая уверенность',
-		medium: 'Средняя уверенность',
-		high: 'Высокая уверенность',
+		low: 'Low confidence',
+		medium: 'Medium confidence',
+		high: 'High confidence',
 	}
 
 	return labels[confidence]

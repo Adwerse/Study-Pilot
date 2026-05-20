@@ -13,7 +13,7 @@ def make_report(
     *,
     metrics: AnalyticsMetrics | None = None,
     data_quality: AnalyticsDataQuality = AnalyticsDataQuality.medium,
-    summary: str = "Ты хорошо держал фокус утром.",
+    summary: str = "You kept focus well in the morning.",
     recommendations: list[str] | None = None,
 ) -> WeeklyDigestReport:
     return WeeklyDigestReport(
@@ -40,20 +40,23 @@ def make_report(
         summary=summary,
         recommendations=recommendations
         if recommendations is not None
-        else ["Планируй сложные задачи утром.", "Дроби крупные этапы."],
+        else [
+            "Plan difficult tasks in the morning.",
+            "Break large stages into smaller steps.",
+        ],
     )
 
 
 def test_formatter_includes_required_digest_metrics() -> None:
     text = WeeklyDigestFormatter().format(make_report())
 
-    assert "Фокус: 7ч 00м" in text
-    assert "Сессии: 18" in text
+    assert "Focus: 7h 00m" in text
+    assert "Sessions: 18" in text
     assert "Completion rate: 86%" in text
-    assert "Streak: 5 дней" in text
-    assert "Лучшие часы: 09:00, 11:00" in text
-    assert "• RAG — 2ч 40м" in text
-    assert "1. Планируй сложные задачи утром." in text
+    assert "Streak: 5 days" in text
+    assert "Best hours: 09:00, 11:00" in text
+    assert "- RAG: 2h 40m" in text
+    assert "1. Plan difficult tasks in the morning." in text
     assert "{" not in text
 
 
@@ -70,19 +73,19 @@ def test_formatter_omits_empty_optional_sections() -> None:
         )
     )
 
-    assert "Лучшие часы:" not in text
-    assert "Темы недели:" not in text
-    assert "Рекомендации:" not in text
+    assert "Best hours:" not in text
+    assert "Topics this week:" not in text
+    assert "Recommendations:" not in text
 
 
 def test_formatter_mentions_low_data_quality_and_trims_long_text() -> None:
     text = WeeklyDigestFormatter().format(
         make_report(
             data_quality=AnalyticsDataQuality.low,
-            summary="Очень длинный итог. " * 300,
-            recommendations=["Очень длинная рекомендация. " * 100],
+            summary="Very long summary. " * 300,
+            recommendations=["Very long recommendation. " * 100],
         )
     )
 
-    assert "выводы предварительные" in text
+    assert "conclusions are preliminary" in text
     assert len(text) <= MAX_DIGEST_CHARS
