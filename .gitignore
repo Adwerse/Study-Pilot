@@ -35,6 +35,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+.codex-run/
 
 # Docker
 **/postgres-data/
