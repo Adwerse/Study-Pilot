@@ -28,6 +28,14 @@ def test_production_settings_accept_safe_required_values():
     assert settings.ALLOWED_ORIGINS == ["https://app.example.com"]
 
 
+def test_database_url_accepts_render_postgres_url():
+    settings = make_production_settings(
+        DATABASE_URL="postgresql://user:pass@host:5432/studypilot"
+    )
+
+    assert settings.DATABASE_URL == "postgresql+asyncpg://user:pass@host:5432/studypilot"
+
+
 def test_production_settings_reject_test_auth():
     with pytest.raises(ValidationError):
         make_production_settings(TEST_AUTH_ENABLED=True)

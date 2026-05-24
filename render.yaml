@@ -1,0 +1,143 @@
+services:
+  - type: web
+    name: studypilot-api
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: cd backend && python scripts/run_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2
+    healthCheckPath: /health/ready
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: TESTING
+        value: false
+      - key: TEST_AUTH_ENABLED
+        value: false
+      - key: APP_VERSION
+        value: 0.1.0
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        fromDatabase:
+          name: studypilot-postgres
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: INTERNAL_JOBS_SECRET
+        generateValue: true
+      - key: BOT_TOKEN
+        sync: false
+      - key: MINI_APP_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: tensorix
+      - key: EMBEDDING_PROVIDER
+        value: openai
+      - key: TENSORIX_API_KEY
+        sync: false
+      - key: TENSORIX_BASE_URL
+        value: https://api.tensorix.ai/v1
+      - key: TENSORIX_MODEL
+        value: deepseek/deepseek-chat-v3.1
+      - key: DEBUG
+        value: false
+      - key: NOTIFICATIONS_ENABLED
+        value: true
+      - key: NOTIFICATIONS_POLL_INTERVAL_SECONDS
+        value: 30
+      - key: WEEKLY_DIGEST_ENABLED
+        value: true
+      - key: WEEKLY_DIGEST_DAY
+        value: 6
+      - key: WEEKLY_DIGEST_HOUR
+        value: 18
+      - key: WEEKLY_DIGEST_POLL_INTERVAL_SECONDS
+        value: 900
+      - key: WEEKLY_DIGEST_BATCH_LIMIT
+        value: 100
+      - key: DOCUMENT_MAX_FILE_SIZE_BYTES
+        value: 10485760
+      - key: DOCUMENT_CHUNK_SIZE_CHARS
+        value: 1600
+      - key: DOCUMENT_CHUNK_OVERLAP_CHARS
+        value: 200
+      - key: DOCUMENT_MAX_CHUNKS
+        value: 500
+      - key: EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: EMBEDDING_DIMENSIONS
+        value: 1536
+      - key: VECTOR_STORE_PROVIDER
+        value: pgvector
+      - key: VECTOR_SEARCH_TOP_K_DEFAULT
+        value: 8
+      - key: VECTOR_SEARCH_SCORE_THRESHOLD
+        value: 0.2
+      - key: RAG_REWRITE_MODEL
+        value: deepseek/deepseek-chat-v3.1
+      - key: RAG_ANSWER_MODEL
+        value: deepseek/deepseek-chat-v3.1
+      - key: RAG_TOP_K_DEFAULT
+        value: 8
+      - key: RAG_RERANK_TOP_K_DEFAULT
+        value: 4
+      - key: RAG_MIN_SCORE_THRESHOLD
+        value: 0.2
+      - key: RAG_MAX_CONTEXT_CHARS
+        value: 12000
+      - key: RAG_SNIPPET_CHARS
+        value: 300
+      - key: ANALYTICS_AI_ENABLED
+        value: true
+      - key: WEEKLY_REVIEW_AI_ENABLED
+        value: true
+
+  - type: worker
+    name: studypilot-bot
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    buildCommand: cd bot && pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: cd bot && python main.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: MINI_APP_URL
+        sync: false
+      - key: USE_WEBHOOK
+        value: false
+      - key: DEBUG
+        value: false
+
+  - type: web
+    name: studypilot-web
+    runtime: static
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+
+databases:
+  - name: studypilot-postgres
+    databaseName: learning_os
+    user: learning_os_user
+    plan: free
+    postgresMajorVersion: "16"

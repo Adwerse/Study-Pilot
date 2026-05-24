@@ -1000,5 +1000,41 @@ Status: in progress
 
 ## Notes
 
+
+-----DEPLOYMENT NOTES-----
+
 - On Windows, `bot` pinned dependencies install reliably with Python 3.12.
 - Root and service-level Makefiles currently use Unix-style `.venv/bin/...` commands and need Windows-specific alternatives for direct `make` usage on PowerShell.
+
+ Применил локальный render-deploy skill из скачанного openai/skills.git, потому что этот проект multi-service: FastAPI
+  API, Vite frontend, Telegram bot, PostgreSQL/pgvector.
+
+  Сделал:
+
+  - Добавил Render Blueprint: C:/Users/Adam Vakar/OneDrive - TUS MM/Untitled Folder/Code/Agent_RAG/learning-os/
+    render.yaml:1
+  - Добавил нормализацию Render/Postgres URL для async SQLAlchemy: C:/Users/Adam Vakar/OneDrive - TUS MM/Untitled
+    Folder/Code/Agent_RAG/learning-os/backend/app/config.py:123
+  - Добавил миграции на старте API с schema_migrations, чтобы рестарты не падали: C:/Users/Adam Vakar/OneDrive - TUS MM/
+    Untitled Folder/Code/Agent_RAG/learning-os/backend/scripts/run_migrations.py:15
+  - Обновил deployment docs с Render flow и dashboard deeplink: C:/Users/Adam Vakar/OneDrive - TUS MM/Untitled Folder/
+    Code/Agent_RAG/learning-os/docs/DEPLOYMENT.md:69
+  - Добавил тест на Render-style DB URL.
+
+  Проверки:
+
+  - Backend tests: 163 passed, 2 skipped
+  - Ruff на изменённых Python-файлах: passed
+  - render.yaml YAML parse: passed
+  - tsc --noEmit: passed
+  - npm run build локально заблокирован Windows/OneDrive EPERM на запись frontend/tsconfig.tsbuildinfo; vite build тоже
+    упёрся в локальный запрет записи временного config-файла. Это похоже на файловую/OneDrive проблему, не на ошибку
+    кода.
+
+  Render CLI локально не установлен, поэтому render blueprints validate не запускался. Для деплоя нужно закоммитить и
+  запушить изменения, потом открыть:
+
+  https://dashboard.render.com/blueprint/new?repo=https://github.com/Adwerse/Learnify
+
+  В Render надо заполнить sync: false env vars: BOT_TOKEN, MINI_APP_URL, ALLOWED_ORIGINS, OPENAI_API_KEY,
+  TENSORIX_API_KEY, VITE_API_BASE_URL.

@@ -118,6 +118,19 @@ class Settings(BaseSettings):
             return value.strip().upper() or "INFO"
         return value
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: Any) -> Any:
+        if not isinstance(value, str):
+            return value
+
+        stripped = value.strip()
+        if stripped.startswith("postgres://"):
+            return "postgresql+asyncpg://" + stripped.removeprefix("postgres://")
+        if stripped.startswith("postgresql://"):
+            return "postgresql+asyncpg://" + stripped.removeprefix("postgresql://")
+        return stripped
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def normalize_allowed_origins(cls, value: Any) -> Any:

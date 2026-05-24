@@ -66,6 +66,31 @@ docker compose -f docker-compose.prod.yml down -v
 
 The production compose stack includes Postgres, migrations, backend, frontend, bot, and Caddy.
 
+## Render Blueprint
+This repo includes a `render.yaml` Blueprint for Render:
+
+- `studypilot-api`: FastAPI web service.
+- `studypilot-bot`: Telegram bot worker.
+- `studypilot-web`: static Vite frontend.
+- `studypilot-postgres`: PostgreSQL 16 database.
+
+Before applying the Blueprint, commit and push `render.yaml` to the Git remote. Then open:
+
+```txt
+https://dashboard.render.com/blueprint/new?repo=https://github.com/Adwerse/Learnify
+```
+
+Fill the environment variables marked `sync: false` in Render:
+
+- `BOT_TOKEN`
+- `MINI_APP_URL`
+- `ALLOWED_ORIGINS`
+- `OPENAI_API_KEY`
+- `TENSORIX_API_KEY` when `LLM_PROVIDER=tensorix`
+- `VITE_API_BASE_URL`
+
+The API service runs SQL migrations on startup with `backend/scripts/run_migrations.py`. The backend accepts Render PostgreSQL URLs and normalizes them for SQLAlchemy asyncpg.
+
 ## Telegram Setup
 1. Create or select the bot in BotFather.
 2. Set `BOT_TOKEN` and `TELEGRAM_BOT_TOKEN`.
