@@ -69,10 +69,14 @@ The production compose stack includes Postgres, migrations, backend, frontend, b
 ## Render Blueprint
 This repo includes a `render.yaml` Blueprint for Render:
 
-- `studypilot-api`: FastAPI web service.
-- `studypilot-bot`: Telegram bot worker.
+- `studypilot-api`: FastAPI web service on a paid `starter` instance.
+- `studypilot-bot`: Telegram bot polling worker on a paid `starter` instance.
 - `studypilot-web`: static Vite frontend.
-- `studypilot-postgres`: PostgreSQL 16 database.
+- `studypilot-postgres`: PostgreSQL 16 database on `basic-256mb`.
+
+The paid API and bot instances are intentional. Render free web services can sleep,
+and Render does not support free background workers. The database is also paid so
+production data does not expire with the free Postgres lifecycle.
 
 Before applying the Blueprint, commit and push `render.yaml` to the Git remote. Then open:
 
@@ -89,14 +93,41 @@ Fill the environment variables marked `sync: false` in Render:
 - `TENSORIX_API_KEY` when `LLM_PROVIDER=tensorix`
 - `VITE_API_BASE_URL`
 
-The API service runs SQL migrations on startup with `backend/scripts/run_migrations.py`. The backend accepts Render PostgreSQL URLs and normalizes them for SQLAlchemy asyncpg.
+Use these URL values on the first Blueprint sync, then verify them against the actual
+service URLs Render assigns:
+
+- `MINI_APP_URL=https://studypilot-web.onrender.com`
+- `ALLOWED_ORIGINS=https://studypilot-web.onrender.com`
+- `VITE_API_BASE_URL=https://studypilot-api.onrender.com`
+
+If Render assigns different subdomains, update the service environment variables and
+redeploy the affected services. `VITE_API_BASE_URL` is embedded at frontend build time,
+so redeploy `studypilot-web` after changing it.
+
+The API service runs SQL migrations in Render's `preDeployCommand` with
+`backend/scripts/run_migrations.py`. The backend accepts Render PostgreSQL URLs and
+normalizes them for SQLAlchemy asyncpg.
+
+Render deployment checks:
+
+```sh
+curl https://studypilot-api.onrender.com/health
+curl https://studypilot-api.onrender.com/health/ready
+```
+
+Expected readiness shape:
+
+```json
+{"status":"ready","checks":{"database":"ok","vector_store":"ok"}}
+```
 
 ## Telegram Setup
-1. Create or select the bot in BotFather.
-2. Set `BOT_TOKEN` and `TELEGRAM_BOT_TOKEN`.
-3. Deploy the frontend over HTTPS.
-4. Configure the Mini App/Web App URL in BotFather to `MINI_APP_URL`.
-5. Ensure backend `ALLOWED_ORIGINS` includes the exact Mini App origin.
+1. Create or select the bot in `@BotFather` and copy the bot token.
+2. Set `BOT_TOKEN` on both Render services: `studypilot-api` and `studypilot-bot`.
+3. Set `MINI_APP_URL` on both services to the frontend HTTPS URL.
+4. Set backend `ALLOWED_ORIGINS` to the exact frontend HTTPS origin.
+5. In `@BotFather`, configure the bot's Mini App/Menu Button URL to `MINI_APP_URL`.
+6. Open the bot in Telegram, send `/start`, click `Open Learning OS`, and create a small test roadmap.
 
 ## Service Commands
 Backend local:
@@ -127,7 +158,7 @@ python main.py
 Readiness checks database connectivity and pgvector availability. It returns `503` when the app is not ready.
 
 ## Rollback Notes
-- Keep the previous container image or Railway deployment available.
+- Keep the previous Render deploy or container image available.
 - Roll back the app before rolling back database changes.
 - SQL migrations in this repo are forward-only; restore from a database backup if a schema rollback is required.
 - After rollback, verify `/health`, `/health/ready`, bot start, Mini App load, auth, roadmap, upload, RAG, and analytics.

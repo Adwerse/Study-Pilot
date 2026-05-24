@@ -686,7 +686,7 @@ Date: 2026-05-09
 Status: prepared
 
 Goal:
-- Prepare a self-hosted VPS deployment path for the Telegram Mini App without Railway.
+- Prepare a self-hosted VPS deployment path for the Telegram Mini App.
 
 What was done:
 - Added `docker-compose.prod.yml` for a production-style stack:
@@ -934,7 +934,7 @@ What was done:
   - Vitest exclusion for e2e specs.
 - Polished Docker setup:
   - backend healthcheck uses `/health`;
-  - Railway backend healthcheck uses `/health/ready`;
+  - backend readiness healthcheck uses `/health/ready`;
   - backend and bot run as non-root where feasible;
   - frontend Dockerfile now builds static assets and serves through nginx;
   - frontend nginx `/health` endpoint;

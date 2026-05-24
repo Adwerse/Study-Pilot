@@ -1,4 +1,4 @@
-CREATE TABLE metrics (
+CREATE TABLE IF NOT EXISTS metrics (
 	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	date date NOT NULL,
@@ -9,4 +9,4 @@ CREATE TABLE metrics (
 	best_hour integer CHECK (best_hour BETWEEN 0 AND 23)
 );
 
-CREATE UNIQUE INDEX ON metrics(user_id, date);
+CREATE UNIQUE INDEX IF NOT EXISTS metrics_user_id_date_idx ON metrics(user_id, date);

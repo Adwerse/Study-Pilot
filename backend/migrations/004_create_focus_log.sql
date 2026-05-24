@@ -1,4 +1,4 @@
-CREATE TABLE focus_log (
+CREATE TABLE IF NOT EXISTS focus_log (
 	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	stage_id uuid REFERENCES plan_stages(id) ON DELETE SET NULL,
@@ -10,4 +10,5 @@ CREATE TABLE focus_log (
 	completed boolean NOT NULL DEFAULT false
 );
 
-CREATE INDEX ON focus_log(user_id, started_at);
+CREATE INDEX IF NOT EXISTS focus_log_user_id_started_at_idx
+	ON focus_log(user_id, started_at);

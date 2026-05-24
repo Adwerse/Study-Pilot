@@ -1,4 +1,4 @@
-CREATE TABLE plan_stages (
+CREATE TABLE IF NOT EXISTS plan_stages (
 	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	plan_id uuid NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
 	week_number integer NOT NULL,
@@ -8,4 +8,4 @@ CREATE TABLE plan_stages (
 	order_index integer NOT NULL
 );
 
-CREATE INDEX ON plan_stages(plan_id);
+CREATE INDEX IF NOT EXISTS plan_stages_plan_id_idx ON plan_stages(plan_id);

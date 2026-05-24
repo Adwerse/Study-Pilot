@@ -99,7 +99,7 @@ The product is designed around one principle:
 | **Agents** | Roadmap, Daily Coach, Focus, RAG, Analytics, Weekly Review |
 | **Bot** | aiogram 3 Telegram bot for launch, reminders, and weekly digests |
 | **Auth** | Telegram Mini App signed `initData` validation |
-| **Deployment** | Docker, production Compose, Caddy, Railway workflows |
+| **Deployment** | Docker, production Compose, Caddy, Render Blueprint |
 | **Testing** | Pytest, Ruff, Vitest, Playwright, GitHub Actions |
 
 ---
@@ -703,11 +703,8 @@ Pull request checks run:
 
 Main-branch e2e checks run Playwright against a seeded test backend with fake AI providers.
 
-Railway workflows exist for:
-
-- backend;
-- frontend;
-- bot.
+A Render Blueprint exists for the backend API, static frontend, Telegram bot worker,
+and PostgreSQL database.
 
 ---
 

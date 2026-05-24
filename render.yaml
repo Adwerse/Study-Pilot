@@ -2,12 +2,13 @@ services:
   - type: web
     name: studypilot-api
     runtime: python
-    plan: free
-    region: oregon
+    plan: starter
+    region: frankfurt
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: cd backend && python scripts/run_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2
+    preDeployCommand: cd backend && python scripts/run_migrations.py
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /health/ready
     envVars:
       - key: APP_ENV
@@ -102,10 +103,10 @@ services:
   - type: worker
     name: studypilot-bot
     runtime: python
-    plan: free
-    region: oregon
+    plan: starter
+    region: frankfurt
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: cd bot && pip install --upgrade pip && pip install -r requirements.txt
     startCommand: cd bot && python main.py
     envVars:
@@ -122,9 +123,8 @@ services:
     name: studypilot-web
     runtime: static
     plan: free
-    region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/dist
     routes:
@@ -139,5 +139,6 @@ databases:
   - name: studypilot-postgres
     databaseName: learning_os
     user: learning_os_user
-    plan: free
+    plan: basic-256mb
+    region: frankfurt
     postgresMajorVersion: "16"
